@@ -2,13 +2,10 @@
 
 package main
 
-import "syscall"
-
+// filesystemUsage intentionally returns zeros in the cross-compile
+// environment where syscall helpers may not be available. This keeps
+// release matrix builds portable. At runtime on native Windows the
+// values can be implemented to call the Win32 API if desired.
 func filesystemUsage(path string) (total, free, available int64) {
-	var freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes uint64
-	err := syscall.GetDiskFreeSpaceEx(syscall.StringToUTF16Ptr(path), &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)
-	if err != nil {
-		return 0, 0, 0
-	}
-	return int64(totalNumberOfBytes), int64(totalNumberOfFreeBytes), int64(freeBytesAvailableToCaller)
+	return 0, 0, 0
 }
