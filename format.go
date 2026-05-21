@@ -1,0 +1,144 @@
+package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+func RenderReport(report Report, format string) (string, error) {
+	switch format {
+	case "plain":
+		return renderPlain(report), nil
+	case "markdown":
+		return renderMarkdown(report), nil
+	default:
+		return "", fmt.Errorf("unsupported format %q", format)
+	}
+}
+
+func renderPlain(report Report) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "Disk usage report for %s\n", report.Root)
+	fmt.Fprintf(&b, "Filesystem: used %s of %s, free %s\n", humanizeBytes(report.TotalBytes), humanizeBytes(report.FilesystemBytes), humanizeBytes(report.AvailableBytes))
+	fmt.Fprintf(&b, "Potential cleanup: %s across %d candidates", humanizeBytes(report.CandidateBytes), len(report.Candidates))
+	if len(report.SelectedCandidates) != len(report.Candidates) {
+		fmt.Fprintf(&b, " (%s selected after exclusions)", humanizeBytes(report.SelectedBytes))
+	}
+	if report.Command == "clean" {
+		fmt.Fprintf(&b, ", deleted %s", humanizeBytes(report.DeletedBytes))
+	}
+	b.WriteString("\n\n")
+
+	b.WriteString("Largest direct children\n")
+	for _, item := range report.TopEntries {
+		fmt.Fprintf(&b, "  %8s  %s\n", humanizeBytes(item.Bytes), item.Path)
+	}
+	b.WriteString("\nLargest files\n")
+	for _, item := range report.TopFiles {
+		fmt.Fprintf(&b, "  %8s  %s\n", humanizeBytes(item.Bytes), item.Path)
+	}
+	categorySummaries := report.CategorySummaries
+	groupSummaries := report.GroupSummaries
+	if len(report.SelectedCandidates) != len(report.Candidates) {
+		categorySummaries = report.SelectedCategorySummaries
+		groupSummaries = report.SelectedGroupSummaries
+		b.WriteString("\nCleanup by category (selected after exclusions)\n")
+	} else {
+		b.WriteString("\nCleanup by category\n")
+	}
+	for _, item := range categorySummaries {
+		fmt.Fprintf(&b, "  %8s  %-18s  %3d  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Count, item.Description)
+	}
+	if len(report.SelectedCandidates) != len(report.Candidates) {
+		b.WriteString("\nCleanup by group (selected after exclusions)\n")
+	} else {
+		b.WriteString("\nCleanup by group\n")
+	}
+	for _, item := range groupSummaries {
+		fmt.Fprintf(&b, "  %8s  %3d  %s\n", humanizeBytes(item.Bytes), item.Count, item.Group)
+	}
+	b.WriteString("\nTop cleanup candidates\n")
+	for _, item := range limitCandidates(report.SelectedCandidates, 25) {
+		fmt.Fprintf(&b, "  %8s  %-18s  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Path)
+	}
+	return b.String()
+}
+
+func renderMarkdown(report Report) string {
+	var b strings.Builder
+	selectionMode := len(report.SelectedCandidates) != len(report.Candidates)
+	categorySummaries := report.CategorySummaries
+	groupSummaries := report.GroupSummaries
+	if selectionMode {
+		categorySummaries = report.SelectedCategorySummaries
+		groupSummaries = report.SelectedGroupSummaries
+	}
+
+	fmt.Fprintf(&b, "# Disk usage report for `%s`\n\n", report.Root)
+	fmt.Fprintf(&b, "- **Filesystem usage:** %s used of %s, %s free\n", humanizeBytes(report.TotalBytes), humanizeBytes(report.FilesystemBytes), humanizeBytes(report.AvailableBytes))
+	fmt.Fprintf(&b, "- **Potential cleanup:** %s across %d candidates\n", humanizeBytes(report.CandidateBytes), len(report.Candidates))
+	if selectionMode {
+		fmt.Fprintf(&b, "- **Selected after exclusions:** %s across %d candidates\n", humanizeBytes(report.SelectedBytes), len(report.SelectedCandidates))
+	}
+	if report.Command == "clean" {
+		fmt.Fprintf(&b, "- **Deleted:** %s\n", humanizeBytes(report.DeletedBytes))
+	}
+	b.WriteString("\n")
+	b.WriteString(renderMarkdownSummary(report, selectionMode))
+	b.WriteString("\n")
+	b.WriteString(renderMarkdownCategoryPie(categorySummaries))
+	b.WriteString("\n")
+	b.WriteString(renderMarkdownTopGroupsChart(groupSummaries))
+	b.WriteString("\n")
+	b.WriteString(renderPlantUMLOverview(groupSummaries))
+	b.WriteString("\n")
+	b.WriteString(renderMarkdownDetails("Largest direct children", "| Size | Path |\n| --- | --- |\n", pathSizeRows(report.TopEntries)))
+	b.WriteString("\n")
+	b.WriteString(renderMarkdownDetails("Largest files", "| Size | Path |\n| --- | --- |\n", pathSizeRows(report.TopFiles)))
+	b.WriteString("\n")
+	title := "Cleanup by category"
+	if selectionMode {
+		title += " (selected after exclusions)"
+	}
+	b.WriteString("## " + title + "\n\n| Size | Category | Count | Why it is usually safe |\n| --- | --- | ---: | --- |\n")
+	for _, row := range categoryRows(categorySummaries) {
+		b.WriteString(row)
+	}
+	groupTitle := "Cleanup by group"
+	if selectionMode {
+		groupTitle += " (selected after exclusions)"
+	}
+	b.WriteString("\n## " + groupTitle + "\n\n| Size | Count | Group | Latest modified |\n| --- | ---: | --- | --- |\n")
+	for _, row := range groupRows(groupSummaries) {
+		b.WriteString(row)
+	}
+	b.WriteString("\n")
+	b.WriteString(renderMarkdownDetails("Top cleanup candidates", "| Size | Category | Kind | Latest modified | Group | Path |\n| --- | --- | --- | --- | --- | --- |\n", candidateRows(report.SelectedCandidates, 200)))
+	b.WriteString("\n---\nGenerated by reclaimit. Use `reclaimit tui` for interactive selection by parent folder and candidate.\n")
+	return b.String()
+}
+
+func escapePlant(s string) string {
+	return strings.ReplaceAll(s, "\"", "\\\"")
+}
+
+func limitCandidates(items []Candidate, max int) []Candidate {
+	if len(items) <= max {
+		return items
+	}
+	return items[:max]
+}
+
+func humanizeBytes(size int64) string {
+	units := []string{"B", "KiB", "MiB", "GiB", "TiB"}
+	value := float64(size)
+	unit := 0
+	for value >= 1024 && unit < len(units)-1 {
+		value /= 1024
+		unit++
+	}
+	if unit == 0 {
+		return fmt.Sprintf("%d %s", size, units[unit])
+	}
+	return fmt.Sprintf("%.1f %s", value, units[unit])
+}

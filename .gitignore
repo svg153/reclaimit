@@ -1,0 +1,6 @@
+bin/
+coverage.out
+coverage.html
+disk-usage
+disk-usage.bin
+home-disk-report.md

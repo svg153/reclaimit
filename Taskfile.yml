@@ -1,0 +1,42 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: ci
+  build:
+    cmds:
+      - mkdir -p bin
+      - go build -o ./bin/reclaimit .
+  install:
+    cmds:
+      - mkdir -p "$HOME/.local/bin"
+      - go build -o "$HOME/.local/bin/reclaimit" .
+  test:
+    cmds:
+      - go test ./... -coverprofile=coverage.out
+      - go tool cover -func=coverage.out
+  fmt:
+    cmds:
+      - go fmt ./...
+  vet:
+    cmds:
+      - go vet ./...
+  coverage-html:
+    cmds:
+      - go test ./... -coverprofile=coverage.out
+      - go tool cover -html=coverage.out -o coverage.html
+  report:
+    cmds:
+      - task: build
+      - ./bin/reclaimit analyze --root $HOME --format markdown --out $HOME/home-disk-report.md
+  tui:
+    cmds:
+      - task: build
+      - ./bin/reclaimit tui --root $HOME --format markdown
+  ci:
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: test
+      - task: build
