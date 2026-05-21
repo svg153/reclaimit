@@ -1,0 +1,35 @@
+project_name: reclaimit
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    binary: reclaimit
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+changelog:
+  use: git
+
+snapshot:
+  name_template: "{{ .Tag }}"
+
+brew:
+  name: reclaimit
+  tap:
+    owner: svg153
+    name: reclaimit
+  homepage: "https://github.com/svg153/reclaimit"
+  description: "Portable Go CLI/TUI for reclaimable disk space"
+  files:
+    - "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.tar.gz"
+  commit_author:
+    name: "reclaimit CI"
+    email: "noreply@github.com"

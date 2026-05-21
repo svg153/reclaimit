@@ -1,4 +1,13 @@
+[![CI](https://github.com/svg153/reclaimit/actions/workflows/ci.yml/badge.svg)](https://github.com/svg153/reclaimit/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest) [![Go](https://img.shields.io/badge/Go-1.21%2B-00ADD8?logo=go)](https://golang.org)
+
 # reclaimit
+
+Install via Homebrew once a release is published:
+
+```bash
+brew install svg153/reclaimit/reclaimit
+```
+
 
 ![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-00ADD8?logo=go)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
