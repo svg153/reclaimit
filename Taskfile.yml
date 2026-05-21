@@ -40,3 +40,24 @@ tasks:
       - task: vet
       - task: test
       - task: build
+  coverage-check:
+    cmds:
+      - go test ./... -coverprofile=coverage.out
+      - go tool cover -func=coverage.out | tee coverage.txt
+      - |
+        total=$(grep total: coverage.txt | awk '{print $3}' | sed 's/%//')
+        echo "Coverage: ${total}%"
+        awk '/^total:/ {print "Total coverage: " $3}' coverage.txt
+        if [ $(awk -v cov="$total" 'BEGIN {print (cov>=70)?0:1}') -ne 0 ]; then echo "Coverage ${total}% is below threshold 70%"; exit 1; fi
+  dist:
+    cmds:
+      - echo "Building local dist via goreleaser (requires goreleaser installed locally)"
+      - goreleaser release --rm-dist --snapshot
+  release:
+    cmds:
+      - echo "Create a signed release via goreleaser (ensure GITHUB_TOKEN is set)"
+      - goreleaser release --rm-dist
+  docs:
+    cmds:
+      - mkdir -p docs
+      - awk 'BEGIN{print "---\nlayout: default\n---\n"}{print}' README.md > docs/index.md
