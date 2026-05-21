@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const version = "0.1.0"
+var version = "dev"
 
 type stringList []string
 

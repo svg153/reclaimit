@@ -1,39 +1,18 @@
-```
-  ____            _                 _ _ _ _
- |  _ \ ___  __ _| | ___   __ _  __| (_) (_)___
- | |_) / _ \/ _` | |/ _ \ / _` |/ _` | | | / __|
- |  _ <  __/ (_| | | (_) | (_| | (_| | | | \__ \
- |_| \_\___|\__, |_|\___/ \__,_|\__,_|_|_|_|___/
-            |___/    reclaimit - reclaim disk space
-```
+![reclaimit](assets/reclaimit-hero.svg)
 
-[![CI](https://github.com/svg153/reclaimit/actions/workflows/ci.yml/badge.svg)](https://github.com/svg153/reclaimit/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest) [![Go](https://img.shields.io/badge/Go-1.21%2B-00ADD8?logo=go)](https://golang.org) [![Coverage](https://codecov.io/gh/svg153/reclaimit/branch/main/graph/badge.svg?token=)](https://codecov.io/gh/svg153/reclaimit)
+[![CI](https://github.com/svg153/reclaimit/actions/workflows/ci.yml/badge.svg)](https://github.com/svg153/reclaimit/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest) [![Go](https://img.shields.io/badge/Go-1.24%2B-00ADD8?logo=go)](https://golang.org) [![Coverage](https://codecov.io/gh/svg153/reclaimit/branch/main/graph/badge.svg)](https://codecov.io/gh/svg153/reclaimit) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 # reclaimit
 
-Animated demo (update assets/reclaimit-demo.gif to show a real recording):
-
-![demo](assets/reclaimit-demo.gif)
+![demo](assets/reclaimit-demo.svg)
 
 ## Table of contents
 
-- [Install](#install)
+- [Installation](#installation)
 - [Quick start](#quick-start)
 - [Commands](#commands)
-- [TUI](#tui)
+- [Security & automation](#security--automation)
 - [Contributing](#contributing)
-- [Security & Automation](#security--automation)
-
-Install via Homebrew once a release is published:
-
-```bash
-brew install svg153/reclaimit/reclaimit
-```
-
-
-![Go 1.21+](https://img.shields.io/badge/Go-1.21%2B-00ADD8?logo=go)
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![TUI](https://img.shields.io/badge/UI-Terminal-6f42c1)
 
 `reclaimit` is a Go CLI for finding reclaimable disk space with a bias toward **developer workstations**.
 
@@ -73,26 +52,46 @@ That means it knows about common development leftovers like:
 
 ## Installation
 
-### Build locally
+### Homebrew
 
 ```bash
-git clone <repo-url>
+brew install svg153/reclaimit/reclaimit
+```
+
+### Quick install script
+
+Requires `curl` and `jq`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
+```
+
+Installs to:
+
+```bash
+$HOME/.local/bin/reclaimit
+```
+
+### Go install
+
+```bash
+go install github.com/svg153/reclaimit@latest
+```
+
+### Build from source
+
+```bash
+git clone https://github.com/svg153/reclaimit.git
 cd reclaimit
 task build
 ./bin/reclaimit --version
 ```
 
-### Install into your user PATH
+### Install into your user PATH from source
 
 ```bash
 task install
 reclaimit --version
-```
-
-By default `task install` builds the binary into:
-
-```bash
-$HOME/.local/bin/reclaimit
 ```
 
 ## Quick start
@@ -264,9 +263,19 @@ task coverage-html
 
 GitHub Actions workflow is included for:
 
-- Go `1.21`
-- Go `1.22`
-- Go `1.23`
+- Go `1.24`
+- Go `1.25`
+
+## Security & automation
+
+The repository includes:
+
+- Dependabot for Go modules and GitHub Actions
+- CodeQL analysis on pushes, pull requests and schedule
+- coverage artifacts in CI plus Codecov upload
+- multi-platform tagged releases with attached binaries
+
+For webinstall.dev specifically, this repository now ships a portable `install.sh`, but final publication still requires submitting the installer metadata upstream to `webinstall/webi-installers`.
 
 ## Roadmap ideas
 

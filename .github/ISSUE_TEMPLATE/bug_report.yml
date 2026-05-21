@@ -1,0 +1,37 @@
+name: Bug report
+description: Report a defect or regression in reclaimit
+labels:
+  - bug
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `reclaimit version`
+      placeholder: v0.1.6
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: Ubuntu 24.04 / macOS 15 / Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include what you expected to happen too.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `reclaimit analyze --root ...`
+        2. Open `reclaimit tui`
+        3. ...
+    validations:
+      required: true

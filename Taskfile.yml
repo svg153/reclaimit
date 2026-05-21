@@ -7,11 +7,11 @@ tasks:
   build:
     cmds:
       - mkdir -p bin
-      - go build -o ./bin/reclaimit .
+      - go build -ldflags "-X main.version=dev" -o ./bin/reclaimit .
   install:
     cmds:
       - mkdir -p "$HOME/.local/bin"
-      - go build -o "$HOME/.local/bin/reclaimit" .
+      - go build -ldflags "-X main.version=dev" -o "$HOME/.local/bin/reclaimit" .
   test:
     cmds:
       - go test ./... -coverprofile=coverage.out
@@ -52,11 +52,11 @@ tasks:
   dist:
     cmds:
       - echo "Building local dist via goreleaser (requires goreleaser installed locally)"
-      - goreleaser release --rm-dist --snapshot
+      - goreleaser release --clean --snapshot
   release:
     cmds:
-      - echo "Create a signed release via goreleaser (ensure GITHUB_TOKEN is set)"
-      - goreleaser release --rm-dist
+      - echo "Releases are published by GitHub Actions when you push a v* tag."
+      - echo "Example: git tag v0.1.7 && git push origin v0.1.7"
   docs:
     cmds:
       - mkdir -p docs

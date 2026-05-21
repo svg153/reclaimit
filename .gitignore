@@ -1,6 +1,12 @@
 bin/
 coverage.out
 coverage.html
+coverage.txt
 disk-usage
 disk-usage.bin
+dist/
+docs/
 home-disk-report.md
+*.test
+*.out
+.DS_Store

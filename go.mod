@@ -1,6 +1,8 @@
-module reclaimit
+module github.com/svg153/reclaimit
 
-go 1.23
+go 1.24.0
+
+toolchain go1.24.4
 
 require (
 	github.com/gdamore/tcell/v2 v2.13.9
