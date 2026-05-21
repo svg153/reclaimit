@@ -46,18 +46,11 @@ jobs:
           ARCHIVE_NAME=reclaimit_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}
           if [ "${{ matrix.goos }}" = "windows" ]; then zip -j release/${ARCHIVE_NAME}.zip dist/*; else tar -C dist -czf release/${ARCHIVE_NAME}.tar.gz .; fi
           ls -lh release
-      - name: Create GitHub Release
+      - name: Create GitHub Release and upload artifacts
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
+          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload release asset
-        uses: actions/upload-release-asset@v2
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/*
-          asset_name: |
-            reclaimit_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}
-          asset_content_type: application/octet-stream
