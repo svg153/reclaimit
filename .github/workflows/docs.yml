@@ -13,6 +13,7 @@ jobs:
         run: |
           mkdir -p docs
           awk 'BEGIN{print "---\nlayout: default\n---\n"}{print}' README.md > docs/index.md
+          touch docs/.nojekyll
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:

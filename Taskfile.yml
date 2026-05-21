@@ -55,9 +55,10 @@ tasks:
       - goreleaser release --clean --snapshot
   release:
     cmds:
-      - echo "Releases are published by GitHub Actions when you push a v* tag."
-      - echo "Example: git tag v0.1.7 && git push origin v0.1.7"
+      - 'echo "Releases are published by GitHub Actions when you push a v* tag."'
+      - 'echo "Example: git tag v0.1.7 && git push origin v0.1.7"'
   docs:
     cmds:
       - mkdir -p docs
-      - awk 'BEGIN{print "---\nlayout: default\n---\n"}{print}' README.md > docs/index.md
+      - 'awk ''BEGIN{print "---\nlayout: default\n---\n"}{print}'' README.md > docs/index.md'
+      - touch docs/.nojekyll
