@@ -26,7 +26,7 @@ jobs:
           - goos: windows
             goarch: amd64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -47,7 +47,7 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then zip -j release/${ARCHIVE_NAME}.zip dist/*; else tar -C dist -czf release/${ARCHIVE_NAME}.tar.gz .; fi
           ls -lh release
       - name: Create GitHub Release and upload artifacts
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
