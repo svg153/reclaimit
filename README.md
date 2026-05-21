@@ -1,4 +1,4 @@
-[![CI](https://github.com/svg153/reclaimit/actions/workflows/ci.yml/badge.svg)](https://github.com/svg153/reclaimit/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest) [![Go](https://img.shields.io/badge/Go-1.21%2B-00ADD8?logo=go)](https://golang.org)
+[![CI](https://github.com/svg153/reclaimit/actions/workflows/ci.yml/badge.svg)](https://github.com/svg153/reclaimit/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest) [![Go](https://img.shields.io/badge/Go-1.21%2B-00ADD8?logo=go)](https://golang.org) [![Coverage](https://codecov.io/gh/svg153/reclaimit/branch/main/graph/badge.svg?token=)](https://codecov.io/gh/svg153/reclaimit)
 
 # reclaimit
 
