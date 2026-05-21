@@ -5,19 +5,59 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
-  release:
+  build-and-release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
-      - name: Run goreleaser
-        uses: goreleaser/goreleaser-action@v1
+      - name: Build
+        run: |
+          set -e
+          mkdir -p dist
+          BIN_NAME=reclaimit
+          if [ "${{ matrix.goos }}" = "windows" ]; then BIN_NAME=${BIN_NAME}.exe; fi
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 go build -o dist/${BIN_NAME} .
+          ls -lh dist
+      - name: Archive
+        run: |
+          set -e
+          mkdir -p release
+          ARCHIVE_NAME=reclaimit_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}
+          if [ "${{ matrix.goos }}" = "windows" ]; then zip -j release/${ARCHIVE_NAME}.zip dist/*; else tar -C dist -czf release/${ARCHIVE_NAME}.tar.gz .; fi
+          ls -lh release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          version: latest
-          args: release
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v2
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/*
+          asset_name: |
+            reclaimit_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}
+          asset_content_type: application/octet-stream
