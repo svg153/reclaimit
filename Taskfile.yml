@@ -7,11 +7,11 @@ tasks:
   build:
     cmds:
       - mkdir -p bin
-      - go build -ldflags "-X main.version=dev" -o ./bin/reclaimit .
+      - go build -ldflags "-X github.com/svg153/reclaimit.Version=dev" -o ./bin/reclaimit ./cmd/reclaimit
   install:
     cmds:
       - mkdir -p "$HOME/.local/bin"
-      - go build -ldflags "-X main.version=dev" -o "$HOME/.local/bin/reclaimit" .
+      - go build -ldflags "-X github.com/svg153/reclaimit.Version=dev" -o "$HOME/.local/bin/reclaimit" ./cmd/reclaimit
   test:
     cmds:
       - go test ./... -coverprofile=coverage.out
@@ -22,6 +22,39 @@ tasks:
   vet:
     cmds:
       - go vet ./...
+  lint:
+    desc: Run golangci-lint (downloaded on demand, pinned version)
+    cmds:
+      - go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6 run ./...
+  lint-fix:
+    desc: Run golangci-lint with autofix
+    cmds:
+      - go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6 run --fix ./...
+  vulncheck:
+    desc: Scan dependencies and code for known vulnerabilities (SCA)
+    cmds:
+      - go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+  bench:
+    desc: Run benchmarks with allocation stats
+    cmds:
+      - go test -run '^$' -bench . -benchmem ./...
+  fuzz:
+    desc: Run the file-matcher fuzz target for a bounded time
+    cmds:
+      - go test -run '^$' -fuzz 'FuzzMatchFile' -fuzztime=30s .
+  docker-build:
+    desc: Build the production container image
+    cmds:
+      - docker build -t reclaimit:dev .
+  check:
+    desc: Full quality gate (format, vet, lint, vulncheck, tests, build)
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: lint
+      - task: vulncheck
+      - task: coverage-check
+      - task: build
   coverage-html:
     cmds:
       - go test ./... -coverprofile=coverage.out

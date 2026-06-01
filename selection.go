@@ -1,4 +1,4 @@
-package main
+package reclaimit
 
 func applySelection(report *Report, excludedGroups, excludedPaths []string) {
 	report.SelectedCandidates = filterCandidates(report.Candidates, excludedGroups, excludedPaths)

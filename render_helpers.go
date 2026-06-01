@@ -1,4 +1,4 @@
-package main
+package reclaimit
 
 import (
 	"fmt"
@@ -132,7 +132,7 @@ func humanizeTimestamp(value time.Time) string {
 	if value.IsZero() {
 		return "-"
 	}
-	return value.Local().Format("2006-01-02 15:04")
+	return value.UTC().Format("2006-01-02 15:04")
 }
 
 func candidateKind(item Candidate) string {

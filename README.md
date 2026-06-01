@@ -1,8 +1,8 @@
+# reclaimit
+
 ![reclaimit](assets/reclaimit-hero.svg)
 
 [![CI](https://github.com/svg153/reclaimit/actions/workflows/ci.yml/badge.svg)](https://github.com/svg153/reclaimit/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest) [![Go](https://img.shields.io/badge/Go-1.24%2B-00ADD8?logo=go)](https://golang.org) [![Coverage](https://codecov.io/gh/svg153/reclaimit/branch/main/graph/badge.svg)](https://codecov.io/gh/svg153/reclaimit) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-
-# reclaimit
 
 ![demo](assets/reclaimit-demo.svg)
 
@@ -10,6 +10,7 @@
 
 - [Installation](#installation)
 - [Quick start](#quick-start)
+- [Architecture and review](#architecture-and-review)
 - [Commands](#commands)
 - [Security & automation](#security--automation)
 - [Contributing](#contributing)
@@ -78,6 +79,38 @@ $HOME/.local/bin/reclaimit
 go install github.com/svg153/reclaimit@latest
 ```
 
+### Linux packages (apt, dnf/yum, apk)
+
+Release builds publish native `.deb`, `.rpm`, and `.apk` packages. Download the
+package matching your distribution from the
+[latest release](https://github.com/svg153/reclaimit/releases/latest) and
+install it:
+
+```bash
+# Debian / Ubuntu
+sudo apt install ./reclaimit_*_linux_amd64.deb
+
+# Fedora / RHEL / openSUSE
+sudo dnf install ./reclaimit_*_linux_amd64.rpm
+
+# Alpine
+sudo apk add --allow-untrusted ./reclaimit_*_linux_amd64.apk
+```
+
+### Docker
+
+A minimal, non-root distroless image is published to GitHub Container Registry:
+
+```bash
+docker run --rm ghcr.io/svg153/reclaimit:latest --help
+
+# Analyze a host directory by mounting it read-only
+docker run --rm -v "$HOME:/scan:ro" ghcr.io/svg153/reclaimit:latest \
+  analyze --root /scan --format markdown
+```
+
+Build the image locally with `task docker-build`.
+
 ### Build from source
 
 ```bash
@@ -113,6 +146,22 @@ reclaimit --version
 ```bash
 ./bin/reclaimit clean --root "$HOME" --include-category python-venv --yes
 ```
+
+## Architecture and review
+
+Repository documentation is available in [docs/architecture.md](docs/architecture.md) and [docs/code-review.md](docs/code-review.md).
+
+Current repository layout:
+
+- root package `reclaimit` contains command orchestration and scanner/report logic
+- `cmd/reclaimit/main.go` is the executable entrypoint
+- `internal/tui` contains the reusable TUI package used by the root command flow
+
+Those documents include:
+
+- Mermaid C4 diagrams for system, container, and component views
+- command and safety flows for `analyze`, `tui`, and `clean`
+- a technical review of shallow helpers, duplicated logic, test gaps, and performance opportunities
 
 ## Commands
 
@@ -226,20 +275,36 @@ This tool is opinionated, but intentionally conservative:
 
 Still, this is a cleanup tool: review output before deletion, especially for generic cache directories.
 
-## Development
+## Observability
 
-Taskfile targets:
+`reclaimit` emits structured logs via the standard library `log/slog`. Logs go
+to **stderr** while reports go to **stdout**, so machine-readable output is never
+polluted by diagnostics. Control verbosity with `--log-level`:
 
 ```bash
-task fmt
-task vet
-task test
-task coverage-html
-task build
-task install
-task report
-task tui
-task ci
+# Trace every scanned directory and candidate match
+./bin/reclaimit analyze --root "$HOME" --log-level debug
+```
+
+Accepted levels: `debug`, `info`, `warn` (default) and `error`. Unreadable
+entries (permission denied) are reported at `warn` and skipped rather than
+aborting the scan.
+
+## Development
+
+Common Taskfile targets:
+
+```bash
+task fmt      # gofmt
+task vet      # go vet
+task lint     # golangci-lint (downloaded on demand, pinned)
+task vulncheck # govulncheck SCA scan
+task test     # tests + coverage summary
+task bench    # benchmarks with allocation stats
+task fuzz     # bounded fuzz run of the file matcher
+task build    # build ./bin/reclaimit
+task docker-build # build the distroless container image
+task check    # full quality gate: fmt, vet, lint, vulncheck, coverage, build
 ```
 
 ## Testing and coverage
@@ -261,10 +326,14 @@ task coverage-html
 
 ## CI
 
-GitHub Actions workflow is included for:
+GitHub Actions workflows are included for:
 
-- Go `1.24`
-- Go `1.25`
+- tests on Go `1.24` and `1.25` with a 70% coverage gate
+- `golangci-lint` static analysis
+- `govulncheck` dependency/code vulnerability scanning (SCA)
+- CodeQL analysis
+- Docker image build (and publish to GHCR on `main`/tags)
+- tagged releases via GoReleaser (binaries, `.deb`/`.rpm`/`.apk`, checksums)
 
 ## Security & automation
 
@@ -272,8 +341,10 @@ The repository includes:
 
 - Dependabot for Go modules and GitHub Actions
 - CodeQL analysis on pushes, pull requests and schedule
+- `govulncheck` SCA scanning in CI
 - coverage artifacts in CI plus Codecov upload
-- multi-platform tagged releases with attached binaries
+- GoReleaser-driven releases publishing binaries, Linux packages and checksums
+- a non-root distroless container image published to GHCR
 
 For webinstall.dev specifically, this repository now ships a portable `install.sh`, but final publication still requires submitting the installer metadata upstream to `webinstall/webi-installers`.
 

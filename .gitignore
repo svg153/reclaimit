@@ -5,8 +5,18 @@ coverage.txt
 disk-usage
 disk-usage.bin
 dist/
-docs/
+# Generated documentation site (authored docs under docs/ are tracked)
+docs/index.md
+docs/.nojekyll
 home-disk-report.md
 *.test
 *.out
 .DS_Store
+# Squad: ignore runtime state (logs, inbox, sessions)
+.squad/orchestration-log/
+.squad/log/
+.squad/decisions/inbox/
+.squad/sessions/
+.squad/.scratch/
+# Squad: SubSquad activation file (local to this machine)
+.squad-workstream

@@ -1,0 +1,42 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: standard
+  # standard = errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - bodyclose
+    - misspell
+    - prealloc
+    - revive
+    - unconvert
+    - gosec
+  settings:
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+    gosec:
+      excludes:
+        # reclaimit intentionally operates on user-supplied paths and removes
+        # user-selected reclaimable directories; these rules flag that by design.
+        - G304 # file path provided as a CLI argument
+        - G301 # directory permissions for generated output
+        - G302 # file permissions for generated reports
+        - G306 # WriteFile permissions for generated reports
+        - G115 # platform-portable syscall integer conversions (clamped manually)
+  exclusions:
+    generated: lax
+    rules:
+      # Generated documentation site and build artifacts are out of scope.
+      - path: docs/
+        linters:
+          - all
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

@@ -1,7 +1,11 @@
+version: 2
+
 project_name: reclaimit
+
 builds:
   - env:
       - CGO_ENABLED=0
+    main: ./cmd/reclaimit
     goos:
       - linux
       - darwin
@@ -10,26 +14,58 @@ builds:
       - amd64
       - arm64
     binary: reclaimit
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/svg153/reclaimit.Version={{ .Version }}
+
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE
+
 checksum:
   name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+
 changelog:
   use: git
 
 snapshot:
-  name_template: "{{ .Tag }}"
+  version_template: "{{ .Tag }}-snapshot"
 
-brew:
-  name: reclaimit
-  tap:
-    owner: svg153
-    name: reclaimit
-  homepage: "https://github.com/svg153/reclaimit"
-  description: "Portable Go CLI/TUI for reclaimable disk space"
-  files:
-    - "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.tar.gz"
-  commit_author:
-    name: "reclaimit CI"
-    email: "noreply@github.com"
+# Linux system packages so users can install via apt (deb), dnf/yum (rpm)
+# and apk (Alpine).
+nfpms:
+  - id: packages
+    package_name: reclaimit
+    vendor: svg153
+    homepage: "https://github.com/svg153/reclaimit"
+    maintainer: "svg153 <noreply@github.com>"
+    description: "Reclaim disk space by finding and removing regenerable build/cache directories."
+    license: MIT
+    formats:
+      - deb
+      - rpm
+      - apk
+    bindir: /usr/bin
+    contents:
+      - src: README.md
+        dst: /usr/share/doc/reclaimit/README.md
+      - src: LICENSE
+        dst: /usr/share/doc/reclaimit/LICENSE
+
+homebrew_casks:
+  - name: reclaimit
+    repository:
+      owner: svg153
+      name: reclaimit
+    homepage: "https://github.com/svg153/reclaimit"
+    description: "Portable Go CLI/TUI for reclaimable disk space"
+    commit_author:
+      name: "reclaimit CI"
+      email: "noreply@github.com"

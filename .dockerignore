@@ -1,0 +1,33 @@
+# Keep the build context minimal and reproducible.
+.git
+.github
+.squad
+.copilot
+agents
+skills
+docs
+dist
+bin
+assets
+
+# Local artifacts
+*.test
+*.out
+*.html
+coverage.*
+reclaimit
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
+
+# Project meta not needed inside the image
+*.md
+!README.md
+LICENSE
+Taskfile.yml
+.golangci.yml
+.goreleaser.yml
+install.sh
+skills-lock.json

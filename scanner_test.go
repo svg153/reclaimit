@@ -1,4 +1,4 @@
-package main
+package reclaimit
 
 import (
 	"os"
@@ -158,10 +158,10 @@ func TestRenderPlainAndDetermineGroupHelpers(t *testing.T) {
 	target := filepath.Join(repo, "node_modules")
 	mustMkdir(t, target)
 
-	if got := determineGroup(target, config{root: root, groupMode: "repo", groupDepth: 1}, map[string]string{}); got != repo {
+	if got := determineGroup(target, AnalyzeOptions{Root: root, GroupMode: "repo", GroupDepth: 1}, map[string]string{}); got != repo {
 		t.Fatalf("expected repo group %q, got %q", repo, got)
 	}
-	if got := determineGroup(filepath.Join(root, "a", "b", "c"), config{root: root, groupMode: "depth", groupDepth: 2}, map[string]string{}); got != filepath.Join(root, "a", "b") {
+	if got := determineGroup(filepath.Join(root, "a", "b", "c"), AnalyzeOptions{Root: root, GroupMode: "depth", GroupDepth: 2}, map[string]string{}); got != filepath.Join(root, "a", "b") {
 		t.Fatalf("unexpected depth group %q", got)
 	}
 	if got := ancestorGroup(root, root, 2); got != root {
