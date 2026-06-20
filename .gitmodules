@@ -1,3 +1,6 @@
 [submodule ".agents/skills"]
 	path = .agents/skills
 	url = https://github.com/svg153/skills.git
+[submodule "skills"]
+	path = .agents/skills
+	url = https://github.com/Gentleman-Programming/gentle-ai.git

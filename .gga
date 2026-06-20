@@ -1,5 +1,5 @@
 # Gentleman Guardian Angel Configuration
-# https://github.com/your-org/gga
+# https://github.com/Gentleman-Programming/gentle-ai
 
 # AI Provider (required)
 # Options: claude, gemini, codex, opencode, ollama:<model>, lmstudio[:model], github:<model>
@@ -8,21 +8,17 @@
 #   PROVIDER="gemini"
 #   PROVIDER="codex"
 #   PROVIDER="opencode"
-#   PROVIDER="opencode:anthropic/claude-opus-4-5"
 #   PROVIDER="ollama:llama3.2"
-#   PROVIDER="ollama:codellama"
 #   PROVIDER="lmstudio"
-#   PROVIDER="lmstudio:qwen2.5-coder-7b-instruct"
 #   PROVIDER="github:gpt-4o"
 #   PROVIDER="github:deepseek-r1"
 PROVIDER="github:qwen3.6"
 
 # File patterns to include in review (comma-separated)
-# Default: * (all files)
-FILE_PATTERNS="*.ts,*.tsx,*.js,*.jsx"
+FILE_PATTERNS="*.go"
 
 # File patterns to exclude from review (comma-separated)
-EXCLUDE_PATTERNS="*.test.ts,*.spec.ts,*.test.tsx,*.spec.tsx,*.d.ts"
+EXCLUDE_PATTERNS="*_test.go,*.pb.go,*_mock.go"
 
 # File containing code review rules
 # Default: AGENTS.md
