@@ -49,6 +49,7 @@ jobs:
         run: |
           mkdir -p dist
           GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=ci-${{ github.sha }}" -o dist/reclaimit_linux_amd64 .
+          chmod +x dist/reclaimit_linux_amd64
       - name: Smoke test binary
         run: |
           ./dist/reclaimit_linux_amd64 version
