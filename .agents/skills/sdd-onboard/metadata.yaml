@@ -1,0 +1,12 @@
+name: sdd-onboard
+origin: https://github.com/Gentleman-Programming/gentle-ai
+origin_path: /gentle-ai
+category: software-development
+status: active
+sync:
+  enabled: true
+  interval: weekly
+  strategy: manual
+tags:
+  - gentle-ai
+  - sdd
