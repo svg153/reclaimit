@@ -1,0 +1,11 @@
+# Hermes Agent Configuration
+# https://hermes-agent.nousresearch.com/docs
+
+persona: gentleman
+
+mcp_servers:
+  engram:
+    command: /usr/local/bin/engram
+    args:
+      - mcp
+      - --tools=agent
