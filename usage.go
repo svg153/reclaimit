@@ -27,7 +27,11 @@ Remove the currently selected cleanup candidates.
 Production usage:
   ./bin/reclaimit clean --root "$HOME" --include-category python-venv --yes
 
+Dry-run usage:
+  ./bin/reclaimit clean --root "$HOME" --include-category python-venv --yes --dry-run
+
 The command prints a deletion preview first and then emits a fresh post-clean report.
+Use --dry-run to preview what would be deleted without actually removing anything.
 
 Important flags:
   --root PATH
@@ -35,6 +39,7 @@ Important flags:
   --exclude-group PATH
   --exclude-path PATH
   --yes
+  --dry-run
 `
 	case "tui":
 		return `reclaimit tui
@@ -69,7 +74,7 @@ Usage:
 Commands:
   analyze   Generate a plain-text or Markdown report
   tui       Open the interactive tree UI
-  clean     Delete the currently selected candidates
+  clean     Delete the currently selected candidates (use --dry-run to preview)
   help      Show help for the CLI or a subcommand
 
 Global flags:
@@ -83,6 +88,7 @@ Global flags:
   --exclude-path PATH
   --min-candidate-size BYTES
   --out FILE
+  --dry-run
 
 Examples:
   ./bin/reclaimit analyze --root "$HOME" --format markdown --out report.md

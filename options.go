@@ -40,6 +40,7 @@ type config struct {
 	excludeCategories stringList
 	excludeGroups     stringList
 	excludePaths      stringList
+	dryRun            bool
 	yes               bool
 	logLevel          string
 	logger            *slog.Logger
@@ -101,6 +102,7 @@ func parseConfig(args []string) (config, error) {
 	fs.IntVar(&cfg.topEntries, "top-entries", cfg.topEntries, "number of largest direct children under root to show")
 	fs.Int64Var(&cfg.minCandidateSize, "min-candidate-size", cfg.minCandidateSize, "minimum candidate size in bytes")
 	fs.StringVar(&cfg.outFile, "out", "", "write the report to a file")
+	fs.BoolVar(&cfg.dryRun, "dry-run", false, "preview cleanup without deleting anything")
 	fs.BoolVar(&cfg.yes, "yes", false, "confirm destructive cleanup when using clean")
 	fs.StringVar(&cfg.logLevel, "log-level", cfg.logLevel, "log verbosity sent to stderr: debug, info, warn or error")
 	fs.Var(&cfg.includeCategories, "include-category", "limit to a category (repeatable)")

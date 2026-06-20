@@ -1,6 +1,7 @@
 package reclaimit
 
 import (
+	"fmt"
 	"io"
 	"os"
 )
@@ -59,6 +60,10 @@ func handleCleanFlow(cfg config, report Report, stdout, stderr io.Writer) (Repor
 	}
 	if err := writeString(stdout, renderDeletionPreview(report.SelectedCandidates)); err != nil {
 		return report, exitf(stderr, "error: writing deletion preview: %v\n", err)
+	}
+	if cfg.dryRun {
+		_, _ = fmt.Fprintln(stdout, "\nDry run — no files were deleted.")
+		return report, 0
 	}
 	deleted, err := Clean(report.SelectedCandidates)
 	if err != nil {
