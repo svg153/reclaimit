@@ -52,9 +52,9 @@ jobs:
           chmod +x dist/reclaimit_linux_amd64
       - name: Smoke test binary
         run: |
-          go run . version
-          go run . --help >/dev/null
-          go run . help analyze >/dev/null
+          go run ./cmd/reclaimit/ version
+          go run ./cmd/reclaimit/ --help >/dev/null
+          go run ./cmd/reclaimit/ help analyze >/dev/null
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
