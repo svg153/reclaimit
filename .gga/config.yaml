@@ -1,0 +1,4 @@
+provider: github:qwen3.6
+file_patterns: "*.go"
+review_command: "golangci-lint run"
+test_command: "go test ./..."

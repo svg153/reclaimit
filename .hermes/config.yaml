@@ -1,0 +1,6 @@
+persona: gentleman
+mcp_servers:
+  engram:
+    type: stdio
+    command: "engram"
+    args: ["mcp"]
