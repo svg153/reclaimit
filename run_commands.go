@@ -54,12 +54,32 @@ func handleCleanFlow(cfg config, report Report, stdout, stderr io.Writer) (Repor
 	if cfg.command != "clean" {
 		return report, 0
 	}
-	if !cfg.yes {
-		return report, exitf(stderr, "error: clean requires --yes\n")
+	if !cfg.yes && !cfg.dryRun {
+		return report, exitf(stderr, "error: clean requires --yes or --dry-run\n")
 	}
 	if err := writeString(stdout, renderDeletionPreview(report.SelectedCandidates)); err != nil {
 		return report, exitf(stderr, "error: writing deletion preview: %v\n", err)
 	}
+	if cfg.dryRun {
+		return handleDryRun(report, stdout, stderr)
+	}
+	return handleActualClean(cfg, report, stdout, stderr)
+}
+
+func handleDryRun(report Report, stdout, stderr io.Writer) (Report, int) {
+	deleted, err := DryRun(report.SelectedCandidates)
+	if err != nil {
+		return report, exitf(stderr, "error: %v\n", err)
+	}
+	if err := writef(stdout, "\n[DRY RUN] Would delete %s across %d candidates\n", humanizeBytes(deleted), len(report.SelectedCandidates)); err != nil {
+		return report, exitf(stderr, "error: writing dry-run summary: %v\n", err)
+	}
+	updated := report
+	updated.DeletedBytes = deleted
+	return updated, 0
+}
+
+func handleActualClean(cfg config, report Report, stdout, stderr io.Writer) (Report, int) {
 	deleted, err := Clean(report.SelectedCandidates)
 	if err != nil {
 		return report, exitf(stderr, "error: %v\n", err)
