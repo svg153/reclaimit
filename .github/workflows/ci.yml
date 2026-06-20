@@ -49,11 +49,12 @@ jobs:
         run: |
           mkdir -p dist
           GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=ci-${{ github.sha }}" -o dist/reclaimit_linux_amd64 .
+          chmod +x dist/reclaimit_linux_amd64
       - name: Smoke test binary
         run: |
-          ./dist/reclaimit_linux_amd64 version
-          ./dist/reclaimit_linux_amd64 --help >/dev/null
-          ./dist/reclaimit_linux_amd64 help analyze >/dev/null
+          go run ./cmd/reclaimit/ version
+          go run ./cmd/reclaimit/ --help >/dev/null
+          go run ./cmd/reclaimit/ help analyze >/dev/null
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
