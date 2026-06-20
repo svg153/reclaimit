@@ -1,0 +1,40 @@
+name: reclaimit
+version: 1.0.0
+description: Disk usage analysis and cleanup CLI — agent skills via APM
+author: Sergio Valverde
+
+# Which agent platforms to deploy to.
+# agent-skills deploys to .agents/skills/ (used by Hermes, Claude, Cursor, etc.)
+targets:
+- agent-skills
+
+dependencies:
+  apm:
+    # Gentle-AI SDD skills (branch-pr, chained-pr, cognitive-doc-design, etc.)
+    - Gentleman-Programming/gentle-ai
+    # Sergio's custom skills (go-testing, judgment-day, sdd-* suite, etc.)
+    - svg153/skills/skills/branch-pr
+    - svg153/skills/skills/chained-pr
+    - svg153/skills/skills/cognitive-doc-design
+    - svg153/skills/skills/comment-writer
+    - svg153/skills/skills/go-testing
+    - svg153/skills/skills/issue-creation
+    - svg153/skills/skills/judgment-day
+    - svg153/skills/skills/sdd-apply
+    - svg153/skills/skills/sdd-archive
+    - svg153/skills/skills/sdd-design
+    - svg153/skills/skills/sdd-explore
+    - svg153/skills/skills/sdd-init
+    - svg153/skills/skills/sdd-onboard
+    - svg153/skills/skills/sdd-propose
+    - svg153/skills/skills/sdd-spec
+    - svg153/skills/skills/sdd-tasks
+    - svg153/skills/skills/sdd-verify
+    - svg153/skills/skills/skill-creator
+    - svg153/skills/skills/skill-improver
+    - svg153/skills/skills/skill-registry
+    - svg153/skills/skills/work-unit-commits
+  mcp: []
+
+includes: auto
+scripts: {}

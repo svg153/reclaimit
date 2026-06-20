@@ -1,0 +1,335 @@
+lockfile_version: '1'
+generated_at: '2026-06-20T23:08:49.102479+00:00'
+apm_version: 0.21.0
+dependencies:
+- repo_url: Gentleman-Programming/gentle-ai
+  host: github.com
+  resolved_commit: 510751e017d308d986bd4b45c249e0b0cf00678f
+  package_type: skill_bundle
+  deployed_files:
+  - .agents/skills/branch-pr
+  - .agents/skills/branch-pr/SKILL.md
+  - .agents/skills/chained-pr
+  - .agents/skills/chained-pr/SKILL.md
+  - .agents/skills/chained-pr/references/chaining-details.md
+  - .agents/skills/cognitive-doc-design
+  - .agents/skills/cognitive-doc-design/SKILL.md
+  - .agents/skills/comment-writer
+  - .agents/skills/comment-writer/SKILL.md
+  - .agents/skills/issue-creation
+  - .agents/skills/issue-creation/SKILL.md
+  - .agents/skills/work-unit-commits
+  - .agents/skills/work-unit-commits/SKILL.md
+  deployed_file_hashes:
+    .agents/skills/branch-pr/SKILL.md: sha256:8553fdde3397c7dc1c2fda2b4ca848baf5d9185d0db65635b151755c4e627dc8
+    .agents/skills/chained-pr/SKILL.md: sha256:865f2e78db039797eabfe46d80589677c1420c052ed2b993c4435b487b17e83b
+    .agents/skills/chained-pr/references/chaining-details.md: sha256:09534b2a10a6819721cbb4b08a59bcb859b2859e65bb2977c7b979a2307e10f3
+    .agents/skills/cognitive-doc-design/SKILL.md: sha256:80dcaeca45c35e830939ef5440ca270b147f6370e4afcb47cdab762097f8cde0
+    .agents/skills/comment-writer/SKILL.md: sha256:cb980612f7237b31a4afea87899275ba20f1f621ba237ecd4a3b440f0cf2e6da
+    .agents/skills/issue-creation/SKILL.md: sha256:32d2cdfe36095ede49d422311a8b2bdeaebff4810d980fdfd4e309478344cfe4
+    .agents/skills/work-unit-commits/SKILL.md: sha256:ce50c2b606e55362dbe71393a40a4ef7c8f1a9b1bd5f2de920268642e6b5c678
+  content_hash: sha256:dc78d60b7d23cd239da28768995cb45b71dd065695c848f85ffe576a19643d64
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/branch-pr
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/branch-pr
+  - .agents/skills/branch-pr/SKILL.md
+  - .agents/skills/branch-pr/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/branch-pr/SKILL.md: sha256:8553fdde3397c7dc1c2fda2b4ca848baf5d9185d0db65635b151755c4e627dc8
+    .agents/skills/branch-pr/metadata.yaml: sha256:35f522e4c6560006e42b4ed85ea272ea4a4af2ae0af308c5e89a55e70e3d552a
+  content_hash: sha256:c55cc536abd6582567f745baf38bc397526ae18c0541e2a443638738b66502e2
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/chained-pr
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/chained-pr
+  - .agents/skills/chained-pr/SKILL.md
+  - .agents/skills/chained-pr/metadata.yaml
+  - .agents/skills/chained-pr/references/chaining-details.md
+  deployed_file_hashes:
+    .agents/skills/chained-pr/SKILL.md: sha256:865f2e78db039797eabfe46d80589677c1420c052ed2b993c4435b487b17e83b
+    .agents/skills/chained-pr/metadata.yaml: sha256:038b40b32085015f94ec3477914d39b0f7ece6dedfee982cff2095618898c0ce
+    .agents/skills/chained-pr/references/chaining-details.md: sha256:09534b2a10a6819721cbb4b08a59bcb859b2859e65bb2977c7b979a2307e10f3
+  content_hash: sha256:53920c5b4096e889a87171e0052a18ff730fbc589577d7f7aca31195cee6854d
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/cognitive-doc-design
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/cognitive-doc-design
+  - .agents/skills/cognitive-doc-design/SKILL.md
+  - .agents/skills/cognitive-doc-design/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/cognitive-doc-design/SKILL.md: sha256:80dcaeca45c35e830939ef5440ca270b147f6370e4afcb47cdab762097f8cde0
+    .agents/skills/cognitive-doc-design/metadata.yaml: sha256:33d5b3ee7bbb41fbd272fcc8d2a1ed3c8d49e9c2419ce3da7213bca1a0f629ad
+  content_hash: sha256:9e09ad6be19ad660d20d5d2d4e07844afb3c88d21db3ed17e3bc37484c4ff666
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/comment-writer
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/comment-writer
+  - .agents/skills/comment-writer/SKILL.md
+  - .agents/skills/comment-writer/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/comment-writer/SKILL.md: sha256:cb980612f7237b31a4afea87899275ba20f1f621ba237ecd4a3b440f0cf2e6da
+    .agents/skills/comment-writer/metadata.yaml: sha256:b7a762b80fdf75ed8defb6617e65c1bdebed3ecbc5ba6a46c11e4ab700eea89d
+  content_hash: sha256:16cdb3967eea7a430c865493d9b75b15865de856933406b8046158b461293622
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/go-testing
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/go-testing
+  - .agents/skills/go-testing/SKILL.md
+  - .agents/skills/go-testing/metadata.yaml
+  - .agents/skills/go-testing/references/examples.md
+  deployed_file_hashes:
+    .agents/skills/go-testing/SKILL.md: sha256:87205f2eff2f5dad905117e0fe7545ed432b728522ee742755fd25b22b612df3
+    .agents/skills/go-testing/metadata.yaml: sha256:b0f155da7e47c8ef45fbd8124efd20e620160947983467692c2c029a5f1ab652
+    .agents/skills/go-testing/references/examples.md: sha256:4db924d33425f317d5cc0b5b8881c4015bdc0193e3c2a218939352ae85cc369e
+  content_hash: sha256:5804073a7e42427a513e153ec99fe199e1f0874b0a51330d99fc6b2c6fcefc4f
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/issue-creation
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/issue-creation
+  - .agents/skills/issue-creation/SKILL.md
+  - .agents/skills/issue-creation/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/issue-creation/SKILL.md: sha256:32d2cdfe36095ede49d422311a8b2bdeaebff4810d980fdfd4e309478344cfe4
+    .agents/skills/issue-creation/metadata.yaml: sha256:2d15cd639ce457e32ba42ed8f39b27ced2761e1db5cf1e54c98b3d5cda5799fc
+  content_hash: sha256:887e900e0d29cb9cff2e3ac99e8515b614f17fb7206eec1141e6c42d09a6f52e
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/judgment-day
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/judgment-day
+  - .agents/skills/judgment-day/SKILL.md
+  - .agents/skills/judgment-day/metadata.yaml
+  - .agents/skills/judgment-day/references/prompts-and-formats.md
+  deployed_file_hashes:
+    .agents/skills/judgment-day/SKILL.md: sha256:1454be78206c52219b0af58db706983683f8e0c310ade6831eb829e269454fcc
+    .agents/skills/judgment-day/metadata.yaml: sha256:aca8aee2a646316d934c7d2155486ef158bb24dd3dde8f1b8ec269a31fef40dd
+    .agents/skills/judgment-day/references/prompts-and-formats.md: sha256:bce23691898d751fa9c7a02357b73121b86bcaf348ce5e45b750f75d0a2d7c78
+  content_hash: sha256:c2ea8163113b9fbc242358e145b1090b36e2ee5fe31447941a98c9646a01c7f4
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-apply
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-apply
+  - .agents/skills/sdd-apply/SKILL.md
+  - .agents/skills/sdd-apply/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-apply/SKILL.md: sha256:d2feb29dc902de54b3dd909adf8451acd6d56e64c9d8fd5a6afd43309863bf50
+    .agents/skills/sdd-apply/metadata.yaml: sha256:79797534a57c9e67485750406ee2efbc39bf11527f3e8e21612a8e15c2b6d249
+  content_hash: sha256:2c4336c53d421002068a071bc13235a5983d5dbc1bd339b7077bfbc470c8bbdd
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-archive
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-archive
+  - .agents/skills/sdd-archive/SKILL.md
+  - .agents/skills/sdd-archive/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-archive/SKILL.md: sha256:56aeb209a0ed09c5d389e26ffe2e1884a8c136d1d9639a3976c0e5cc6d65f59c
+    .agents/skills/sdd-archive/metadata.yaml: sha256:c7247aef53443075284a82eb4497c01f48dfac30615fc52a41733de27d0c8a94
+  content_hash: sha256:1fe3ab6914f47f3b89f4c8a6c2599f005df254272e66f014683b103bc27261b0
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-design
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-design
+  - .agents/skills/sdd-design/SKILL.md
+  - .agents/skills/sdd-design/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-design/SKILL.md: sha256:fcb4e81c92b2744432891d2ab75cb00756fa3b588519287dfe47cef9463a3f81
+    .agents/skills/sdd-design/metadata.yaml: sha256:055490301660bd462a5405a799388a50329af935669eb14008b87ee0a5122296
+  content_hash: sha256:e0412dfe2d446bbdcdffd08479219fe30503436d08c6d8bc0f8ae5e75a429f2f
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-explore
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-explore
+  - .agents/skills/sdd-explore/SKILL.md
+  - .agents/skills/sdd-explore/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-explore/SKILL.md: sha256:3cd9a1073e3ecce9adbcd8091e2441ddb818efe2ac726b53b38912ccec5307df
+    .agents/skills/sdd-explore/metadata.yaml: sha256:844237f5229f21054e5dbfe2c95adfd352bcf861f68da26cddf3563def918403
+  content_hash: sha256:867d083974968e08958dd109452483c2c36914308b58bc8b2471a824fe4e3735
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-init
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-init
+  - .agents/skills/sdd-init/SKILL.md
+  - .agents/skills/sdd-init/metadata.yaml
+  - .agents/skills/sdd-init/references/init-details.md
+  deployed_file_hashes:
+    .agents/skills/sdd-init/SKILL.md: sha256:7fd14d4dd4e88017073c613821bcdd77e583b82b13fd5138e8b923f9840e85b5
+    .agents/skills/sdd-init/metadata.yaml: sha256:8a6c7edf6adc85eb7f577d8b3e73c4f0f65c84071ad41b5cc5570c684511f99b
+    .agents/skills/sdd-init/references/init-details.md: sha256:496875386f1ddaf1e44db4a484a396a22e28f92c0a4e0c6d9055541a59d87a34
+  content_hash: sha256:e996bdae115c7a62cf827f34b9de2494a85ea599322ef6e224e03335a605317a
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-onboard
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-onboard
+  - .agents/skills/sdd-onboard/SKILL.md
+  - .agents/skills/sdd-onboard/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-onboard/SKILL.md: sha256:c7f1e0dffe0c4d46fbe2073d29289ee7342712cb7d14fb65e04c58ac51e4a4ab
+    .agents/skills/sdd-onboard/metadata.yaml: sha256:8400e9c48e13708c4f72808a2804eecb9a34cf9327a67c3ad91aafd0154dd268
+  content_hash: sha256:37af5c8d53dc46fb311a75ccf25d708aca24b0fd826e7292b05bcfed03f66947
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-propose
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-propose
+  - .agents/skills/sdd-propose/SKILL.md
+  - .agents/skills/sdd-propose/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-propose/SKILL.md: sha256:e30a9b14d89dbfc90cf418d9af3c02e2032f23efe62df46fa2ee7b0472d25189
+    .agents/skills/sdd-propose/metadata.yaml: sha256:f97f1151361266c421c9adc9ae90858667dbf8bf05a2db9ed9f4cdc46e53cd62
+  content_hash: sha256:171b3cdd1a4885001de14f8a575724a0f269b41af06db408000af6e0cd1aa16d
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-spec
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-spec
+  - .agents/skills/sdd-spec/SKILL.md
+  - .agents/skills/sdd-spec/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-spec/SKILL.md: sha256:f0012d2101e97b1e0ebcb27f74ce0379dcb727dd805f0f2026bb967abf205284
+    .agents/skills/sdd-spec/metadata.yaml: sha256:8fa795ef9390a60d1d33162f0fa7b1c7b869592e7543588702f6c5f210b0c537
+  content_hash: sha256:cc918579200f356157f0853fea259804b490f6cf1b0418d0f8b855e7644c83cf
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-tasks
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-tasks
+  - .agents/skills/sdd-tasks/SKILL.md
+  - .agents/skills/sdd-tasks/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/sdd-tasks/SKILL.md: sha256:9397f6271d0e5b87b7fbe2f611fdedac8f3cf235833ed4894b6b5ed7a56424f5
+    .agents/skills/sdd-tasks/metadata.yaml: sha256:ea464d804dc9d0ff8327e675a09df7e06b253f7fbce92d96f607fe758295d260
+  content_hash: sha256:083f41e163e6adea196bcbb4e4035460ee42d387fefeb6167fa003b7960444da
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/sdd-verify
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/sdd-verify
+  - .agents/skills/sdd-verify/SKILL.md
+  - .agents/skills/sdd-verify/metadata.yaml
+  - .agents/skills/sdd-verify/references/report-format.md
+  deployed_file_hashes:
+    .agents/skills/sdd-verify/SKILL.md: sha256:21ae55fa7b8d6a5965ec2844903e3780cf9338f90578deb15c9805993a897d11
+    .agents/skills/sdd-verify/metadata.yaml: sha256:6e671f7fd25a46e9a15182bd7fae1ed7c952d7653e654af382c8afba93a7f27f
+    .agents/skills/sdd-verify/references/report-format.md: sha256:b8a790f3e4d6c5ae630446e4c8273109ee8a55bafea1c25aa6aa5e7dc3265daa
+  content_hash: sha256:c9c1c882d1ecf1e2ea6d0662958a14b8d543e27ecb10cd760c32f1eb3a27b05e
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/skill-creator
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/skill-creator
+  - .agents/skills/skill-creator/SKILL.md
+  - .agents/skills/skill-creator/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/skill-creator/SKILL.md: sha256:5accc4add125cfe62bf28e6ea2569898bb49902b8637aa7bc2e5162c4cb18d9e
+    .agents/skills/skill-creator/metadata.yaml: sha256:923f7acd85c116c13da1fa1c5fe488676a550bdc041ed2ec969ec5920ad85490
+  content_hash: sha256:d40fe2520337725a308ef017749b6b49a1d6f7e77ee345c6c328760ad4ec356a
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/skill-improver
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/skill-improver
+  - .agents/skills/skill-improver/SKILL.md
+  - .agents/skills/skill-improver/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/skill-improver/SKILL.md: sha256:4818ad6acc675f9766a27cfeba7ec275ed145cb990f633f0c9d48d5f25b0e9e2
+    .agents/skills/skill-improver/metadata.yaml: sha256:87a04a9801d223f620e312a29d5b88786b060dc86f87e2f247137df5e0b22ec4
+  content_hash: sha256:6a68d3b0d088a49f7a2bd82d9a34edc3e9e65bffc1ca80381e4fcf39530c0d69
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/skill-registry
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/skill-registry
+  - .agents/skills/skill-registry/SKILL.md
+  - .agents/skills/skill-registry/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/skill-registry/SKILL.md: sha256:06b49f63bd311218618d79cbdaeed63f49c5853fda552ffe2c3e81e42e94f189
+    .agents/skills/skill-registry/metadata.yaml: sha256:b6486984af6abfc13fbffa235989a2899b7850045114395d5821280c886d48d5
+  content_hash: sha256:897b072be5af29f5be99c2114760beaa931ad4d4b1342d339c62dc829477d997
+- repo_url: svg153/skills
+  host: github.com
+  resolved_commit: b922be1bb4f58bde9b0f73d9cca8c2a667552afe
+  virtual_path: skills/work-unit-commits
+  is_virtual: true
+  package_type: claude_skill
+  deployed_files:
+  - .agents/skills/work-unit-commits
+  - .agents/skills/work-unit-commits/SKILL.md
+  - .agents/skills/work-unit-commits/metadata.yaml
+  deployed_file_hashes:
+    .agents/skills/work-unit-commits/SKILL.md: sha256:ce50c2b606e55362dbe71393a40a4ef7c8f1a9b1bd5f2de920268642e6b5c678
+    .agents/skills/work-unit-commits/metadata.yaml: sha256:9f7aeb0c996fe16ecc7348fdf8eaa661b7f66f3b1acb649a0bc820abba2b222d
+  content_hash: sha256:f2bfcb0408ebc6eb34e2e714dfb5696b3270fcde7751a6068071d71b6a62aab7
