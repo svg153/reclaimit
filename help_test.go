@@ -78,7 +78,7 @@ func TestStringListAndParseConfigValidation(t *testing.T) {
 	}
 
 	for _, args := range [][]string{
-		{"analyze", "--format", "json"},
+		{"analyze", "--format", "invalid-format"},
 		{"analyze", "--group-mode", "invalid"},
 		{"analyze", "--group-depth", "0"},
 		{"analyze", "--top-files", "0"},

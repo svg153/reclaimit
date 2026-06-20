@@ -131,12 +131,23 @@ func TestParseConfigVersionFlag(t *testing.T) {
 
 // TestParseConfigInvalidFormat validates format validation.
 func TestParseConfigInvalidFormat(t *testing.T) {
-	_, err := parseConfig([]string{"--format", "json"})
+	_, err := parseConfig([]string{"--format", "xml"})
 	if err == nil {
-		t.Fatalf("expected error for unsupported format 'json'")
+		t.Fatalf("expected error for unsupported format 'xml'")
 	}
 	if !strings.Contains(err.Error(), "unsupported format") {
 		t.Fatalf("expected 'unsupported format' error, got: %v", err)
+	}
+}
+
+// TestParseConfigValidJSONFormat validates that json format is accepted.
+func TestParseConfigValidJSONFormat(t *testing.T) {
+	cfg, err := parseConfig([]string{"--format", "json"})
+	if err != nil {
+		t.Fatalf("expected no error for json format, got: %v", err)
+	}
+	if cfg.format != "json" {
+		t.Fatalf("expected format 'json', got %q", cfg.format)
 	}
 }
 

@@ -12,12 +12,13 @@ Production usage:
 
 Important flags:
   --root PATH
-  --format plain|markdown
+  --format plain|markdown|json
   --group-mode repo|depth
   --group-depth N
   --exclude-group PATH
   --exclude-path PATH
   --out FILE
+  --ignore-file PATH
 `
 	case "clean":
 		return `reclaimit clean
@@ -67,14 +68,14 @@ Usage:
   ./bin/reclaimit --version
 
 Commands:
-  analyze   Generate a plain-text or Markdown report
+  analyze   Generate a plain-text, Markdown, or JSON report
   tui       Open the interactive tree UI
   clean     Delete the currently selected candidates
   help      Show help for the CLI or a subcommand
 
 Global flags:
   --root PATH
-  --format plain|markdown
+  --format plain|markdown|json
   --group-mode repo|depth
   --group-depth N
   --include-category KEY
@@ -83,11 +84,14 @@ Global flags:
   --exclude-path PATH
   --min-candidate-size BYTES
   --out FILE
+  --ignore-file PATH
 
 Examples:
   ./bin/reclaimit analyze --root "$HOME" --format markdown --out report.md
+  ./bin/reclaimit analyze --root "$HOME" --format json
   ./bin/reclaimit tui --root "$HOME"
   ./bin/reclaimit clean --root "$HOME" --include-category node-modules --yes
+  ./bin/reclaimit analyze --root "$HOME" --ignore-file .reclaimitignore
 `
 	}
 }

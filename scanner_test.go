@@ -202,8 +202,9 @@ func TestRenderPlainAndDetermineGroupHelpers(t *testing.T) {
 		}
 	}
 
-	if _, err := RenderReport(Report{}, "json"); err == nil {
-		t.Fatalf("expected unsupported format error")
+	// JSON is now a valid format
+	if _, err := RenderReport(Report{}, "json"); err != nil {
+		t.Fatalf("expected JSON to be a valid format, got: %v", err)
 	}
 }
 

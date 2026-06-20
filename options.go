@@ -36,6 +36,7 @@ type config struct {
 	topEntries        int
 	minCandidateSize  int64
 	outFile           string
+	ignoreFile        string
 	includeCategories stringList
 	excludeCategories stringList
 	excludeGroups     stringList
@@ -102,6 +103,7 @@ func parseConfig(args []string) (config, error) {
 	fs.IntVar(&cfg.topEntries, "top-entries", cfg.topEntries, "number of largest direct children under root to show")
 	fs.Int64Var(&cfg.minCandidateSize, "min-candidate-size", cfg.minCandidateSize, "minimum candidate size in bytes")
 	fs.StringVar(&cfg.outFile, "out", "", "write the report to a file")
+	fs.StringVar(&cfg.ignoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
 	fs.BoolVar(&cfg.yes, "yes", false, "confirm destructive cleanup when using clean")
 	fs.BoolVar(&cfg.dryRun, "dry-run", false, "preview cleanup without deleting files")
 	fs.StringVar(&cfg.logLevel, "log-level", cfg.logLevel, "log verbosity sent to stderr: debug, info, warn or error")
@@ -119,8 +121,25 @@ func parseConfig(args []string) (config, error) {
 		return cfg, err
 	}
 
-	if cfg.format != "plain" && cfg.format != "markdown" {
+	switch cfg.format {
+	case "plain", "markdown", "json":
+	default:
 		return cfg, fmt.Errorf("unsupported format %q", cfg.format)
+	}
+
+	// Load ignore file if provided
+	if cfg.ignoreFile != "" {
+		patterns, err := loadIgnoreFile(cfg.ignoreFile)
+		if err != nil {
+			return cfg, fmt.Errorf("loading ignore file: %w", err)
+		}
+		for _, p := range patterns {
+			absPath, err := filepath.Abs(p)
+			if err != nil {
+				return cfg, err
+			}
+			cfg.excludePaths = append(cfg.excludePaths, filepath.Clean(absPath))
+		}
 	}
 	if cfg.groupMode != "repo" && cfg.groupMode != "depth" {
 		return cfg, fmt.Errorf("unsupported group mode %q", cfg.groupMode)
@@ -157,4 +176,22 @@ func parseConfig(args []string) (config, error) {
 	}
 
 	return cfg, nil
+}
+
+// loadIgnoreFile reads a .reclaimitignore file and returns a list of absolute paths.
+// Each non-empty, non-comment line is treated as a path to exclude.
+func loadIgnoreFile(path string) ([]string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var patterns []string
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		patterns = append(patterns, line)
+	}
+	return patterns, nil
 }

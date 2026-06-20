@@ -17,6 +17,18 @@ var categories = []Category{
 	newDirCategory("rust-target", "target", "Rust build output that cargo rebuilds.", "target"),
 	newDirCategory("next-cache", ".next / .nuxt", "Frontend framework build caches.", ".next", ".nuxt"),
 	newDirCategory("generic-cache", ".cache", "Generic caches. Review first because some tools keep useful offline assets here.", ".cache"),
+	newDirCategory("gradle-cache", ".gradle", "Gradle build cache and dependency downloads that can be rebuilt.", ".gradle"),
+	newDirCategory("ide-config", ".idea / .vscode", "IDE configuration and index caches that can be regenerated.", ".idea", ".vscode"),
+	newDirCategory("vendor", "vendor", "Go vendor directory that can be rebuilt with go mod vendor.", "vendor"),
+	newDirCategory("go-mod-cache", "pkg / mod", "Go module cache directories.", "pkg", "mod"),
+	newDirCategory("npm-cache", ".npm", "npm package cache that can be rebuilt.", ".npm"),
+	newDirCategory("yarn-cache", ".yarn", "Yarn package cache that can be rebuilt.", ".yarn"),
+	newDirCategory("pnpm-store", ".pnpm-store", "pnpm global store that can be rebuilt.", ".pnpm-store"),
+	newDirCategory("cargo-cache", ".cargo", "Cargo registry cache that can be rebuilt.", ".cargo"),
+	newDirCategory("go-sum-cache", "go.sum", "Go sum cache file.", "go.sum"),
+	newDirCategory("node-modules-cache", "node_modules/.cache", "npm package build cache inside node_modules.", "node_modules/.cache"),
+	newDirCategory("terraform-state", ".terraform", "Terraform provider cache and state that can be rebuilt.", ".terraform"),
+	newDirCategory("docker-buildx", ".buildx", "Docker Buildx cache.", ".buildx"),
 }
 
 func newDirCategory(key, display, description string, names ...string) Category {

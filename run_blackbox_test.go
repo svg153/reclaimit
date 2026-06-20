@@ -41,10 +41,10 @@ func TestRunBlackBoxControlPaths(t *testing.T) {
 			forbidStderr: []string{"error:"},
 		},
 		{
-			name:         "invalid flag value",
-			args:         []string{"analyze", "--format", "json"},
+			name:         "invalid format value",
+			args:         []string{"analyze", "--format", "xml"},
 			wantCode:     1,
-			wantStderr:   []string{"error: unsupported format \"json\""},
+			wantStderr:   []string{"error: unsupported format \"xml\""},
 			forbidStdout: []string{"Disk usage report for"},
 		},
 	}

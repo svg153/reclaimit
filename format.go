@@ -1,8 +1,10 @@
 package reclaimit
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 )
 
 func RenderReport(report Report, format string) (string, error) {
@@ -11,6 +13,8 @@ func RenderReport(report Report, format string) (string, error) {
 		return renderPlain(report), nil
 	case "markdown":
 		return renderMarkdown(report), nil
+	case "json":
+		return renderJSON(report), nil
 	default:
 		return "", fmt.Errorf("unsupported format %q", format)
 	}
@@ -141,4 +145,77 @@ func humanizeBytes(size int64) string {
 		return fmt.Sprintf("%d %s", size, units[unit])
 	}
 	return fmt.Sprintf("%.1f %s", value, units[unit])
+}
+
+type jsonReport struct {
+	Root                    string           `json:"root"`
+	TotalBytes              int64            `json:"total_bytes"`
+	FilesystemBytes         int64            `json:"filesystem_bytes"`
+	FreeBytes               int64            `json:"free_bytes"`
+	AvailableBytes          int64            `json:"available_bytes"`
+	CandidateBytes          int64            `json:"candidate_bytes"`
+	SelectedBytes           int64            `json:"selected_bytes"`
+	DeletedBytes            int64            `json:"deleted_bytes"`
+	Command                 string           `json:"command"`
+	TopEntries              []PathSize       `json:"top_entries"`
+	TopFiles                []PathSize       `json:"top_files"`
+	CategorySummaries       []CategorySummary `json:"category_summaries"`
+	GroupSummaries          []GroupSummary   `json:"group_summaries"`
+	SelectedCategorySummaries []CategorySummary `json:"selected_category_summaries"`
+	SelectedGroupSummaries  []GroupSummary   `json:"selected_group_summaries"`
+	Candidates              []jsonCandidate  `json:"candidates"`
+	SelectedCandidates      []jsonCandidate  `json:"selected_candidates"`
+}
+
+type jsonCandidate struct {
+	Category    string `json:"category"`
+	CategoryKey string `json:"category_key"`
+	Path        string `json:"path"`
+	Group       string `json:"group"`
+	Bytes       int64  `json:"bytes"`
+	Description string `json:"description"`
+	ModifiedAt  string `json:"modified_at"`
+	IsDir       bool   `json:"is_dir"`
+}
+
+func renderJSON(report Report) string {
+	jc := func(c Candidate) jsonCandidate {
+		return jsonCandidate{
+			Category:    c.Category,
+			CategoryKey: c.CategoryKey,
+			Path:        c.Path,
+			Group:       c.Group,
+			Bytes:       c.Bytes,
+			Description: c.Description,
+			ModifiedAt:  c.ModifiedAt.Format(time.RFC3339),
+			IsDir:       c.IsDir,
+		}
+	}
+	jr := jsonReport{
+		Root:                    report.Root,
+		TotalBytes:              report.TotalBytes,
+		FilesystemBytes:         report.FilesystemBytes,
+		FreeBytes:               report.FreeBytes,
+		AvailableBytes:          report.AvailableBytes,
+		CandidateBytes:          report.CandidateBytes,
+		SelectedBytes:           report.SelectedBytes,
+		DeletedBytes:            report.DeletedBytes,
+		Command:                 report.Command,
+		TopEntries:              report.TopEntries,
+		TopFiles:                report.TopFiles,
+		CategorySummaries:       report.CategorySummaries,
+		GroupSummaries:          report.GroupSummaries,
+		SelectedCategorySummaries: report.SelectedCategorySummaries,
+		SelectedGroupSummaries:  report.SelectedGroupSummaries,
+		Candidates:              make([]jsonCandidate, len(report.Candidates)),
+		SelectedCandidates:      make([]jsonCandidate, len(report.SelectedCandidates)),
+	}
+	for i, c := range report.Candidates {
+		jr.Candidates[i] = jc(c)
+	}
+	for i, c := range report.SelectedCandidates {
+		jr.SelectedCandidates[i] = jc(c)
+	}
+	data, _ := json.MarshalIndent(jr, "", "  ")
+	return string(data) + "\n"
 }
