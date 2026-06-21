@@ -26,7 +26,7 @@ jobs:
           mkdir -p docs
           awk 'BEGIN{print "---\nlayout: default\n---\n"}{print}' README.md > docs/index.md
           touch docs/.nojekyll
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs
 
