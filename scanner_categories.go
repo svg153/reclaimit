@@ -29,6 +29,9 @@ var categories = []Category{
 	newDirCategory("node-modules-cache", "node_modules/.cache", "npm package build cache inside node_modules.", "node_modules/.cache"),
 	newDirCategory("terraform-state", ".terraform", "Terraform provider cache and state that can be rebuilt.", ".terraform"),
 	newDirCategory("docker-buildx", ".buildx", "Docker Buildx cache.", ".buildx"),
+	newFileCategory("ds-store", ".DS_Store", "macOS Finder metadata files.", ".ds_store"),
+	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight index directory.", ".Spotlight-V100"),
+	newDirCategory("macos-trash", ".Trashes", "macOS Trash directory.", ".Trashes"),
 }
 
 func newDirCategory(key, display, description string, names ...string) Category {

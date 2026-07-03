@@ -38,6 +38,7 @@ That means it knows about common development leftovers like:
 - `dist`, `build`, `target`
 - `.next`, `.nuxt`
 - `.cache`
+- `.DS_Store`, `.Spotlight-V100`, `.Trashes` (macOS finder metadata, index caches, and trash folders)
 
 ## Key capabilities
 
