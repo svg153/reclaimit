@@ -155,17 +155,7 @@ func TestAnalyzeFindsMacOSCandidates(t *testing.T) {
 	mustMkdir(t, trashesDir)
 	mustWriteFile(t, filepath.Join(trashesDir, "trash_file"), strings.Repeat("t", 4096))
 
-	report, err := Analyze(config{
-		command:          "analyze",
-		root:             root,
-		format:           "plain",
-		groupMode:        "repo",
-		groupDepth:       1,
-		topFiles:         10,
-		topGroups:        10,
-		topEntries:       10,
-		minCandidateSize: 1,
-	})
+	report, err := Analyze(analyzeConfig(root))
 	if err != nil {
 		t.Fatalf("Analyze returned error: %v", err)
 	}
