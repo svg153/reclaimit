@@ -37,7 +37,7 @@ That means it knows about common development leftovers like:
 - `.pytest_cache`, `.mypy_cache`
 - `dist`, `build`, `target`
 - `.next`, `.nuxt`
-- `.cache`, `.npm`, `.yarn`, `.pnpm-store`, `.bun` (global and local package manager caches)
+- `.cache` (generic caches), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)
 
 ## Key capabilities
 

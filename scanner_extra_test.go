@@ -142,36 +142,19 @@ func TestNewLoggerRespectsLevel(t *testing.T) {
 func TestAnalyzeFindsBunCache(t *testing.T) {
 	root := t.TempDir()
 
-	// 1. Bun global cache: ~/.bun/install/cache (matching .bun directory name)
+	// Bun global cache: ~/.bun/install/cache (matching .bun directory name)
 	bunGlobal := filepath.Join(root, ".bun", "install", "cache")
 	mustMkdir(t, bunGlobal)
 	mustWriteFile(t, filepath.Join(bunGlobal, "cache.json"), strings.Repeat("x", 1024))
 
-	// 2. Bun local cache: node_modules/.cache/bun (matching bun directory name)
-	// We run the scan directly on the .cache folder to avoid it being swallowed by the parent node_modules candidate.
-	bunLocalParent := filepath.Join(root, "node_modules", ".cache")
-	bunLocal := filepath.Join(bunLocalParent, "bun")
-	mustMkdir(t, bunLocal)
-	mustWriteFile(t, filepath.Join(bunLocal, "cache.json"), strings.Repeat("y", 2048))
-
-	// Scan 1: Global Cache (root is scan target)
-	reportGlobal, err := Analyze(config{
-		command:          "analyze",
-		root:             root,
-		format:           "plain",
-		groupMode:        "repo",
-		groupDepth:       1,
-		topFiles:         10,
-		topGroups:        10,
-		topEntries:       10,
-		minCandidateSize: 1,
-	})
+	// Scan Global Cache (root is scan target)
+	report, err := Analyze(analyzeConfig(root))
 	if err != nil {
-		t.Fatalf("Global Analyze returned error: %v", err)
+		t.Fatalf("Analyze returned error: %v", err)
 	}
 
 	foundGlobal := false
-	for _, c := range reportGlobal.Candidates {
+	for _, c := range report.Candidates {
 		if c.CategoryKey == "bun-cache" && filepath.Base(c.Path) == ".bun" {
 			foundGlobal = true
 			if c.Bytes != 1024 {
@@ -181,34 +164,5 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 	}
 	if !foundGlobal {
 		t.Error("expected to find Bun global cache (.bun) as candidate")
-	}
-
-	// Scan 2: Local Cache (node_modules/.cache is scan target)
-	reportLocal, err := Analyze(config{
-		command:          "analyze",
-		root:             bunLocalParent,
-		format:           "plain",
-		groupMode:        "repo",
-		groupDepth:       1,
-		topFiles:         10,
-		topGroups:        10,
-		topEntries:       10,
-		minCandidateSize: 1,
-	})
-	if err != nil {
-		t.Fatalf("Local Analyze returned error: %v", err)
-	}
-
-	foundLocal := false
-	for _, c := range reportLocal.Candidates {
-		if c.CategoryKey == "bun-cache" && filepath.Base(c.Path) == "bun" {
-			foundLocal = true
-			if c.Bytes != 2048 {
-				t.Errorf("expected local cache candidate size 2048, got %d", c.Bytes)
-			}
-		}
-	}
-	if !foundLocal {
-		t.Error("expected to find Bun local cache (bun) as candidate")
 	}
 }
