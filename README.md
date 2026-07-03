@@ -358,7 +358,7 @@ For webinstall.dev specifically, this repository now ships a portable `install.s
 
 ## Contributing
 
-Contributions are welcome.
+Contributions are welcome. Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on code style, testing, and making pull requests.
 
 If you open a change, prefer:
 
