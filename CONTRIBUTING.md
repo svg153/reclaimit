@@ -7,7 +7,7 @@ Thank you for your interest in contributing to `reclaimit`! This guide outlines 
 ## Getting Started
 
 ### Prerequisites
-- **Go**: Version 1.24 or 1.25+ is required (see `go.mod`).
+- **Go**: Version 1.24+ is required (see `go.mod`).
 - **Task**: We use [Taskfile](https://taskfile.dev) to manage build, lint, and test scripts. Install it via `brew install go-task` or follow their installation guide.
 
 ### Setup
@@ -108,7 +108,7 @@ To add a new category (e.g., matching a new build tool cache), follow these step
 
 ## Releasing
 
-- **CI Releases**: Official releases are built and published by GitHub Actions using GoReleaser when a semantic version tag (e.g., `v0.1.7`) is pushed to the repository.
+- **CI Releases**: Official releases are built and published by GitHub Actions (see `.github/workflows/release.yml`) when a semantic version tag (e.g., `v0.1.7`) is pushed to the repository.
 - **Snapshot Releases**: To build and test a release snapshot locally, run:
   ```bash
   task dist
