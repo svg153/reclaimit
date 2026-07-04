@@ -197,10 +197,37 @@ No — reclaimit is terminal-first. The TUI uses `tview` for an interactive tree
 **Can I export the report?**
 Yes. `analyze --format markdown --out report.md` produces a Markdown report with tables, Mermaid diagrams, and PlantUML blocks.
 
-## License
+## Security & automation
 
-MIT — see [LICENSE](./LICENSE).
+The repository includes:
+
+- Dependabot for Go modules and GitHub Actions
+- CodeQL analysis on pushes, pull requests and schedule
+- `govulncheck` SCA scanning in CI
+- coverage artifacts in CI plus Codecov upload
+- GoReleaser-driven releases publishing binaries, Linux packages and checksums
+- a non-root distroless container image published to GHCR
+
+For webinstall.dev specifically, this repository now ships a portable `install.sh`, but final publication still requires submitting the installer metadata upstream to `webinstall/webi-installers`.
+
+## Roadmap ideas
+
+- richer filtering by age / last-modified thresholds
+- export/import of reviewed selections
+- release pipeline for prebuilt binaries
+- ignore rules file
+- optional JSON output for automation
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING](CONTRIBUTING.md) for guidelines.
+Contributions are welcome. Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on code style, testing, and making pull requests.
+
+If you open a change, prefer:
+
+- focused PRs
+- tests for new behavior
+- updated help/README when CLI behavior changes
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
