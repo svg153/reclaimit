@@ -37,6 +37,14 @@ reclaimit is different. It **categorizes** cleanup targets by type and lets you 
 - **Docker-ready**: Non-root distroless image on GHCR
 - **Cross-platform**: Linux, macOS, Windows
 
+- `node_modules`
+- `.venv`, `venv`, `.tox`
+- `__pycache__`, `.pyc`, `.pyo`
+- `.pytest_cache`, `.mypy_cache`
+- `dist`, `build`, `target`
+- `.next`, `.nuxt`
+- `.cache` (generic caches), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)
+
 ## Usage
 
 ### Generate a report

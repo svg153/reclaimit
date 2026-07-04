@@ -138,3 +138,31 @@ func TestNewLoggerRespectsLevel(t *testing.T) {
 		t.Fatalf("expected info to be filtered at warn level, got %q", buf.String())
 	}
 }
+
+func TestAnalyzeFindsBunCache(t *testing.T) {
+	root := t.TempDir()
+
+	// Bun global cache: ~/.bun/install/cache (matching .bun directory name)
+	bunGlobal := filepath.Join(root, ".bun", "install", "cache")
+	mustMkdir(t, bunGlobal)
+	mustWriteFile(t, filepath.Join(bunGlobal, "cache.json"), strings.Repeat("x", 1024))
+
+	// Scan Global Cache (root is scan target)
+	report, err := Analyze(analyzeConfig(root))
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+
+	foundGlobal := false
+	for _, c := range report.Candidates {
+		if c.CategoryKey == "bun-cache" && filepath.Base(c.Path) == ".bun" {
+			foundGlobal = true
+			if c.Bytes != 1024 {
+				t.Errorf("expected global cache candidate size 1024, got %d", c.Bytes)
+			}
+		}
+	}
+	if !foundGlobal {
+		t.Error("expected to find Bun global cache (.bun) as candidate")
+	}
+}
