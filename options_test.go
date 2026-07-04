@@ -294,3 +294,32 @@ func TestParseConfigHelpTopic(t *testing.T) {
 func filepathIsAbs(path string) bool {
 	return len(path) > 0 && path[0] == '/'
 }
+
+// TestParseConfigQuietFlag validates --quiet flag parsing.
+func TestParseConfigQuietFlag(t *testing.T) {
+	cfg, err := parseConfig([]string{"--quiet"})
+	if err != nil {
+		t.Fatalf("parseConfig --quiet: %v", err)
+	}
+	if !cfg.quiet {
+		t.Fatalf("expected quiet=true")
+	}
+	if cfg.logLevel != "warn" {
+		t.Fatalf("expected logLevel 'warn' by default (quiet override happens in main.go)")
+	}
+}
+
+// TestParseConfigQuietOverridesLogLevel validates that --quiet + --log-level debug
+// results in quiet being set (logLevel override to error happens in main.go).
+func TestParseConfigQuietOverridesLogLevel(t *testing.T) {
+	cfg, err := parseConfig([]string{"--quiet", "--log-level", "debug"})
+	if err != nil {
+		t.Fatalf("parseConfig quiet+debug: %v", err)
+	}
+	if !cfg.quiet {
+		t.Fatalf("expected quiet=true")
+	}
+	if cfg.logLevel != "debug" {
+		t.Fatalf("expected logLevel 'debug' (quiet override happens in main.go)")
+	}
+}

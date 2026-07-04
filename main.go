@@ -26,6 +26,9 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return 0
 	}
 
+	if cfg.quiet {
+		cfg.logLevel = "error"
+	}
 	cfg.logger = newLogger(cfg.logLevel, stderr)
 
 	report, err := Analyze(cfg)

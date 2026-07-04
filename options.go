@@ -43,6 +43,7 @@ type config struct {
 	excludePaths      stringList
 	yes               bool
 	dryRun            bool
+	quiet             bool
 	logLevel          string
 	logger            *slog.Logger
 }
@@ -106,6 +107,7 @@ func parseConfig(args []string) (config, error) {
 	fs.StringVar(&cfg.ignoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
 	fs.BoolVar(&cfg.yes, "yes", false, "confirm destructive cleanup when using clean")
 	fs.BoolVar(&cfg.dryRun, "dry-run", false, "preview cleanup without deleting files")
+	fs.BoolVar(&cfg.quiet, "quiet", false, "suppress non-essential output (sets log level to error)")
 	fs.StringVar(&cfg.logLevel, "log-level", cfg.logLevel, "log verbosity sent to stderr: debug, info, warn or error")
 	fs.Var(&cfg.includeCategories, "include-category", "limit to a category (repeatable)")
 	fs.Var(&cfg.excludeCategories, "exclude-category", "exclude a category (repeatable)")
