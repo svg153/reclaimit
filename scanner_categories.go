@@ -24,11 +24,15 @@ var categories = []Category{
 	newDirCategory("npm-cache", ".npm", "npm package cache that can be rebuilt.", ".npm"),
 	newDirCategory("yarn-cache", ".yarn", "Yarn package cache that can be rebuilt.", ".yarn"),
 	newDirCategory("pnpm-store", ".pnpm-store", "pnpm global store that can be rebuilt.", ".pnpm-store"),
+	newDirCategory("bun-cache", ".bun", "Bun package cache that can be rebuilt.", ".bun"),
 	newDirCategory("cargo-cache", ".cargo", "Cargo registry cache that can be rebuilt.", ".cargo"),
 	newDirCategory("go-sum-cache", "go.sum", "Go sum cache file.", "go.sum"),
 	newDirCategory("node-modules-cache", "node_modules/.cache", "npm package build cache inside node_modules.", "node_modules/.cache"),
 	newDirCategory("terraform-state", ".terraform", "Terraform provider cache and state that can be rebuilt.", ".terraform"),
 	newDirCategory("docker-buildx", ".buildx", "Docker Buildx cache.", ".buildx"),
+	newFileCategory("ds-store", ".DS_Store", "macOS Finder metadata files.", ".ds_store"),
+	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight index directory.", ".Spotlight-V100"),
+	newDirCategory("macos-trash", ".Trashes", "macOS Trash directory.", ".Trashes"),
 }
 
 func newDirCategory(key, display, description string, names ...string) Category {
