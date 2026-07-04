@@ -1,0 +1,210 @@
+name: Release Notes
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  generate-release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo "")
+
+          # Collect all commits between prev tag and this tag
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log --oneline --no-merges "${PREV_TAG}..${TAG}")
+          else
+            COMMITS=$(git log --oneline --no-merges --max-count=100)
+          fi
+
+          # Categorize by conventional commit type
+          ADDED=$(echo "$COMMITS" | grep -E "^\w+ (feat|✨)" || true)
+          CHANGED=$(echo "$COMMITS" | grep -E "^\w+ (fix|perf|refactor|chore|build|ci)" || true)
+          DOCS=$(echo "$COMMITS" | grep -E "^\w+ (docs|doc)" || true)
+          DEPS=$(echo "$COMMITS" | grep -E "^\w+ (deps|dependabot)" || true)
+
+          # Build markdown body
+          BODY="## What's New in $TAG
+
+          "
+
+          if [ -n "$ADDED" ]; then
+            BODY+="### Added
+          "
+            echo "$ADDED" | while read -r line; do
+              HASH=$(echo "$line" | awk '{print $1}')
+              MSG=$(echo "$line" | cut -d' ' -f2-)
+              URL="https://github.com/svg153/reclaimit/commit/$HASH"
+              BODY+="- $MSG ($URL)
+          "
+            done
+            BODY+="
+          "
+          fi
+
+          if [ -n "$CHANGED" ]; then
+            BODY+="### Changed
+          "
+            echo "$CHANGED" | while read -r line; do
+              HASH=$(echo "$line" | awk '{print $1}')
+              MSG=$(echo "$line" | cut -d' ' -f2-)
+              URL="https://github.com/svg153/reclaimit/commit/$HASH"
+              BODY+="- $MSG ($URL)
+          "
+            done
+            BODY+="
+          "
+          fi
+
+          if [ -n "$DOCS" ]; then
+            BODY+="### Documentation
+          "
+            echo "$DOCS" | while read -r line; do
+              HASH=$(echo "$line" | awk '{print $1}')
+              MSG=$(echo "$line" | cut -d' ' -f2-)
+              URL="https://github.com/svg153/reclaimit/commit/$HASH"
+              BODY+="- $MSG ($URL)
+          "
+            done
+            BODY+="
+          "
+          fi
+
+          if [ -n "$DEPS" ]; then
+            BODY+="### Dependencies
+          "
+            echo "$DEPS" | while read -r line; do
+              HASH=$(echo "$line" | awk '{print $1}')
+              MSG=$(echo "$line" | cut -d' ' -f2-)
+              URL="https://github.com/svg153/reclaimit/commit/$HASH"
+              BODY+="- $MSG ($URL)
+          "
+            done
+            BODY+="
+          "
+          fi
+
+          # Add package details
+          BODY+="## Packages
+
+          ### Linux (.deb)
+          - Debian/Ubuntu (amd64, arm64)
+          - \`apt install ./reclaimit_${TAG}_linux_amd64.deb\`
+
+          ### Linux (.rpm)
+          - Fedora/RHEL/openSUSE (amd64, arm64)
+          - \`dnf install ./reclaimit-${TAG}-1.x86_64.rpm\`
+
+          ### Linux (.apk)
+          - Alpine (amd64, arm64)
+          - \`apk add ./reclaimit_${TAG}_linux_amd64.apk\`
+
+          ### macOS (Universal Binary)
+          - \`brew install svg153/reclaimit/reclaimit\`
+          - Universal binary (amd64 + arm64)
+
+          ### Docker
+          - \`docker pull ghcr.io/svg153/reclaimit:${TAG}\`
+          - Non-root distroless image
+
+          ### Binary (checksums)
+          - SHA256 checksums available in release assets
+
+          ---
+          **Full changelog**: https://github.com/svg153/reclaimit/releases/tag/${TAG}
+          "
+
+          echo "$BODY" > release_notes.md
+          echo "body=$BODY" >> "$GITHUB_OUTPUT"
+
+      - name: Update release with generated notes
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          body_path: release_notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update CHANGELOG.md
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo "")
+
+          # Build changelog entries
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log --oneline --no-merges "${PREV_TAG}..${TAG}")
+          else
+            COMMITS=$(git log --oneline --no-merges --max-count=100)
+          fi
+
+          # Extract sections
+          ADDED=$(echo "$COMMITS" | grep -iE "feat|✨" | sed 's/^[a-f0-9]* //' || true)
+          CHANGED=$(echo "$COMMITS" | grep -iE "fix|perf|refactor|chore|build|ci" | sed 's/^[a-f0-9]* //' || true)
+          DOCS=$(echo "$COMMITS" | grep -iE "docs|doc " | sed 's/^[a-f0-9]* //' || true)
+          DEPS=$(echo "$COMMITS" | grep -iE "deps|dependabot" | sed 's/^[a-f0-9]* //' || true)
+
+          # Build new changelog section
+          NEW_SECTION="## [$TAG] - $(date +%Y-%m-%d)
+
+          "
+          if [ -n "$ADDED" ]; then
+            NEW_SECTION+="### Added
+          "
+            echo "$ADDED" | while read -r line; do
+              [ -n "$line" ] && NEW_SECTION+="- $line
+          "
+            done
+            NEW_SECTION+="
+          "
+          fi
+          if [ -n "$CHANGED" ]; then
+            NEW_SECTION+="### Changed
+          "
+            echo "$CHANGED" | while read -r line; do
+              [ -n "$line" ] && NEW_SECTION+="- $line
+          "
+            done
+            NEW_SECTION+="
+          "
+          fi
+          if [ -n "$DOCS" ]; then
+            NEW_SECTION+="### Documentation
+          "
+            echo "$DOCS" | while read -r line; do
+              [ -n "$line" ] && NEW_SECTION+="- $line
+          "
+            done
+            NEW_SECTION+="
+          "
+          fi
+          if [ -n "$DEPS" ]; then
+            NEW_SECTION+="### Dependencies
+          "
+            echo "$DEPS" | while read -r line; do
+              [ -n "$line" ] && NEW_SECTION+="- $line
+          "
+            done
+            NEW_SECTION+="
+          "
+          fi
+
+          # Prepend to CHANGELOG.md
+          EXISTING=$(cat CHANGELOG.md)
+          echo -e "$NEW_SECTION$EXISTING" > CHANGELOG.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG.md for $TAG" || echo "No changes to commit"
+          git push origin main || echo "Push skipped (no changes)"
