@@ -9,7 +9,9 @@ func TestMatchDirectory(t *testing.T) {
 	// Known categories
 	for _, name := range []string{"node_modules", ".venv", "venv", "__pycache__",
 		".pytest_cache", ".mypy_cache", ".tox", "dist", "build", "target",
-		".next", ".nuxt", ".cache"} {
+		".next", ".nuxt", ".cache", ".svelte-kit", ".astro", ".parcel-cache",
+		".docusaurus", ".kotlin", ".nx", ".turbo", ".swc", ".vercel",
+		"_npx", "apm_modules"} {
 		cat, ok := matchDirectory(name)
 		if !ok {
 			t.Fatalf("expected %q to match a category", name)
