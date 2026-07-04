@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reclaimit — Developer Disk Space Analyzer | Go CLI Tool</title>
+  <meta name="description" content="reclaimit is a fast, safe Go CLI for reclaimable disk space analysis on developer workstations. Find what you can safely delete — node_modules, .venv, caches, build artifacts.">
+  <meta name="keywords" content="disk space, disk cleanup, developer tools, go cli, reclaim disk, node_modules cleanup, disk analyzer, du replacement, safe delete">
+  <meta name="author" content="Sergio Valverde">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="reclaimit — Developer Disk Space Analyzer">
+  <meta property="og:description" content="Find reclaimable disk space on developer workstations. Safe, fast, developer-aware.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://reclaimit.dev">
+  <meta property="og:image" content="https://reclaimit.dev/assets/reclaimit-hero.svg">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="reclaimit — Developer Disk Space Analyzer">
+  <meta name="twitter:description" content="Find reclaimable disk space on developer workstations. Safe, fast, developer-aware.">
+  
+  <!-- Canonical -->
+  <link rel="canonical" href="https://reclaimit.dev">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧹</text></svg>">
+  
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-code: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-red: #f85149;
+      --accent-orange: #d29922;
+      --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* Navigation */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      background: rgba(13, 17, 23, 0.95);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .logo span { color: var(--accent-green); }
+    
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    
+    .nav-links a:hover { color: var(--text); }
+    
+    .nav-links .btn-github {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 6px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    
+    .nav-links .btn-github:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+    
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(88, 166, 255, 0.1);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent-green), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 32px;
+      line-height: 1.5;
+    }
+    
+    .hero .subtitle strong { color: var(--text); }
+    
+    /* Install box */
+    .install-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 560px;
+      margin: 0 auto 40px;
+      text-align: left;
+    }
+    
+    .install-box .label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .install-box code {
+      display: block;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--accent-green);
+      overflow-x: auto;
+      position: relative;
+    }
+    
+    .install-box code .copy-btn {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      background: var(--border);
+      border: none;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: var(--font-sans);
+    }
+    
+    .install-box code .copy-btn:hover {
+      color: var(--text);
+      background: #484f58;
+    }
+    
+    .install-methods {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .install-methods a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    
+    .install-methods a:hover {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.05);
+    }
+    
+    /* Sections */
+    section {
+      padding: 60px 0;
+    }
+    
+    section + section {
+      border-top: 1px solid var(--border);
+    }
+    
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    
+    .section-subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 40px;
+      max-width: 560px;
+    }
+    
+    /* Features grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+    
+    .feature-card:hover {
+      border-color: var(--accent);
+    }
+    
+    .feature-icon {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+    
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    /* Usage */
+    .usage-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: -1px;
+    }
+    
+    .usage-tab {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      padding: 10px 20px;
+      border-radius: 8px 8px 0 0;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .usage-tab.active {
+      background: var(--bg-code);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    
+    .usage-code {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0 10px 10px 10px;
+      padding: 24px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--accent-green);
+      overflow-x: auto;
+      display: none;
+    }
+    
+    .usage-code.active { display: block; }
+    
+    .usage-code .comment { color: var(--text-muted); }
+    .usage-code .flag { color: var(--accent); }
+    .usage-code .path { color: var(--accent-orange); }
+    
+    /* Comparison table */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    
+    .comparison-table th {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+    }
+    
+    .comparison-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .comparison-table tr:last-child td { border-bottom: none; }
+    
+    .comparison-table .tool-name {
+      font-weight: 600;
+      color: var(--accent-green);
+    }
+    
+    .comparison-table .check { color: var(--accent-green); }
+    .comparison-table .cross { color: var(--text-muted); }
+    
+    /* FAQ */
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    
+    .faq-item:last-child { border-bottom: none; }
+    
+    .faq-item h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .faq-item h3::after {
+      content: '+';
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      font-weight: 300;
+    }
+    
+    .faq-item h3:hover { color: var(--accent); }
+    
+    .faq-item p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      padding-left: 4px;
+    }
+    
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding: 80px 0;
+    }
+    
+    .cta h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .cta p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 32px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .cta-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn-primary {
+      background: var(--accent-green);
+      color: #000;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+    }
+    
+    .btn-primary:hover { opacity: 0.9; }
+    
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+    }
+    
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    
+    footer a:hover { text-decoration: underline; }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2rem; }
+      .hero .subtitle { font-size: 1.05rem; }
+      .nav-links { gap: 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .comparison-table { font-size: 0.8rem; }
+      .comparison-table th, .comparison-table td { padding: 10px 8px; }
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .hero, .install-box, .feature-card {
+      animation: fadeIn 0.5s ease-out;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <a href="/" class="logo">🧹 <span>reclaimit</span></a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#usage">Usage</a>
+        <a href="#comparison">Compare</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/svg153/reclaimit" class="btn-github" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">⚡ Fast · Safe · Developer-aware</div>
+      <h1>
+        Reclaim disk space<br>
+        <span class="gradient">without the guesswork</span>
+      </h1>
+      <p class="subtitle">
+        <strong>reclaimit</strong> is a Go CLI that finds reclaimable disk space on developer workstations — by understanding <strong>what is safe enough to delete</strong>.
+      </p>
+      
+      <div class="install-box">
+        <div class="label">Install in one line</div>
+        <code>
+          <button class="copy-btn" onclick="copyInstall(this)">Copy</button>
+          <span class="install-text">brew install svg153/reclaimit/reclaimit</span>
+        </code>
+        <div class="install-methods">
+          <a href="#install">Homebrew</a>
+          <a href="#install">Install script</a>
+          <a href="#install">Go install</a>
+          <a href="#install">Docker</a>
+          <a href="#install">Build from source</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="container">
+      <h2 class="section-title">Why reclaimit?</h2>
+      <p class="section-subtitle">
+        Most disk tools answer "what is big?". reclaimit answers "what can I safely clean up?"
+      </p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Developer-aware</h3>
+          <p>Recognizes 20+ patterns: <code>node_modules</code>, <code>.venv</code>, <code>__pycache__</code>, Docker layers, build caches, and more.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Safe by design</h3>
+          <p>Preview before delete. <code>--yes</code> flag required. Context nodes that never imply deleting the repository root itself.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Three output modes</h3>
+          <p>Plain text, Markdown with tables and Mermaid diagrams, or an interactive TUI with a path tree.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">📁</div>
+          <h3>Repository grouping</h3>
+          <p>Groups cleanup candidates by project, not just by raw size — so you see "next.js project caches" not just "2.3GB".</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🐳</div>
+          <h3>Docker-ready</h3>
+          <p>Non-root distroless image on GHCR. Run it in CI, containers, or any environment.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Single binary</h3>
+          <p>~10MB Go binary, no dependencies. No Python, no Node, no runtime setup.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Usage -->
+  <section id="usage">
+    <div class="container">
+      <h2 class="section-title">Usage</h2>
+      <p class="section-subtitle">Three commands. Three ways to reclaim space.</p>
+      
+      <div class="usage-tabs">
+        <button class="usage-tab active" onclick="showUsage('analyze')">analyze</button>
+        <button class="usage-tab" onclick="showUsage('tui')">tui</button>
+        <button class="usage-tab" onclick="showUsage('clean')">clean</button>
+      </div>
+      
+      <div id="code-analyze" class="usage-code active">
+<span class="comment"># Generate a Markdown report</span>
+<span class="flag">reclaimit</span> <span class="flag">analyze</span> --root <span class="path">"$HOME"</span> --format markdown --out cleanup-report.md
+      </div>
+      
+      <div id="code-tui" class="usage-code">
+<span class="comment"># Interactive cleanup with TUI</span>
+<span class="flag">reclaimit</span> <span class="flag">tui</span> --root <span class="path">"$HOME"</span>
+      </div>
+      
+      <div id="code-clean" class="usage-code">
+<span class="comment"># Clean reviewed targets (requires --yes)</span>
+<span class="flag">reclaimit</span> <span class="flag">clean</span> --root <span class="path">"$HOME"</span> --include-category python-venv --yes
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section id="comparison">
+    <div class="container">
+      <h2 class="section-title">How it compares</h2>
+      <p class="section-subtitle">reclaimit is purpose-built for developers, not general disk usage.</p>
+      
+      <div style="overflow-x: auto;">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="tool-name">reclaimit</th>
+              <th>du / ncdu</th>
+              <th>gdu</th>
+              <th>dust</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Developer-aware patterns</td>
+              <td class="check">✅ 20+ patterns</td>
+              <td class="cross">❌ Raw sizes</td>
+              <td class="cross">❌ Raw sizes</td>
+              <td class="cross">❌ Raw sizes</td>
+            </tr>
+            <tr>
+              <td>Safe delete preview</td>
+              <td class="check">✅ Review first</td>
+              <td class="cross">❌ Immediate</td>
+              <td class="cross">❌ Immediate</td>
+              <td class="cross">❌ Immediate</td>
+            </tr>
+            <tr>
+              <td>Markdown reports</td>
+              <td class="check">✅ Tables + Mermaid</td>
+              <td class="cross">❌</td>
+              <td class="cross">❌</td>
+              <td class="cross">❌</td>
+            </tr>
+            <tr>
+              <td>Repository grouping</td>
+              <td class="check">✅ Group by project</td>
+              <td class="cross">❌ Flat tree</td>
+              <td class="cross">❌ Flat tree</td>
+              <td class="cross">❌ Flat tree</td>
+            </tr>
+            <tr>
+              <td>Docker image</td>
+              <td class="check">✅ GHCR distroless</td>
+              <td class="cross">❌</td>
+              <td class="cross">❌</td>
+              <td class="cross">❌</td>
+            </tr>
+            <tr>
+              <td>Homebrew tap</td>
+              <td class="check">✅</td>
+              <td class="cross">❌</td>
+              <td class="cross">❌</td>
+              <td class="cross">❌</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="container">
+      <h2 class="section-title">FAQ</h2>
+      <p class="section-subtitle">Common questions about reclaimit.</p>
+      
+      <div class="faq-item">
+        <h3>Is reclaimit safe to use?</h3>
+        <p>Yes. The <code>clean</code> command requires <code>--yes</code> to delete anything. The <code>analyze</code> and <code>tui</code> commands only read — they never modify files.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>What directories does reclaimit recognize?</h3>
+        <p>Over 20 developer-specific patterns including <code>node_modules</code>, <code>.venv</code>, <code>__pycache__</code>, <code>.pytest_cache</code>, <code>dist/</code>, <code>build/</code>, <code>.next</code>, <code>.nuxt</code>, Docker layers, Go build caches, npm/yarn/pnpm caches, and more.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>Can I exclude specific paths?</h3>
+        <p>Yes. Use <code>--exclude-path</code> for exact paths or <code>--exclude-group</code> for prefix-based exclusions.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>Does it work on Windows?</h3>
+        <p>Yes. reclaimit is written in Go and supports Linux, macOS, and Windows.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>How fast is it?</h3>
+        <p>A single binary with no external dependencies. Scans 100K+ files in seconds. Benchmarks are available in the repository documentation.</p>
+      </div>
+      
+      <div class="faq-item">
+        <h3>Can I export the report?</h3>
+        <p>Yes. <code>analyze --format markdown --out report.md</code> produces a Markdown report with tables, Mermaid diagrams, and PlantUML blocks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container">
+      <h2>Ready to reclaim your disk space?</h2>
+      <p>Install it in seconds. No dependencies. No setup.</p>
+      <div class="cta-buttons">
+        <a href="https://github.com/svg153/reclaimit" class="btn-primary" target="_blank" rel="noopener">
+          ⭐ Star on GitHub
+        </a>
+        <a href="#install" class="btn-secondary">
+          📦 Install now
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>
+        <a href="https://github.com/svg153/reclaimit" target="_blank" rel="noopener">GitHub</a> · 
+        <a href="https://github.com/svg153/reclaimit/releases" target="_blank" rel="noopener">Releases</a> · 
+        <a href="https://github.com/svg153/reclaimit/issues" target="_blank" rel="noopener">Issues</a> · 
+        MIT License
+      </p>
+      <p style="margin-top: 8px; font-size: 0.8rem;">
+        Built by <a href="https://github.com/svg153" target="_blank" rel="noopener">Sergio Valverde</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    function showUsage(cmd) {
+      document.querySelectorAll('.usage-code').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.usage-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('code-' + cmd).classList.add('active');
+      event.target.classList.add('active');
+    }
+    
+    function copyInstall(btn) {
+      const text = btn.parentElement.querySelector('.install-text').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

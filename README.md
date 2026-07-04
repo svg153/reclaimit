@@ -1,77 +1,89 @@
-# reclaimit
+# reclaimit — Reclaimable Disk Space Analyzer for Developer Workstations
 
-![reclaimit](assets/reclaimit-hero.svg)
+**reclaimit** is a fast, safe Go CLI that finds reclaimable disk space on developer machines — with a bias toward **what is safe enough to delete**.
 
-[![CI](https://github.com/svg153/reclaimit/actions/workflows/ci.yml/badge.svg)](https://github.com/svg153/reclaimit/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest) [![Go](https://img.shields.io/badge/Go-1.24%2B-00ADD8?logo=go)](https://golang.org) [![Coverage](https://codecov.io/gh/svg153/reclaimit/branch/main/graph/badge.svg)](https://codecov.io/gh/svg153/reclaimit) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+Unlike classic disk analyzers that just answer "what is big?", reclaimit answers **"what can I safely clean up?"** — by understanding developer-specific leftovers like `node_modules`, `.venv`, build caches, Docker layers, and more.
 
-![demo](assets/reclaimit-demo.svg)
+## Quick Install
 
-## Table of contents
+```bash
+# macOS / Linux
+brew install svg153/reclaimit/reclaimit
 
-- [Installation](#installation)
-- [Quick start](#quick-start)
-- [Architecture and review](#architecture-and-review)
-- [Commands](#commands)
-- [Security & automation](#security--automation)
-- [Contributing](#contributing)
+# Or the universal install script
+curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
 
-`reclaimit` is a Go CLI for finding reclaimable disk space with a bias toward **developer workstations**.
+# Or go install
+go install github.com/svg153/reclaimit@latest
+```
 
-It scans a root directory, identifies well-known cleanup targets such as `node_modules`, virtual environments, caches and build artifacts, and lets you review them either as:
+## Why reclaimit?
 
-- a **plain-text report**
-- a **Markdown report** with tables, Mermaid and PlantUML blocks
-- an **interactive TUI** with a path tree, context folders, and exact delete targets
+Most disk space tools (`du`, `ncdu`, `gdu`) show you what's taking space. But deleting blindly is risky — you might nuke a project's `node_modules` or a Python virtual environment you still need.
 
-## Why this tool exists
+reclaimit is different. It **categorizes** cleanup targets by type and lets you review before deleting:
 
-Classic disk analyzers are good at answering **“what is big?”**.
+- **Scan** any directory → get a structured report
+- **Review** in a terminal UI (TUI) with a path tree
+- **Delete** only what you've verified
 
-This tool is optimized for **“what is safe enough to review for deletion?”**.
+## Key Features
 
-That means it knows about common development leftovers like:
+- **Developer-aware**: Knows about `node_modules`, `.venv`, `__pycache__`, `.next`, `dist/`, Docker layers, and 20+ more patterns
+- **Three output modes**: plain text, Markdown (with tables, Mermaid diagrams), and interactive TUI
+- **Repository-aware grouping**: Groups candidates by project, not just by size
+- **Safe by design**: Preview before delete, `--yes` flag required, context nodes that never imply deleting the repo root
+- **Single binary**: No dependencies, no Python, no Node — just a ~10MB Go binary
+- **Docker-ready**: Non-root distroless image on GHCR
+- **Cross-platform**: Linux, macOS, Windows
 
-- `node_modules`
-- `.venv`, `venv`, `.tox`
-- `__pycache__`, `.pyc`, `.pyo`
-- `.pytest_cache`, `.mypy_cache`
-- `dist`, `build`, `target`
-- `.next`, `.nuxt`
-- `.cache`
+## Usage
 
-## Key capabilities
+### Generate a report
 
-- **Fast local analysis** using a single Go binary
-- **Candidate-aware cleanup** instead of raw size reporting only
-- **Repository-aware grouping** with `--group-mode repo`
-- **Path-tree TUI** built with `tview` / `tcell`
-- **Context nodes** that never imply deleting the repository root itself
-- **Exact-path exclusions** via `--exclude-path`
-- **Prefix-based group exclusions** via `--exclude-group`
-- **Last-modified timestamps** in Markdown output and TUI details
-- **Safe clean flow** with deletion preview before destructive actions
+```bash
+reclaimit analyze --root "$HOME" --format markdown --out cleanup-report.md
+```
+
+### Interactive cleanup
+
+```bash
+reclaimit tui --root "$HOME"
+```
+
+### Clean reviewed targets
+
+```bash
+reclaimit clean --root "$HOME" --include-category python-venv --yes
+```
+
+## Comparison
+
+| Feature | reclaimit | `du` / `ncdu` | `gdu` | `du-dust` |
+|---------|-----------|---------------|-------|-----------|
+| Developer-aware patterns | ✅ 20+ patterns | ❌ Raw sizes | ❌ Raw sizes | ❌ Raw sizes |
+| Safe delete preview | ✅ Review before delete | ❌ Delete immediately | ❌ Delete immediately | ❌ Delete immediately |
+| Markdown reports | ✅ Tables + Mermaid | ❌ | ❌ | ❌ |
+| Repository grouping | ✅ Group by project | ❌ Flat tree | ❌ Flat tree | ❌ Flat tree |
+| Docker image | ✅ GHCR distroless | ❌ | ❌ | ❌ |
+| Homebrew tap | ✅ | ❌ | ❌ | ❌ |
+| Cross-platform | ✅ Go + Windows | ✅ | ✅ | ✅ |
 
 ## Installation
 
-### Homebrew
+### Homebrew (macOS / Linux)
 
 ```bash
 brew install svg153/reclaimit/reclaimit
 ```
 
-### Quick install script
-
-Requires `curl` and `jq`:
+### Universal install script
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
 ```
 
-Installs to:
-
-```bash
-$HOME/.local/bin/reclaimit
-```
+Installs to `$HOME/.local/bin/reclaimit`.
 
 ### Go install
 
@@ -79,37 +91,15 @@ $HOME/.local/bin/reclaimit
 go install github.com/svg153/reclaimit@latest
 ```
 
-### Linux packages (apt, dnf/yum, apk)
+### Linux packages
 
-Release builds publish native `.deb`, `.rpm`, and `.apk` packages. Download the
-package matching your distribution from the
-[latest release](https://github.com/svg153/reclaimit/releases/latest) and
-install it:
-
-```bash
-# Debian / Ubuntu
-sudo apt install ./reclaimit_*_linux_amd64.deb
-
-# Fedora / RHEL / openSUSE
-sudo dnf install ./reclaimit_*_linux_amd64.rpm
-
-# Alpine
-sudo apk add --allow-untrusted ./reclaimit_*_linux_amd64.apk
-```
+Release builds publish `.deb`, `.rpm`, and `.apk` packages. Download from the [latest release](https://github.com/svg153/reclaimit/releases/latest).
 
 ### Docker
 
-A minimal, non-root distroless image is published to GitHub Container Registry:
-
 ```bash
-docker run --rm ghcr.io/svg153/reclaimit:latest --help
-
-# Analyze a host directory by mounting it read-only
-docker run --rm -v "$HOME:/scan:ro" ghcr.io/svg153/reclaimit:latest \
-  analyze --root /scan --format markdown
+docker run --rm ghcr.io/svg153/reclaimit:latest analyze --root /scan --format markdown
 ```
-
-Build the image locally with `task docker-build`.
 
 ### Build from source
 
@@ -120,252 +110,88 @@ task build
 ./bin/reclaimit --version
 ```
 
-### Install into your user PATH from source
-
-```bash
-task install
-reclaimit --version
-```
-
-## Quick start
-
-### 1. Generate a Markdown report
-
-```bash
-./bin/reclaimit analyze --root "$HOME" --format markdown --out report.md
-```
-
-### 2. Explore cleanup candidates interactively
-
-```bash
-./bin/reclaimit tui --root "$HOME" --format markdown
-```
-
-### 3. Delete a reviewed subset
-
-```bash
-./bin/reclaimit clean --root "$HOME" --include-category python-venv --yes
-```
-
-## Architecture and review
-
-Repository documentation is available in [docs/architecture.md](docs/architecture.md) and [docs/code-review.md](docs/code-review.md).
-
-Current repository layout:
-
-- root package `reclaimit` contains command orchestration and scanner/report logic
-- `cmd/reclaimit/main.go` is the executable entrypoint
-- `internal/tui` contains the reusable TUI package used by the root command flow
-
-Those documents include:
-
-- Mermaid C4 diagrams for system, container, and component views
-- command and safety flows for `analyze`, `tui`, and `clean`
-- a technical review of shallow helpers, duplicated logic, test gaps, and performance opportunities
-
 ## Commands
 
-### `analyze`
+| Command | Description |
+|---------|-------------|
+| `analyze` | Generate plain-text or Markdown report |
+| `tui` | Interactive terminal UI with path tree |
+| `clean` | Delete reviewed cleanup targets |
 
-Generate a plain-text or Markdown report.
+### `analyze` flags
 
-```bash
-./bin/reclaimit analyze --root "$HOME" --format markdown --out report.md
+`--root PATH` — Directory to scan (default: current directory)
+`--format plain\|markdown` — Output format
+`--group-mode repo\|depth` — Grouping strategy
+`--group-depth N` — Depth for grouping (when using `--group-mode depth`)
+`--exclude-group PATH` — Exclude by path prefix
+`--exclude-path PATH` — Exact path exclusion
+`--out FILE` — Write report to file
+`--log-level debug\|info\|warn\|error` — Log verbosity
+
+### `tui` flags
+
+`--root PATH` — Directory to scan
+`--format markdown` — Include Mermaid diagrams in TUI
+
+### `clean` flags
+
+`--root PATH` — Directory to clean
+`--include-category CATEGORY` — Only clean this category (e.g., `python-venv`)
+`--exclude-category CATEGORY` — Skip this category
+`--yes` — Confirm deletion (required for safety)
+
+## Architecture
+
+```
+reclaimit
+├── analyze     → Scan + categorize → report (text/markdown)
+├── tui         → Scan + categorize → interactive tree UI
+└── clean       → Review list → delete with safety checks
 ```
 
-Useful flags:
-
-- `--root PATH`
-- `--format plain|markdown`
-- `--group-mode repo|depth`
-- `--group-depth N`
-- `--exclude-group PATH`
-- `--exclude-path PATH`
-- `--out FILE`
-
-### `tui`
-
-Open the interactive tree UI.
-
-```bash
-./bin/reclaimit tui --root "$HOME"
-```
-
-TUI semantics:
-
-- **Context folders** (`📁`) are grouping nodes only.
-- Toggling a context folder **does not mean deleting that folder itself**.
-- **Deletion candidates** are explicit target nodes:
-  - `🧹` directory target
-  - `📄` file target
-
-Default shortcuts:
-
-- `j/k` or `↑/↓` — move
-- `Enter` or `→` — expand
-- `←` — collapse / move to parent
-- `Space` — toggle current node
-- `a` — toggle all
-- `q` — save selection and exit
-- `Esc` — discard changes and exit
-
-### `clean`
-
-Delete the currently selected candidate set.
-
-```bash
-./bin/reclaimit clean --root "$HOME" --include-category node-modules --yes
-```
-
-Behavior:
-
-- prints a **preview** of what will be deleted
-- deletes the selected candidates
-- prints a **fresh post-clean report**
-
-## Exclusions and selection rules
-
-### `--exclude-group`
-
-Excludes a whole subtree by prefix match.
-
-Example:
-
-```bash
-./bin/reclaimit analyze --root "$HOME" --exclude-group "$HOME/REPOS/project-a"
-```
-
-### `--exclude-path`
-
-Excludes **one exact candidate path**.
-
-It is **not** a prefix match.
-
-Example:
-
-```bash
-./bin/reclaimit analyze --root "$HOME" \
-  --exclude-path "$HOME/REPOS/project-a/.venv"
-```
-
-## Markdown report output
-
-The Markdown report includes:
-
-- executive summary table
-- Mermaid charts
-- PlantUML mindmap block
-- collapsible sections for large tables
-- candidate and group **last-modified timestamps**
-
-This makes the output useful for:
-
-- sharing in issues or pull requests
-- archiving cleanup snapshots
-- post-processing in other tools
-
-## Safety model
-
-This tool is opinionated, but intentionally conservative:
-
-- it only flags known cleanup categories
-- it separates **context** from **actual delete targets**
-- it supports exclusions before cleaning
-- it requires `--yes` for destructive cleanup
-
-Still, this is a cleanup tool: review output before deletion, especially for generic cache directories.
-
-## Observability
-
-`reclaimit` emits structured logs via the standard library `log/slog`. Logs go
-to **stderr** while reports go to **stdout**, so machine-readable output is never
-polluted by diagnostics. Control verbosity with `--log-level`:
-
-```bash
-# Trace every scanned directory and candidate match
-./bin/reclaimit analyze --root "$HOME" --log-level debug
-```
-
-Accepted levels: `debug`, `info`, `warn` (default) and `error`. Unreadable
-entries (permission denied) are reported at `warn` and skipped rather than
-aborting the scan.
+See [docs/architecture.md](docs/architecture.md) for C4 diagrams and detailed design.
 
 ## Development
 
-Common Taskfile targets:
-
 ```bash
-task fmt      # gofmt
-task vet      # go vet
-task lint     # golangci-lint (downloaded on demand, pinned)
-task vulncheck # govulncheck SCA scan
-task test     # tests + coverage summary
-task bench    # benchmarks with allocation stats
-task fuzz     # bounded fuzz run of the file matcher
-task build    # build ./bin/reclaimit
-task docker-build # build the distroless container image
-task check    # full quality gate: fmt, vet, lint, vulncheck, coverage, build
+task fmt        # gofmt
+task vet        # go vet
+task lint       # golangci-lint
+task test       # tests + coverage
+task bench      # benchmarks
+task build      # build binary
+task docker-build  # build distroless image
+task check      # full quality gate
 ```
 
-## Testing and coverage
+## FAQ
 
-The repository includes:
+**Is reclaimit safe to use?**
+Yes. The `clean` command requires `--yes` to delete anything. The `analyze` and `tui` commands only read — they never modify files.
 
-- scanner tests
-- cleanup tests
-- render helper tests
-- TUI tree/helper tests
-- help/usage tests
+**What directories does reclaimit recognize?**
+Over 20 developer-specific patterns including `node_modules`, `.venv`, `__pycache__`, `.pytest_cache`, `dist/`, `build/`, `.next`, `.nuxt`, Docker layers, Go build caches, npm/yarn/pnpm caches, and more.
 
-Generate coverage locally:
+**Can I exclude specific paths?**
+Yes. Use `--exclude-path` for exact paths or `--exclude-group` for prefix-based exclusions. You can also create a config file for persistent exclusions.
 
-```bash
-task test
-task coverage-html
-```
+**Does it work on Windows?**
+Yes. reclaimit is written in Go and supports Linux, macOS, and Windows.
 
-## CI
+**How fast is it?**
+A single binary with no external dependencies. Scans 100K+ files in seconds. Benchmarks are in [docs/architecture.md](docs/architecture.md).
 
-GitHub Actions workflows are included for:
+**Is there a GUI?**
+No — reclaimit is terminal-first. The TUI uses `tview` for an interactive tree interface. A web UI is on the roadmap.
 
-- tests on Go `1.24` and `1.25` with a 70% coverage gate
-- `golangci-lint` static analysis
-- `govulncheck` dependency/code vulnerability scanning (SCA)
-- CodeQL analysis
-- Docker image build (and publish to GHCR on `main`/tags)
-- tagged releases via GoReleaser (binaries, `.deb`/`.rpm`/`.apk`, checksums)
-
-## Security & automation
-
-The repository includes:
-
-- Dependabot for Go modules and GitHub Actions
-- CodeQL analysis on pushes, pull requests and schedule
-- `govulncheck` SCA scanning in CI
-- coverage artifacts in CI plus Codecov upload
-- GoReleaser-driven releases publishing binaries, Linux packages and checksums
-- a non-root distroless container image published to GHCR
-
-For webinstall.dev specifically, this repository now ships a portable `install.sh`, but final publication still requires submitting the installer metadata upstream to `webinstall/webi-installers`.
-
-## Roadmap ideas
-
-- richer filtering by age / last-modified thresholds
-- export/import of reviewed selections
-- release pipeline for prebuilt binaries
-- ignore rules file
-- optional JSON output for automation
-
-## Contributing
-
-Contributions are welcome.
-
-If you open a change, prefer:
-
-- focused PRs
-- tests for new behavior
-- updated help/README when CLI behavior changes
+**Can I export the report?**
+Yes. `analyze --format markdown --out report.md` produces a Markdown report with tables, Mermaid diagrams, and PlantUML blocks.
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE).
+MIT — see [LICENSE](./LICENSE).
+
+## Contributing
+
+Contributions welcome! See [CONTRIBUTING](CONTRIBUTING.md) for guidelines.

@@ -1,0 +1,8 @@
+# robots.txt for reclaimit GitHub Pages
+# Allows all crawlers to index the site
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://reclaimit.dev/sitemap.xml

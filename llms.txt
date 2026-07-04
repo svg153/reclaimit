@@ -1,0 +1,71 @@
+# reclaimit — Developer Disk Space Analyzer
+
+## What is reclaimit?
+
+A fast, safe Go CLI for reclaimable disk space analysis on developer workstations. Unlike `du` or `ncdu` which just show sizes, reclaimit understands developer-specific cleanup patterns and lets you review before deleting.
+
+## Key Features
+
+- **Developer-aware**: 20+ patterns for `node_modules`, `.venv`, `__pycache__`, Docker layers, build caches
+- **Three output modes**: plain text, Markdown (tables + Mermaid), interactive TUI
+- **Safe by design**: Preview before delete, `--yes` required, never deletes repo root
+- **Single binary**: No dependencies, ~10MB Go binary
+- **Cross-platform**: Linux, macOS, Windows
+- **Docker image**: Non-root distroless on GHCR
+
+## Comparison vs Alternatives
+
+| Feature | reclaimit | `du`/`ncdu` | `gdu` | `du-dust` |
+|---------|-----------|-------------|-------|-----------|
+| Developer-aware patterns | ✅ | ❌ | ❌ | ❌ |
+| Safe delete preview | ✅ | ❌ | ❌ | ❌ |
+| Markdown reports | ✅ | ❌ | ❌ | ❌ |
+| Repository grouping | ✅ | ❌ | ❌ | ❌ |
+| Docker image | ✅ | ❌ | ❌ | ❌ |
+
+## Install
+
+```bash
+# Homebrew
+brew install svg153/reclaimit/reclaimit
+
+# Universal script
+curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
+
+# Go install
+go install github.com/svg153/reclaimit@latest
+```
+
+## Usage
+
+```bash
+# Generate Markdown report
+reclaimit analyze --root "$HOME" --format markdown --out report.md
+
+# Interactive cleanup
+reclaimit tui --root "$HOME"
+
+# Clean reviewed targets
+reclaimit clean --root "$HOME" --include-category python-venv --yes
+```
+
+## Quick Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
+```
+
+## Stats
+
+- **Stars**: Check GitHub for current count
+- **Downloads**: GHCR + Homebrew + Go install
+- **Last updated**: Active development
+- **Language**: Go 1.24+
+- **License**: MIT
+
+## Links
+
+- **Source**: https://github.com/svg153/reclaimit
+- **Releases**: https://github.com/svg153/reclaimit/releases
+- **Issues**: https://github.com/svg153/reclaimit/issues
+- **Documentation**: https://github.com/svg153/reclaimit/tree/main/docs
