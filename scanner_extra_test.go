@@ -166,3 +166,62 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 		t.Error("expected to find Bun global cache (.bun) as candidate")
 	}
 }
+
+func TestAnalyzeFindsMacOSCandidates(t *testing.T) {
+	root := t.TempDir()
+
+	// 1. .DS_Store file candidate
+	mustWriteFile(t, filepath.Join(root, ".DS_Store"), strings.Repeat("d", 1024))
+
+	// 2. .Spotlight-V100 directory candidate
+	spotlightDir := filepath.Join(root, ".Spotlight-V100")
+	mustMkdir(t, spotlightDir)
+	mustWriteFile(t, filepath.Join(spotlightDir, "store.db"), strings.Repeat("s", 2048))
+
+	// 3. .Trashes directory candidate
+	trashesDir := filepath.Join(root, ".Trashes")
+	mustMkdir(t, trashesDir)
+	mustWriteFile(t, filepath.Join(trashesDir, "trash_file"), strings.Repeat("t", 4096))
+
+	report, err := Analyze(analyzeConfig(root))
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+
+	var foundDSStore, foundSpotlight, foundTrashes bool
+	for _, c := range report.Candidates {
+		switch c.CategoryKey {
+		case "ds-store":
+			if filepath.Base(c.Path) == ".DS_Store" {
+				foundDSStore = true
+				if c.Bytes != 1024 {
+					t.Errorf("expected .DS_Store size 1024, got %d", c.Bytes)
+				}
+			}
+		case "spotlight-index":
+			if filepath.Base(c.Path) == ".Spotlight-V100" {
+				foundSpotlight = true
+				if c.Bytes != 2048 {
+					t.Errorf("expected .Spotlight-V100 size 2048, got %d", c.Bytes)
+				}
+			}
+		case "macos-trash":
+			if filepath.Base(c.Path) == ".Trashes" {
+				foundTrashes = true
+				if c.Bytes != 4096 {
+					t.Errorf("expected .Trashes size 4096, got %d", c.Bytes)
+				}
+			}
+		}
+	}
+
+	if !foundDSStore {
+		t.Error("expected to find .DS_Store file as candidate")
+	}
+	if !foundSpotlight {
+		t.Error("expected to find .Spotlight-V100 directory as candidate")
+	}
+	if !foundTrashes {
+		t.Error("expected to find .Trashes directory as candidate")
+	}
+}

@@ -44,6 +44,7 @@ reclaimit is different. It **categorizes** cleanup targets by type and lets you 
 - `dist`, `build`, `target`
 - `.next`, `.nuxt`
 - `.cache` (generic caches), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)
+- `.DS_Store`, `.Spotlight-V100`, `.Trashes` (macOS Finder metadata, index caches, and trash folders)
 
 ## Usage
 
