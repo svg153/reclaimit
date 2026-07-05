@@ -1,7 +1,6 @@
-package reclaimit
+package scanner
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,17 +8,15 @@ import (
 	"testing"
 )
 
-func analyzeConfig(root string) config {
-	return config{
-		command:          "analyze",
-		root:             root,
-		format:           "plain",
-		groupMode:        "repo",
-		groupDepth:       1,
-		topFiles:         10,
-		topGroups:        10,
-		topEntries:       10,
-		minCandidateSize: 1,
+func analyzeConfig(root string) AnalyzeOptions {
+	return AnalyzeOptions{
+		Root:             root,
+		GroupMode:        "repo",
+		GroupDepth:       1,
+		TopFiles:         20,
+		TopGroups:        20,
+		TopEntries:       15,
+		MinCandidateSize: 1,
 	}
 }
 
@@ -44,7 +41,7 @@ func TestAnalyzeSkipsPermissionDeniedDir(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(locked, 0o755) })
 
-	report, err := Analyze(analyzeConfig(root))
+	report, err := AnalyzeWithOptions("analyze", analyzeConfig(root), nil)
 	if err != nil {
 		t.Fatalf("Analyze should skip unreadable dirs, got error: %v", err)
 	}
@@ -71,7 +68,7 @@ func TestAnalyzeIgnoresSymlinks(t *testing.T) {
 		t.Fatalf("symlink: %v", err)
 	}
 
-	report, err := Analyze(analyzeConfig(root))
+	report, err := AnalyzeWithOptions("analyze", analyzeConfig(root), nil)
 	if err != nil {
 		t.Fatalf("Analyze returned error: %v", err)
 	}
@@ -92,10 +89,10 @@ func TestExcludeGroupAndPathCombined(t *testing.T) {
 	}
 
 	cfg := analyzeConfig(root)
-	cfg.excludeGroups = stringList{repoA}
-	cfg.excludePaths = stringList{filepath.Join(repoB, "node_modules")}
+	cfg.ExcludeGroups = []string{repoA}
+	cfg.ExcludePaths = []string{filepath.Join(repoB, "node_modules")}
 
-	report, err := Analyze(cfg)
+	report, err := AnalyzeWithOptions("analyze", cfg, nil)
 	if err != nil {
 		t.Fatalf("Analyze returned error: %v", err)
 	}
@@ -110,35 +107,6 @@ func TestExcludeGroupAndPathCombined(t *testing.T) {
 	}
 }
 
-func TestParseConfigRejectsInvalidLogLevel(t *testing.T) {
-	if _, err := parseConfig([]string{"analyze", "--log-level", "loud"}); err == nil {
-		t.Fatal("expected an error for an invalid log level")
-	}
-	cfg, err := parseConfig([]string{"analyze", "--log-level", "debug"})
-	if err != nil {
-		t.Fatalf("expected debug to be accepted: %v", err)
-	}
-	if cfg.logLevel != "debug" {
-		t.Fatalf("expected log level debug, got %q", cfg.logLevel)
-	}
-}
-
-func TestNewLoggerRespectsLevel(t *testing.T) {
-	var buf bytes.Buffer
-	logger := newLogger("debug", &buf)
-	logger.Debug("emitted", "key", "value")
-	if !strings.Contains(buf.String(), "emitted") {
-		t.Fatalf("expected debug record, got %q", buf.String())
-	}
-
-	buf.Reset()
-	logger = newLogger("warn", &buf)
-	logger.Info("suppressed")
-	if buf.Len() != 0 {
-		t.Fatalf("expected info to be filtered at warn level, got %q", buf.String())
-	}
-}
-
 func TestAnalyzeFindsBunCache(t *testing.T) {
 	root := t.TempDir()
 
@@ -148,7 +116,7 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 	mustWriteFile(t, filepath.Join(bunGlobal, "cache.json"), strings.Repeat("x", 1024))
 
 	// Scan Global Cache (root is scan target)
-	report, err := Analyze(analyzeConfig(root))
+	report, err := AnalyzeWithOptions("analyze", analyzeConfig(root), nil)
 	if err != nil {
 		t.Fatalf("Analyze returned error: %v", err)
 	}
@@ -169,6 +137,7 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 
 func TestAnalyzeFindsMacOSCandidates(t *testing.T) {
 	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, ".git"), 0o755)
 
 	// 1. .DS_Store file candidate
 	mustWriteFile(t, filepath.Join(root, ".DS_Store"), strings.Repeat("d", 1024))
@@ -183,7 +152,7 @@ func TestAnalyzeFindsMacOSCandidates(t *testing.T) {
 	mustMkdir(t, trashesDir)
 	mustWriteFile(t, filepath.Join(trashesDir, "trash_file"), strings.Repeat("t", 4096))
 
-	report, err := Analyze(analyzeConfig(root))
+	report, err := AnalyzeWithOptions("analyze", analyzeConfig(root), nil)
 	if err != nil {
 		t.Fatalf("Analyze returned error: %v", err)
 	}

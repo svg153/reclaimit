@@ -1,9 +1,9 @@
-package reclaimit
+package scanner
 
 import (
 	"os"
+
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -148,17 +148,15 @@ func TestDryRunWithRealScan(t *testing.T) {
 	os.MkdirAll(filepath.Join(repo, "node_modules", "pkg"), 0o755)
 	os.WriteFile(filepath.Join(repo, "node_modules", "pkg", "bundle.js"), []byte("a"), 0o644)
 
-	report, err := Analyze(config{
-		command:          "analyze",
-		root:             root,
-		format:           "plain",
-		groupMode:        "repo",
-		groupDepth:       1,
-		topFiles:         10,
-		topGroups:        10,
-		topEntries:       10,
-		minCandidateSize: 1,
-	})
+	report, err := AnalyzeWithOptions("analyze", AnalyzeOptions{
+		Root:             repo,
+		GroupMode:        "repo",
+		GroupDepth:       1,
+		TopFiles:         20,
+		TopGroups:        20,
+		TopEntries:       15,
+		MinCandidateSize: 1,
+	}, nil)
 	if err != nil {
 		t.Fatalf("Analyze: %v", err)
 	}
@@ -193,18 +191,11 @@ func TestDryRunReportShowsDeletedBytes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("DryRun: %v", err)
 	}
-
-	report := Report{
-		SelectedCandidates: candidates,
-		DeletedBytes:       deleted,
+	if deleted != 512 {
+		t.Fatalf("expected 512 bytes, got %d", deleted)
 	}
-
-	// Plain output should mention the deleted bytes
-	out, err := RenderReport(report, "plain")
-	if err != nil {
-		t.Fatalf("RenderReport: %v", err)
-	}
-	if !strings.Contains(out, "512 B") {
-		t.Fatalf("expected plain report to mention deleted bytes, got: %s", out)
+	// File must still exist — DryRun never deletes
+	if _, err := os.Stat(target); err != nil {
+		t.Fatalf("target deleted by DryRun!")
 	}
 }
