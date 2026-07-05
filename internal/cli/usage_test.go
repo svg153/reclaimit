@@ -45,52 +45,52 @@ func TestUsageText_TrimsWhitespace(t *testing.T) {
 }
 
 func TestValidLogLevel_Debug(t *testing.T) {
-	if !ValidLogLevel("debug") {
+	if !validLogLevel("debug") {
 		t.Error("expected debug to be valid")
 	}
 }
 
 func TestValidLogLevel_Info(t *testing.T) {
-	if !ValidLogLevel("info") {
+	if !validLogLevel("info") {
 		t.Error("expected info to be valid")
 	}
 }
 
 func TestValidLogLevel_Warn(t *testing.T) {
-	if !ValidLogLevel("warn") {
+	if !validLogLevel("warn") {
 		t.Error("expected warn to be valid")
 	}
 }
 
 func TestValidLogLevel_Error(t *testing.T) {
-	if !ValidLogLevel("error") {
+	if !validLogLevel("error") {
 		t.Error("expected error to be valid")
 	}
 }
 
 func TestValidLogLevel_Invalid(t *testing.T) {
-	if ValidLogLevel("verbose") {
+	if validLogLevel("verbose") {
 		t.Error("expected verbose to be invalid")
 	}
 }
 
 func TestValidLogLevel_CaseInsensitive(t *testing.T) {
-	if !ValidLogLevel("debug") {
+	if !validLogLevel("DEBUG") {
 		t.Error("expected DEBUG (uppercase) to be valid")
 	}
-	if !ValidLogLevel("info") {
+	if !validLogLevel("Info") {
 		t.Error("expected Info (mixed case) to be valid")
 	}
 }
 
 func TestValidLogLevel_Empty(t *testing.T) {
-	if ValidLogLevel("") {
+	if validLogLevel("") {
 		t.Error("expected empty to be invalid")
 	}
 }
 
 func TestValidLogLevel_TrimsWhitespace(t *testing.T) {
-	if !ValidLogLevel("  debug  ") {
+	if !validLogLevel("  debug  ") {
 		t.Error("expected trimmed debug to be valid")
 	}
 }

@@ -1,8 +1,7 @@
-package main
+package reclaimit_test
 
 import (
 	"os"
-
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -57,7 +56,6 @@ func TestBinarySmoke(t *testing.T) {
 
 func runCmd(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
-	cmd.Dir = "/root/reclaimit"
 	cmd.Env = os.Environ()
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

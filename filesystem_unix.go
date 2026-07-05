@@ -1,13 +1,13 @@
 //go:build !windows
 
-package filesystem
+package reclaimit
 
 import (
 	"math"
 	"syscall"
 )
 
-func FilesystemUsage(path string) (total, free, available int64) {
+func filesystemUsage(path string) (total, free, available int64) {
 	var stat syscall.Statfs_t
 	if err := syscall.Statfs(path, &stat); err != nil {
 		return 0, 0, 0

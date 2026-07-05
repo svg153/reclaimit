@@ -1,9 +1,7 @@
-package cli
+package reclaimit
 
 import (
 	"fmt"
-
-	"github.com/svg153/reclaimit/internal/scanner"
 	"io"
 	"strings"
 )
@@ -23,7 +21,7 @@ func writef(w io.Writer, format string, args ...any) error {
 	return err
 }
 
-func RenderDeletionPreview(candidates []scanner.Candidate) string {
+func renderDeletionPreview(candidates []Candidate) string {
 	var b strings.Builder
 	if len(candidates) == 0 {
 		return "No cleanup candidates selected.\n"
@@ -43,12 +41,4 @@ func RenderDeletionPreview(candidates []scanner.Candidate) string {
 	}
 	b.WriteString("\n")
 	return b.String()
-}
-
-func sumCandidateBytes(candidates []scanner.Candidate) int64 {
-	var total int64
-	for _, c := range candidates {
-		total += c.Bytes
-	}
-	return total
 }

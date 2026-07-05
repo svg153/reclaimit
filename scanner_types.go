@@ -1,4 +1,4 @@
-package scanner
+package reclaimit
 
 import "time"
 
@@ -39,6 +39,11 @@ type GroupSummary struct {
 	Bytes      int64
 	Count      int
 	ModifiedAt time.Time
+}
+
+type scanSummary struct {
+	bytes      int64
+	modifiedAt time.Time
 }
 
 type Report struct {

@@ -1,4 +1,4 @@
-package scanner
+package reclaimit
 
 import (
 	"fmt"

@@ -1,8 +1,7 @@
-package scanner
+package reclaimit
 
 import (
 	"fmt"
-
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,14 +33,14 @@ func buildScanTree(tb testing.TB, repos, filesPerRepo int) string {
 	return root
 }
 
-func BenchmarkAnalyzeWithOptions(b *testing.B) {
+func BenchmarkAnalyze(b *testing.B) {
 	root := buildScanTree(b, 40, 25)
 	cfg := analyzeConfig(root)
-	cfg.MinCandidateSize = 1
+	cfg.minCandidateSize = 1
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if _, err := AnalyzeWithOptions("analyze", cfg, nil); err != nil {
-			b.Fatalf("AnalyzeWithOptions: %v", err)
+		if _, err := Analyze(cfg); err != nil {
+			b.Fatalf("Analyze: %v", err)
 		}
 	}
 }
@@ -52,10 +51,10 @@ func BenchmarkPushTop(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var top []PathSize
 		for j := 0; j < 10000; j++ {
-			top = PushTop(top, PathSize{Path: "p", Bytes: int64(j % 997)}, limit)
+			top = pushTop(top, PathSize{Path: "p", Bytes: int64(j % 997)}, limit)
 		}
 		if len(top) > limit {
-			b.Fatalf("PushTop exceeded limit: %d", len(top))
+			b.Fatalf("pushTop exceeded limit: %d", len(top))
 		}
 	}
 }
@@ -71,7 +70,7 @@ func BenchmarkSummarizeGroups(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if got := SummarizeGroups(candidates, 20); len(got) == 0 {
+		if got := summarizeGroups(candidates, 20); len(got) == 0 {
 			b.Fatal("expected summaries")
 		}
 	}
@@ -83,7 +82,7 @@ func FuzzMatchFile(f *testing.F) {
 		f.Add(seed)
 	}
 	f.Fuzz(func(t *testing.T, path string) {
-		_, _ = MatchFile(path)
+		_, _ = matchFile(path)
 	})
 }
 
@@ -93,7 +92,7 @@ func FuzzMatchDirectory(f *testing.F) {
 		f.Add(seed)
 	}
 	f.Fuzz(func(t *testing.T, name string) {
-		_, _ = MatchDirectory(name)
+		_, _ = matchDirectory(name)
 	})
 }
 
@@ -107,21 +106,4 @@ func FuzzHumanizeBytes(f *testing.F) {
 			t.Fatalf("humanizeBytes(%d) returned empty string", size)
 		}
 	})
-}
-
-func humanizeBytes(bytes int64) string {
-	units := []string{"B", "KiB", "MiB", "GiB", "TiB"}
-	if bytes == 0 {
-		return "0 B"
-	}
-	idx := 0
-	size := float64(bytes)
-	for size >= 1024 && idx < len(units)-1 {
-		size /= 1024
-		idx++
-	}
-	if idx == 0 {
-		return fmt.Sprintf("%d %s", int(size), units[idx])
-	}
-	return fmt.Sprintf("%.1f %s", size, units[idx])
 }

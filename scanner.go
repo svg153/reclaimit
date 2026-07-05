@@ -8,4 +8,4 @@
 // and scanner_clean.go.
 //
 // This file intentionally contains no production code.
-package scanner
+package reclaimit

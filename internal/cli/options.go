@@ -4,11 +4,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
-
 )
 
 type stringList []string
@@ -37,16 +35,12 @@ type Options struct {
 	TopEntries        int
 	MinCandidateSize  int64
 	OutFile           string
-	IgnoreFile        string
 	IncludeCategories []string
 	ExcludeCategories []string
 	ExcludeGroups     []string
 	ExcludePaths      []string
 	Yes               bool
-	DryRun            bool
-	Quiet             bool
 	LogLevel          string
-	Logger            *slog.Logger
 }
 
 func ParseConfig(args []string) (Options, error) {
@@ -105,11 +99,8 @@ func ParseConfig(args []string) (Options, error) {
 	fs.IntVar(&cfg.TopEntries, "top-entries", cfg.TopEntries, "number of largest direct children under root to show")
 	fs.Int64Var(&cfg.MinCandidateSize, "min-candidate-size", cfg.MinCandidateSize, "minimum candidate size in bytes")
 	fs.StringVar(&cfg.OutFile, "out", "", "write the report to a file")
-	fs.StringVar(&cfg.IgnoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
 	fs.BoolVar(&cfg.Yes, "yes", false, "confirm destructive cleanup when using clean")
 	fs.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "log verbosity sent to stderr: debug, info, warn or error")
-	fs.BoolVar(&cfg.DryRun, "dry-run", false, "preview cleanup without deleting files")
-	fs.BoolVar(&cfg.Quiet, "quiet", false, "suppress non-essential output (sets log level to error)")
 
 	includeCategories := stringList{}
 	excludeCategories := stringList{}
@@ -146,21 +137,7 @@ func ParseConfig(args []string) (Options, error) {
 	if cfg.TopFiles < 1 || cfg.TopGroups < 1 || cfg.TopEntries < 1 {
 		return cfg, errors.New("top limits must be >= 1")
 	}
-	// Load ignore file if provided
-	if cfg.IgnoreFile != "" {
-		patterns, err := loadIgnoreFile(cfg.IgnoreFile)
-		if err != nil {
-			return cfg, fmt.Errorf("loading ignore file: %w", err)
-		}
-		for _, p := range patterns {
-			absPath, err := filepath.Abs(p)
-			if err != nil {
-				return cfg, err
-			}
-			cfg.ExcludePaths = append(cfg.ExcludePaths, filepath.Clean(absPath))
-		}
-	}
-	if !ValidLogLevel(cfg.LogLevel) {
+	if !validLogLevel(cfg.LogLevel) {
 		return cfg, fmt.Errorf("unsupported log level %q", cfg.LogLevel)
 	}
 
@@ -186,21 +163,4 @@ func ParseConfig(args []string) (Options, error) {
 	}
 
 	return cfg, nil
-}
-
-
-func loadIgnoreFile(path string) ([]string, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read ignore file: %w", err)
-	}
-	var patterns []string
-	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		patterns = append(patterns, line)
-	}
-	return patterns, nil
 }

@@ -58,7 +58,11 @@ Flags:
 `
 }
 
-func ValidLogLevel(name string) bool {
-	name = strings.TrimSpace(name)
-	return name == "debug" || name == "info" || name == "warn" || name == "error"
+func validLogLevel(name string) bool {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "debug", "info", "warn", "error":
+		return true
+	default:
+		return false
+	}
 }

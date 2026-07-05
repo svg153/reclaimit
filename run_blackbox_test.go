@@ -1,6 +1,4 @@
-//go:build integration
-
-package main
+package reclaimit_test
 
 import (
 	"bytes"
@@ -8,9 +6,17 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/svg153/reclaimit"
 )
 
 func TestRunBlackBoxControlPaths(t *testing.T) {
+	originalVersion := reclaimit.Version
+	reclaimit.Version = "v9.9.9-test"
+	t.Cleanup(func() {
+		reclaimit.Version = originalVersion
+	})
+
 	tests := []struct {
 		name         string
 		args         []string
@@ -24,21 +30,21 @@ func TestRunBlackBoxControlPaths(t *testing.T) {
 			name:         "help",
 			args:         []string{"clean", "--help"},
 			wantCode:     0,
-			wantStdout:   []string{"reclaimit clean"},
+			wantStdout:   []string{"reclaimit clean", "The command prints a deletion preview first", "--yes"},
 			forbidStderr: []string{"error:"},
 		},
 		{
 			name:         "version",
 			args:         []string{"version"},
 			wantCode:     0,
-			wantStdout:   []string{"reclaimit "},
+			wantStdout:   []string{"reclaimit v9.9.9-test"},
 			forbidStderr: []string{"error:"},
 		},
 		{
 			name:         "invalid format value",
 			args:         []string{"analyze", "--format", "xml"},
 			wantCode:     1,
-			wantStderr:   []string{"error: unsupported format"},
+			wantStderr:   []string{"error: unsupported format \"xml\""},
 			forbidStdout: []string{"Disk usage report for"},
 		},
 	}
@@ -110,6 +116,6 @@ func runCommand(args []string) (stdout string, stderr string, code int) {
 	var stdoutBuf bytes.Buffer
 	var stderrBuf bytes.Buffer
 
-	code = Run(args, &stdoutBuf, &stderrBuf)
+	code = reclaimit.Run(args, &stdoutBuf, &stderrBuf)
 	return stdoutBuf.String(), stderrBuf.String(), code
 }

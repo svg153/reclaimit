@@ -1,4 +1,4 @@
-package scanner
+package reclaimit
 
 import (
 	"path/filepath"
@@ -17,6 +17,22 @@ var categories = []Category{
 	newDirCategory("rust-target", "target", "Rust build output that cargo rebuilds.", "target"),
 	newDirCategory("next-cache", ".next / .nuxt", "Frontend framework build caches.", ".next", ".nuxt"),
 	newDirCategory("generic-cache", ".cache", "Generic caches. Review first because some tools keep useful offline assets here.", ".cache"),
+	newDirCategory("gradle-cache", ".gradle", "Gradle build cache and dependency downloads that can be rebuilt.", ".gradle"),
+	newDirCategory("ide-config", ".idea / .vscode", "IDE configuration and index caches that can be regenerated.", ".idea", ".vscode"),
+	newDirCategory("vendor", "vendor", "Go vendor directory that can be rebuilt with go mod vendor.", "vendor"),
+	newDirCategory("go-mod-cache", "pkg / mod", "Go module cache directories.", "pkg", "mod"),
+	newDirCategory("npm-cache", ".npm", "npm package cache that can be rebuilt.", ".npm"),
+	newDirCategory("yarn-cache", ".yarn", "Yarn package cache that can be rebuilt.", ".yarn"),
+	newDirCategory("pnpm-store", ".pnpm-store", "pnpm global store that can be rebuilt.", ".pnpm-store"),
+	newDirCategory("bun-cache", ".bun", "Bun package cache that can be rebuilt.", ".bun"),
+	newDirCategory("cargo-cache", ".cargo", "Cargo registry cache that can be rebuilt.", ".cargo"),
+	newDirCategory("go-sum-cache", "go.sum", "Go sum cache file.", "go.sum"),
+	newDirCategory("node-modules-cache", "node_modules/.cache", "npm package build cache inside node_modules.", "node_modules/.cache"),
+	newDirCategory("terraform-state", ".terraform", "Terraform provider cache and state that can be rebuilt.", ".terraform"),
+	newDirCategory("docker-buildx", ".buildx", "Docker Buildx cache.", ".buildx"),
+	newFileCategory("ds-store", ".DS_Store", "macOS Finder metadata files.", ".ds_store"),
+	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight index directory.", ".Spotlight-V100"),
+	newDirCategory("macos-trash", ".Trashes", "macOS Trash directory.", ".Trashes"),
 }
 
 func newDirCategory(key, display, description string, names ...string) Category {
@@ -47,7 +63,7 @@ func newFileCategory(key, display, description string, exts ...string) Category 
 	}
 }
 
-func IncludeCategory(category string, includeSet, excludeSet map[string]struct{}) bool {
+func includeCategory(category string, includeSet, excludeSet map[string]struct{}) bool {
 	if _, blocked := excludeSet[category]; blocked {
 		return false
 	}
@@ -58,7 +74,7 @@ func IncludeCategory(category string, includeSet, excludeSet map[string]struct{}
 	return allowed
 }
 
-func MatchDirectory(name string) (Category, bool) {
+func matchDirectory(name string) (Category, bool) {
 	for _, category := range categories {
 		if _, ok := category.DirectoryNames[name]; ok {
 			return category, true
@@ -67,7 +83,7 @@ func MatchDirectory(name string) (Category, bool) {
 	return Category{}, false
 }
 
-func MatchFile(path string) (Category, bool) {
+func matchFile(path string) (Category, bool) {
 	ext := strings.ToLower(filepath.Ext(path))
 	for _, category := range categories {
 		if _, ok := category.FileExtensions[ext]; ok {

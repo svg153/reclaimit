@@ -1,15 +1,13 @@
-package renderer
+package reclaimit
 
 import (
 	"encoding/json"
-
-	"github.com/svg153/reclaimit/internal/scanner"
 	"fmt"
 	"strings"
 	"time"
 )
 
-func RenderReport(report scanner.Report, format string) (string, error) {
+func RenderReport(report Report, format string) (string, error) {
 	switch format {
 	case "plain":
 		return renderPlain(report), nil
@@ -22,7 +20,7 @@ func RenderReport(report scanner.Report, format string) (string, error) {
 	}
 }
 
-func renderPlain(report scanner.Report) string {
+func renderPlain(report Report) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "Disk usage report for %s\n", report.Root)
 	fmt.Fprintf(&b, "Filesystem: used %s of %s, free %s\n", humanizeBytes(report.TotalBytes), humanizeBytes(report.FilesystemBytes), humanizeBytes(report.AvailableBytes))
@@ -70,7 +68,7 @@ func renderPlain(report scanner.Report) string {
 	return b.String()
 }
 
-func renderMarkdown(report scanner.Report) string {
+func renderMarkdown(report Report) string {
 	var b strings.Builder
 	selectionMode := len(report.SelectedCandidates) != len(report.Candidates)
 	categorySummaries := report.CategorySummaries
@@ -128,7 +126,7 @@ func escapePlant(s string) string {
 	return strings.ReplaceAll(s, "\"", "\\\"")
 }
 
-func limitCandidates(items []scanner.Candidate, max int) []scanner.Candidate {
+func limitCandidates(items []Candidate, max int) []Candidate {
 	if len(items) <= max {
 		return items
 	}
@@ -159,12 +157,12 @@ type jsonReport struct {
 	SelectedBytes           int64            `json:"selected_bytes"`
 	DeletedBytes            int64            `json:"deleted_bytes"`
 	Command                 string           `json:"command"`
-	TopEntries              []scanner.PathSize       `json:"top_entries"`
-	TopFiles                []scanner.PathSize       `json:"top_files"`
-	CategorySummaries       []scanner.CategorySummary `json:"category_summaries"`
-	GroupSummaries          []scanner.GroupSummary   `json:"group_summaries"`
-	SelectedCategorySummaries []scanner.CategorySummary `json:"selected_category_summaries"`
-	SelectedGroupSummaries  []scanner.GroupSummary   `json:"selected_group_summaries"`
+	TopEntries              []PathSize       `json:"top_entries"`
+	TopFiles                []PathSize       `json:"top_files"`
+	CategorySummaries       []CategorySummary `json:"category_summaries"`
+	GroupSummaries          []GroupSummary   `json:"group_summaries"`
+	SelectedCategorySummaries []CategorySummary `json:"selected_category_summaries"`
+	SelectedGroupSummaries  []GroupSummary   `json:"selected_group_summaries"`
 	Candidates              []jsonCandidate  `json:"candidates"`
 	SelectedCandidates      []jsonCandidate  `json:"selected_candidates"`
 }
@@ -180,8 +178,8 @@ type jsonCandidate struct {
 	IsDir       bool   `json:"is_dir"`
 }
 
-func renderJSON(report scanner.Report) string {
-	jc := func(c scanner.Candidate) jsonCandidate {
+func renderJSON(report Report) string {
+	jc := func(c Candidate) jsonCandidate {
 		return jsonCandidate{
 			Category:    c.Category,
 			CategoryKey: c.CategoryKey,
