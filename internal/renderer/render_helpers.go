@@ -1,13 +1,15 @@
-package reclaimit
+package renderer
 
 import (
 	"fmt"
+
+	"github.com/svg153/reclaimit/internal/scanner"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
-func renderMarkdownSummary(report Report, selectionMode bool) string {
+func renderMarkdownSummary(report scanner.Report, selectionMode bool) string {
 	var b strings.Builder
 	b.WriteString("## Executive summary\n\n")
 	b.WriteString("| Metric | Value |\n| --- | --- |\n")
@@ -22,7 +24,7 @@ func renderMarkdownSummary(report Report, selectionMode bool) string {
 	return b.String()
 }
 
-func renderMarkdownCategoryPie(summaries []CategorySummary) string {
+func renderMarkdownCategoryPie(summaries []scanner.CategorySummary) string {
 	var b strings.Builder
 	b.WriteString("## Cleanup mix by category\n\n```mermaid\npie showData title Cleanup by category\n")
 	for _, summary := range summaries {
@@ -32,7 +34,7 @@ func renderMarkdownCategoryPie(summaries []CategorySummary) string {
 	return b.String()
 }
 
-func renderMarkdownTopGroupsChart(groups []GroupSummary) string {
+func renderMarkdownTopGroupsChart(groups []scanner.GroupSummary) string {
 	var b strings.Builder
 	limited := groups
 	if len(limited) > 8 {
@@ -66,7 +68,7 @@ func renderMarkdownTopGroupsChart(groups []GroupSummary) string {
 	return b.String()
 }
 
-func renderPlantUMLOverview(groups []GroupSummary) string {
+func renderPlantUMLOverview(groups []scanner.GroupSummary) string {
 	var b strings.Builder
 	limited := groups
 	if len(limited) > 8 {
@@ -91,7 +93,7 @@ func renderMarkdownDetails(title string, header string, rows []string) string {
 	return b.String()
 }
 
-func pathSizeRows(items []PathSize) []string {
+func pathSizeRows(items []scanner.PathSize) []string {
 	rows := make([]string, 0, len(items))
 	for _, item := range items {
 		rows = append(rows, fmt.Sprintf("| %s | `%s` |\n", humanizeBytes(item.Bytes), escapeMarkdownCell(item.Path)))
@@ -99,7 +101,7 @@ func pathSizeRows(items []PathSize) []string {
 	return rows
 }
 
-func categoryRows(items []CategorySummary) []string {
+func categoryRows(items []scanner.CategorySummary) []string {
 	rows := make([]string, 0, len(items))
 	for _, item := range items {
 		rows = append(rows, fmt.Sprintf("| %s | `%s` | %d | %s |\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Count, escapeMarkdownCell(item.Description)))
@@ -107,7 +109,7 @@ func categoryRows(items []CategorySummary) []string {
 	return rows
 }
 
-func groupRows(items []GroupSummary) []string {
+func groupRows(items []scanner.GroupSummary) []string {
 	rows := make([]string, 0, len(items))
 	for _, item := range items {
 		rows = append(rows, fmt.Sprintf("| %s | %d | `%s` | %s |\n", humanizeBytes(item.Bytes), item.Count, escapeMarkdownCell(item.Group), humanizeTimestamp(item.ModifiedAt)))
@@ -115,7 +117,7 @@ func groupRows(items []GroupSummary) []string {
 	return rows
 }
 
-func candidateRows(items []Candidate, max int) []string {
+func candidateRows(items []scanner.Candidate, max int) []string {
 	limited := limitCandidates(items, max)
 	rows := make([]string, 0, len(limited))
 	for _, item := range limited {
@@ -135,7 +137,7 @@ func humanizeTimestamp(value time.Time) string {
 	return value.UTC().Format("2006-01-02 15:04")
 }
 
-func candidateKind(item Candidate) string {
+func candidateKind(item scanner.Candidate) string {
 	if item.IsDir {
 		return "dir"
 	}

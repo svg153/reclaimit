@@ -1,6 +1,6 @@
 //go:build windows
 
-package reclaimit
+package filesystem
 
 import (
 	"math"
@@ -16,7 +16,7 @@ var (
 // filesystemUsage reads total, free and available bytes using the native
 // GetDiskFreeSpaceExW API. On failures it returns zeros to preserve the CLI
 // best-effort behavior used on other platforms.
-func filesystemUsage(path string) (total, free, available int64) {
+func FilesystemUsage(path string) (total, free, available int64) {
 	ptr, err := syscall.UTF16PtrFromString(path)
 	if err != nil {
 		return 0, 0, 0
