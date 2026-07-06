@@ -109,19 +109,4 @@ func FuzzHumanizeBytes(f *testing.F) {
 	})
 }
 
-func humanizeBytes(bytes int64) string {
-	units := []string{"B", "KiB", "MiB", "GiB", "TiB"}
-	if bytes == 0 {
-		return "0 B"
-	}
-	idx := 0
-	size := float64(bytes)
-	for size >= 1024 && idx < len(units)-1 {
-		size /= 1024
-		idx++
-	}
-	if idx == 0 {
-		return fmt.Sprintf("%d %s", int(size), units[idx])
-	}
-	return fmt.Sprintf("%.1f %s", size, units[idx])
-}
+

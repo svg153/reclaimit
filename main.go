@@ -68,7 +68,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			return exitf(stderr, "error: clean requires --yes or --dry-run\n")
 		}
 
-		if preview := cli.RenderDeletionPreview(report.SelectedCandidates); preview != "" {
+		if preview := scanner.RenderDeletionPreview(report.SelectedCandidates); preview != "" {
 			if err := writeString(stdout, preview); err != nil {
 				return exitf(stderr, "error: %v\n", err)
 			}
