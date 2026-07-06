@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"os/exec"
+	"runtime"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -55,9 +56,14 @@ func TestBinarySmoke(t *testing.T) {
 	}
 }
 
+func repoRoot() string {
+	_, file, _, _ := runtime.Caller(0)
+	return filepath.Dir(filepath.Dir(filepath.Dir(file)))
+}
+
 func runCmd(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
-	cmd.Dir = "/root/reclaimit"
+	cmd.Dir = repoRoot()
 	cmd.Env = os.Environ()
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

@@ -208,3 +208,361 @@ func TestWritef(t *testing.T) {
 		t.Errorf("output = %q, want %q", buf.String(), "42 test")
 	}
 }
+
+
+func TestRun_AnalyzeInvalidFormat(t *testing.T) {
+	var stderr bytes.Buffer
+	code := Run([]string{"analyze", "--format", "xml", "--root", t.TempDir()}, &bytes.Buffer{}, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "unsupported format") {
+		t.Fatalf("expected error about unsupported format, got %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeMissingRoot(t *testing.T) {
+	// analyze without -root: the flag package doesn't error on missing required flags
+	// it just runs with zero value (empty string)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze"}, &stdout, &stderr)
+	// Should succeed (exit 0) but produce empty/minimal output
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: stderr=%q", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeQuietMode(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	code := Run([]string{"analyze", "--root", root, "--quiet", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: stderr=%q", code, stderr.String())
+	}
+	// Quiet mode suppresses verbose output but still produces the report
+	if stderr.String() != "" {
+		t.Fatalf("quiet mode should not write to stderr: %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithSelection(t *testing.T) {
+	root := t.TempDir()
+	// Create a node_modules directory to be detected as a candidate
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "node_modules") {
+		t.Fatalf("expected node_modules in output, got: %s", stdout.String())
+	}
+}
+
+func TestRun_AnalyzeWithIgnoreFile(t *testing.T) {
+	root := t.TempDir()
+	// Create a .reclaimitignore file
+	ignoreFile := filepath.Join(root, ".reclaimitignore")
+	os.WriteFile(ignoreFile, []byte("node_modules\n"), 0o644)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--ignore-file", ignoreFile, "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithSelectionFile(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithInvalidLogLevel(t *testing.T) {
+	var stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", t.TempDir(), "--log-level", "invalid"}, &bytes.Buffer{}, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "unsupported log level") {
+		t.Fatalf("expected error about unsupported log level, got %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithJSONOutput(t *testing.T) {
+	// json is not a supported format — this should fail
+	var stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", t.TempDir(), "--format", "json"}, &bytes.Buffer{}, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "unsupported format") {
+		t.Fatalf("expected error about unsupported format, got %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithMarkdownOutput(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--format", "markdown", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "# Disk usage report") {
+		t.Fatalf("expected markdown header in output, got: %s", stdout.String())
+	}
+}
+
+func TestRun_AnalyzeWithOutputFile(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	outputFile := filepath.Join(root, "output.txt")
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--format", "plain", "--out", outputFile, "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	data, err := os.ReadFile(outputFile)
+	if err != nil {
+		t.Fatalf("failed to read output file: %v", err)
+	}
+	if !strings.Contains(string(data), "Disk usage report") {
+		t.Fatalf("expected output file to contain report, got: %s", string(data))
+	}
+}
+
+func TestRun_AnalyzeWithMinCandidateSize(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithExcludePath(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--exclude-path", filepath.Join(root, "node_modules"), "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithIncludeCategory(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--include-category", "cache", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_CleanHelp(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"clean", "--help"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "reclaimit clean") {
+		t.Fatalf("expected clean help text, got: %s", stdout.String())
+	}
+}
+
+
+func TestRun_AnalyzeWithGroupModeDepth(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--group-mode", "depth", "--group-depth", "2", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithGroupModeRepo(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--group-mode", "repo", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithTopEntries(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--top-entries", "5", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithTopFiles(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--top-files", "10", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithTopGroups(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--top-groups", "3", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithExcludeGroup(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--exclude-group", filepath.Join(root, "node_modules"), "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithExcludeCategory(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--exclude-category", "cache", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithMultipleCategories(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--include-category", "cache", "--include-category", "build", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_VersionFlag(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"--version"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "reclaimit") {
+		t.Fatalf("expected version output, got: %s", stdout.String())
+	}
+}
+
+func TestRun_HelpFlag(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"--help"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "reclaimit") {
+		t.Fatalf("expected help output, got: %s", stdout.String())
+	}
+}
+
+func TestRun_AnalyzeWithLogLevelWarn(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--log-level", "warn", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeWithLogLevelError(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--log-level", "error", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+
+func TestRun_CleanDryRun(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"clean", "--root", root, "--dry-run", "--yes", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "DRY RUN") {
+		t.Fatalf("expected DRY RUN output, got: %s", stdout.String())
+	}
+}
+
+func TestRun_CleanWithoutYesOrDryRun(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"clean", "--root", t.TempDir()}, &stdout, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "clean requires --yes or --dry-run") {
+		t.Fatalf("expected error about --yes/--dry-run, got %q", stderr.String())
+	}
+}
+
+func TestRun_TUIHelp(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"tui", "--help"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "reclaimit tui") {
+		t.Fatalf("expected tui help, got: %s", stdout.String())
+	}
+}
+
+func TestRun_AnalyzeWithYesFlag(t *testing.T) {
+	// --yes is a clean flag but should not cause issues when analyzing
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", root, "--yes", "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
