@@ -60,19 +60,3 @@ type Report struct {
 	SelectedGroupSummaries    []GroupSummary
 	DeletedBytes              int64
 }
-
-// AnalyzeOptions are scanner-specific options independent from CLI routing.
-// They form the test surface for filesystem traversal and candidate selection.
-type AnalyzeOptions struct {
-	Root              string
-	GroupMode         string
-	GroupDepth        int
-	TopFiles          int
-	TopGroups         int
-	TopEntries        int
-	MinCandidateSize  int64
-	IncludeCategories []string
-	ExcludeCategories []string
-	ExcludeGroups     []string
-	ExcludePaths      []string
-}
