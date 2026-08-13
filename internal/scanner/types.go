@@ -7,6 +7,7 @@ type Category struct {
 	Display        string
 	Description    string
 	DirectoryNames map[string]struct{}
+	DirectoryPaths map[string]struct{}
 	FileExtensions map[string]struct{}
 }
 
