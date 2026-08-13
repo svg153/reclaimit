@@ -8,12 +8,12 @@ This document explains how `reclaimit` is structured and how the main commands m
 
 - `cmd/reclaimit/main.go` is the executable entrypoint.
 - `main.go` in the root package `reclaimit` orchestrates commands and output.
-- scanner logic is split across `scanner_types.go`, `scanner_categories.go`, `scanner_analyze.go`, `scanner_summaries.go`, and `scanner_clean.go`.
-- `selection.go` filters candidates after CLI or TUI selection.
-- `tui.go` lets the user review and exclude targets interactively.
-- `format.go` renders the final report.
+- scanner logic is split across `internal/scanner/types.go`, `categories.go`, `scanner_analyze.go`, `summaries.go`, and `scanner_clean.go`.
+- `internal/scanner/selection.go` filters candidates after CLI or TUI selection.
+- `internal/tui/tui.go` lets the user review and exclude targets interactively.
+- `internal/renderer/format.go` renders the final report.
 - `internal/tui/tui.go` contains the reusable internal TUI package.
-- `filesystem_unix.go` and `filesystem_windows.go` isolate per-platform filesystem usage data.
+- `internal/filesystem/filesystem_unix.go` and `filesystem_windows.go` isolate per-platform filesystem usage data.
 
 ## C4: System Context
 
@@ -203,3 +203,12 @@ stateDiagram-v2
 - `scanContext.scan` and helpers (`scanDir`, `scanFile`) concentrate most traversal behavior and remain the primary extension seam.
 - Selection is a seam: exclusion logic is centralized in `selection.go` and reused by CLI flags and TUI output.
 - The Windows filesystem adapter calls `GetDiskFreeSpaceExW` and returns real metrics with overflow-safe clamping.
+
+
+## Scanner limits, concurrency, and observability
+
+`AnalyzeWithOptions` uses a bounded worker pool per directory. `Workers` defaults to 8 and can be reduced to 1 for deterministic debugging or increased cautiously for fast local storage. Shared report state is protected while filesystem traversal remains parallel.
+
+`MaxDepth` is relative to the scan root. A value of 0 preserves unlimited traversal. When a positive limit is reached, directories are not descended into; they are counted as truncated so callers can distinguish a complete scan from a bounded one.
+
+The scanner records `entries_scanned`, `entries_skipped`, `truncated_directories`, and `max_depth_reached`. These values are emitted in the completion log and included in JSON reports for automation and performance comparisons. Filesystem errors below the root are logged as warnings and skipped, while an invalid or unreadable root remains a fatal error.
