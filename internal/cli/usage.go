@@ -43,6 +43,8 @@ Flags:
       minimum candidate size in bytes
   -out FILE
       write the report to a file
+  -ignore-file FILE
+      path to a file containing paths to exclude (one per line)
   -include-category VALUE
       limit to a category (repeatable)
   -exclude-category VALUE
@@ -53,16 +55,16 @@ Flags:
       exclude a specific candidate path (repeatable)
   -yes
       confirm destructive cleanup when using clean
+  -dry-run
+      preview cleanup without deleting files
+  -quiet
+      suppress non-essential output
   -log-level debug|info|warn|error
       log verbosity sent to stderr
 `
 }
 
-func validLogLevel(name string) bool {
-	switch strings.ToLower(strings.TrimSpace(name)) {
-	case "debug", "info", "warn", "error":
-		return true
-	default:
-		return false
-	}
+func ValidLogLevel(name string) bool {
+	name = strings.ToLower(strings.TrimSpace(name))
+	return name == "debug" || name == "info" || name == "warn" || name == "error"
 }

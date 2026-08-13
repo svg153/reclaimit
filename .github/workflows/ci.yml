@@ -23,11 +23,10 @@ jobs:
           total=$(grep total: coverage.txt | awk '{print $3}' | sed 's/%//')
           echo "### Coverage" >> $GITHUB_STEP_SUMMARY
           awk '/^total:/ {print "* Total coverage: " $3}' coverage.txt >> $GITHUB_STEP_SUMMARY
-          # Enforce minimum coverage threshold (70%)
-          if awk -v cov="$total" 'BEGIN {exit cov<70?1:0}'; then
+          if awk -v cov="$total" 'BEGIN {exit cov<90?1:0}'; then
             echo "Coverage OK: ${total}%"
           else
-            echo "Coverage ${total}% is below threshold 70%" >&2
+            echo "Coverage ${total}% is below threshold 90%" >&2
             exit 1
           fi
       - name: Generate coverage html
@@ -48,7 +47,7 @@ jobs:
       - name: Build linux binary
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=amd64 go build -ldflags="-X main.version=ci-${{ github.sha }}" -o dist/reclaimit_linux_amd64 .
+          GOOS=linux GOARCH=amd64 go build -ldflags="-X github.com/svg153/reclaimit.Version=ci-${{ github.sha }}" -o dist/reclaimit_linux_amd64 ./cmd/reclaimit
           chmod +x dist/reclaimit_linux_amd64
       - name: Smoke test binary
         run: |

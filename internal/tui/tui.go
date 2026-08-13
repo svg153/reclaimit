@@ -9,28 +9,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/svg153/reclaimit/internal/scanner"
 )
-
-type Candidate struct {
-	CategoryKey string
-	Path        string
-	Bytes       int64
-	Description string
-	ModifiedAt  time.Time
-	IsDir       bool
-}
-
-type Report struct {
-	Root       string
-	Candidates []Candidate
-}
-
-type Selection struct {
-	ExcludedGroups []string
-	ExcludedPaths  []string
-	SelectedBytes  int64
-	Saved          bool
-}
 
 type selectionNodeKind string
 
@@ -38,6 +18,11 @@ const (
 	nodeFolder    selectionNodeKind = "folder"
 	nodeCandidate selectionNodeKind = "candidate"
 )
+
+
+// Aliases to keep the TUI interface clean.
+type Candidate = scanner.Candidate
+type Report = scanner.Report
 
 type selectionNode struct {
 	kind           selectionNodeKind
@@ -50,6 +35,13 @@ type selectionNode struct {
 	cand           *Candidate
 	modifiedAt     time.Time
 	candidateCount int
+}
+
+type Selection struct {
+	SelectedBytes int64
+	ExcludedGroups []string
+	ExcludedPaths  []string
+	Saved          bool
 }
 
 func Run(report Report) (Selection, error) {

@@ -17,6 +17,10 @@ var categories = []Category{
 	newDirCategory("rust-target", "target", "Rust build output that cargo rebuilds.", "target"),
 	newDirCategory("next-cache", ".next / .nuxt", "Frontend framework build caches.", ".next", ".nuxt"),
 	newDirCategory("generic-cache", ".cache", "Generic caches. Review first because some tools keep useful offline assets here.", ".cache"),
+	newDirCategory("bun-cache", ".bun", "Bun global cache that is safe to remove.", ".bun"),
+	newFileCategory("ds-store", ".DS_Store", "macOS desktop storage file that is regenerated automatically.", ".DS_Store"),
+	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight indexing database.", ".Spotlight-V100"),
+	newDirCategory("macos-trash", ".Trashes", "macOS trash folder.", ".Trashes"),
 }
 
 func newDirCategory(key, display, description string, names ...string) Category {
@@ -68,11 +72,31 @@ func MatchDirectory(name string) (Category, bool) {
 }
 
 func MatchFile(path string) (Category, bool) {
-	ext := strings.ToLower(filepath.Ext(path))
+	ext := filepath.Ext(path)
+	name := filepath.Base(path)
+
+	// First: try case-insensitive extension match for real extensions (.pyc, .pyo, etc.)
 	for _, category := range categories {
-		if _, ok := category.FileExtensions[ext]; ok {
-			return category, true
+		if len(category.DirectoryNames) == 0 && len(category.FileExtensions) > 0 {
+			for catExt := range category.FileExtensions {
+				if ext != "" && len(ext) > 1 && strings.EqualFold(ext, catExt) {
+					return category, true
+				}
+			}
 		}
 	}
+
+	// Second: exact name match for dotfiles where Ext returns the full name (e.g., .DS_Store)
+	// filepath.Ext(".DS_Store") == ".DS_Store" — ext equals name for these
+	if ext == name && strings.HasPrefix(name, ".") {
+		for _, category := range categories {
+			if len(category.DirectoryNames) == 0 && len(category.FileExtensions) > 0 {
+				if _, ok := category.FileExtensions[ext]; ok {
+					return category, true
+				}
+			}
+		}
+	}
+
 	return Category{}, false
 }
