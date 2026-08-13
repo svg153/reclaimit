@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -243,18 +242,6 @@ func (sc *scanContext) scanDir(path string, info os.FileInfo, inCandidateDir boo
 		})
 	}
 	return scanSummary{bytes: total, modifiedAt: latestModified}, nil
-}
-
-func (sc *scanContext) depth(path string) int {
-	relative, err := filepath.Rel(filepath.Clean(sc.opts.Root), filepath.Clean(path))
-	if err != nil || relative == "." {
-		return 0
-	}
-	relative = strings.Trim(filepath.ToSlash(relative), "/")
-	if relative == "" {
-		return 0
-	}
-	return strings.Count(relative, "/") + 1
 }
 
 func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bool) scanSummary {
