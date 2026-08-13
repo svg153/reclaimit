@@ -8,13 +8,23 @@ import (
 func TestMatchDirectory(t *testing.T) {
 	for _, name := range []string{"node_modules", ".venv", "venv", "__pycache__",
 		".pytest_cache", ".mypy_cache", ".tox", "dist", "build", "target",
-		".next", ".nuxt", ".cache"} {
+		".next", ".nuxt", ".cache", ".cache/pip", ".local/pipx"} {
 		cat, ok := MatchDirectory(name)
 		if !ok {
 			t.Fatalf("expected %q to match a category", name)
 		}
 		if cat.Key == "" {
 			t.Fatalf("matched category has empty key for %q", name)
+		}
+	}
+
+	for name, want := range map[string]string{
+		".cache/pip": "pip-cache",
+		".local/pipx": "pipx-data",
+	} {
+		cat, ok := MatchDirectory(name)
+		if !ok || cat.Key != want {
+			t.Fatalf("MatchDirectory(%q) = (%q, %v), want category %q", name, cat.Key, ok, want)
 		}
 	}
 

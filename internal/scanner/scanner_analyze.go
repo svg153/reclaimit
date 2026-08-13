@@ -142,7 +142,7 @@ func (sc *scanContext) scan(path string, inCandidateDir bool) (scanSummary, erro
 }
 
 func (sc *scanContext) scanDir(path string, info os.FileInfo, inCandidateDir bool) (scanSummary, error) {
-	dirCategory, dirIsCandidate := MatchDirectory(info.Name())
+	dirCategory, dirIsCandidate := MatchDirectory(path)
 	nextInCandidate := inCandidateDir || dirIsCandidate
 	entries, err := os.ReadDir(path)
 	if err != nil {
@@ -165,7 +165,7 @@ func (sc *scanContext) scanDir(path string, info os.FileInfo, inCandidateDir boo
 			latestModified = summary.modifiedAt
 		}
 	}
-	if dirIsCandidate && !inCandidateDir && IncludeCategory(dirCategory.Key, sc.includeSet, sc.excludeSet) && total >= sc.opts.MinCandidateSize {
+	if dirIsCandidate && (!inCandidateDir || len(dirCategory.DirectoryPaths) > 0) && IncludeCategory(dirCategory.Key, sc.includeSet, sc.excludeSet) && total >= sc.opts.MinCandidateSize {
 		sc.addCandidate(Candidate{
 			Category:    dirCategory.Display,
 			CategoryKey: dirCategory.Key,
@@ -194,7 +194,7 @@ func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bo
 			Bytes:       size,
 			Description: fileCategory.Description,
 			ModifiedAt:  info.ModTime(),
-			IsDir:       false,
+			IsDir:        false,
 		})
 	}
 	return scanSummary{bytes: size, modifiedAt: info.ModTime()}
