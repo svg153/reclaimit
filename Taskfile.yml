@@ -81,7 +81,7 @@ tasks:
         total=$(grep total: coverage.txt | awk '{print $3}' | sed 's/%//')
         echo "Coverage: ${total}%"
         awk '/^total:/ {print "Total coverage: " $3}' coverage.txt
-        if [ $(awk -v cov="$total" 'BEGIN {print (cov>=70)?0:1}') -ne 0 ]; then echo "Coverage ${total}% is below threshold 70%"; exit 1; fi
+        if [ $(awk -v cov="$total" 'BEGIN {print (cov>=90)?0:1}') -ne 0 ]; then echo "Coverage ${total}% is below threshold 90%"; exit 1; fi
   dist:
     cmds:
       - echo "Building local dist via goreleaser (requires goreleaser installed locally)"
