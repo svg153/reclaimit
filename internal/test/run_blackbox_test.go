@@ -1,6 +1,6 @@
 //go:build integration
 
-package main
+package reclaimit_test
 
 import (
 	"bytes"
@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	reclaimit "github.com/svg153/reclaimit"
 )
 
 func TestRunBlackBoxControlPaths(t *testing.T) {
@@ -110,6 +112,6 @@ func runCommand(args []string) (stdout string, stderr string, code int) {
 	var stdoutBuf bytes.Buffer
 	var stderrBuf bytes.Buffer
 
-	code = Run(args, &stdoutBuf, &stderrBuf)
+	code = reclaimit.Run(args, &stdoutBuf, &stderrBuf)
 	return stdoutBuf.String(), stderrBuf.String(), code
 }
