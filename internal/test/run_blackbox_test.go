@@ -1,6 +1,6 @@
 //go:build integration
 
-package reclaimit_test
+package main
 
 import (
 	"bytes"
