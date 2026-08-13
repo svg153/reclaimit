@@ -36,6 +36,8 @@ type Options struct {
 	TopGroups         int
 	TopEntries        int
 	MinCandidateSize  int64
+	MaxDepth          int
+	Workers           int
 	OutFile           string
 	IgnoreFile        string
 	IncludeCategories []string
@@ -60,6 +62,8 @@ func ParseConfig(args []string) (Options, error) {
 		TopGroups:        20,
 		TopEntries:       15,
 		MinCandidateSize: 1 << 20,
+		MaxDepth:         0,
+		Workers:          8,
 		LogLevel:         "warn",
 	}
 
@@ -104,6 +108,8 @@ func ParseConfig(args []string) (Options, error) {
 	fs.IntVar(&cfg.TopGroups, "top-groups", cfg.TopGroups, "number of candidate groups to show")
 	fs.IntVar(&cfg.TopEntries, "top-entries", cfg.TopEntries, "number of largest direct children under root to show")
 	fs.Int64Var(&cfg.MinCandidateSize, "min-candidate-size", cfg.MinCandidateSize, "minimum candidate size in bytes")
+	fs.IntVar(&cfg.MaxDepth, "max-depth", cfg.MaxDepth, "maximum traversal depth; 0 means unlimited")
+	fs.IntVar(&cfg.Workers, "workers", cfg.Workers, "number of concurrent scanner workers")
 	fs.StringVar(&cfg.OutFile, "out", "", "write the report to a file")
 	fs.StringVar(&cfg.IgnoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
 	fs.BoolVar(&cfg.Yes, "yes", false, "confirm destructive cleanup when using clean")
@@ -145,6 +151,12 @@ func ParseConfig(args []string) (Options, error) {
 	}
 	if cfg.TopFiles < 1 || cfg.TopGroups < 1 || cfg.TopEntries < 1 {
 		return cfg, errors.New("top limits must be >= 1")
+	}
+	if cfg.MaxDepth < 0 {
+		return cfg, errors.New("max-depth must be >= 0")
+	}
+	if cfg.Workers < 1 {
+		return cfg, errors.New("workers must be >= 1")
 	}
 	// Load ignore file if provided
 	if cfg.IgnoreFile != "" {
