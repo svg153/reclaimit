@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -205,7 +206,7 @@ func (sc *scanContext) scan(path string, inCandidateDir bool, depth int) (scanSu
 		return scanSummary{modifiedAt: info.ModTime()}, nil
 	}
 	if info.IsDir() {
-		return sc.scanDir(path, info, inCandidateDir)
+		return sc.scanDir(path, info, inCandidateDir, depth)
 	}
 	if !info.Mode().IsRegular() {
 		return scanSummary{}, nil
@@ -213,14 +214,14 @@ func (sc *scanContext) scan(path string, inCandidateDir bool, depth int) (scanSu
 	return sc.scanFile(path, info, inCandidateDir), nil
 }
 
-func (sc *scanContext) scanDir(path string, info os.FileInfo, inCandidateDir bool) (scanSummary, error) {
+func (sc *scanContext) scanDir(path string, info os.FileInfo, inCandidateDir bool, depth int) (scanSummary, error) {
 	dirCategory, dirIsCandidate := MatchDirectory(path)
 	nextInCandidate := inCandidateDir || dirIsCandidate
 	entries, err := os.ReadDir(path)
 	if err != nil {
 		return scanSummary{}, err
 	}
-	children := sc.scanEntries(path, entries, nextInCandidate, sc.depth(path)+1)
+	children := sc.scanEntries(path, entries, nextInCandidate, depth+1)
 	var total int64
 	latestModified := info.ModTime()
 	for _, child := range children {
@@ -245,24 +246,15 @@ func (sc *scanContext) scanDir(path string, info os.FileInfo, inCandidateDir boo
 }
 
 func (sc *scanContext) depth(path string) int {
-	root := filepath.Clean(sc.opts.Root)
-	relative, err := filepath.Rel(root, filepath.Clean(path))
+	relative, err := filepath.Rel(filepath.Clean(sc.opts.Root), filepath.Clean(path))
 	if err != nil || relative == "." {
 		return 0
 	}
-	depth := 0
-	for _, part := range filepath.SplitList(filepath.ToSlash(relative)) {
-		if part != "" && part != "." {
-			depth++
-		}
+	relative = strings.Trim(filepath.ToSlash(relative), "/")
+	if relative == "" {
+		return 0
 	}
-	if depth == 0 {
-		for relative != "." && relative != string(filepath.Separator) {
-			depth++
-			relative = filepath.Dir(relative)
-		}
-	}
-	return depth
+	return strings.Count(relative, "/") + 1
 }
 
 func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bool) scanSummary {
