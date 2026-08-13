@@ -130,7 +130,7 @@ func TestWriteOutput_ToFile(t *testing.T) {
 	outFile := filepath.Join(tmpDir, "output.txt")
 	var buf bytes.Buffer
 
-	code := writeOutput(&buf, outFile, "hello world")
+	code := writeOutput(&buf, &buf, outFile, "hello world")
 	if code != 0 {
 		t.Errorf("expected exit 0, got %d", code)
 	}
@@ -145,12 +145,27 @@ func TestWriteOutput_ToFile(t *testing.T) {
 
 func TestWriteOutput_ToStdout(t *testing.T) {
 	var buf bytes.Buffer
-	code := writeOutput(&buf, "", "stdout output")
+	code := writeOutput(&buf, &buf, "", "stdout output")
 	if code != 0 {
 		t.Errorf("expected exit 0, got %d", code)
 	}
 	if buf.String() != "stdout output" {
 		t.Errorf("stdout = %q, want %q", buf.String(), "stdout output")
+	}
+}
+
+func TestWriteOutput_FileErrorUsesStderrAndFails(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	outFile := filepath.Join(t.TempDir(), "missing", "report.txt")
+	code := writeOutput(&stdout, &stderr, outFile, "report")
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d", code)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("expected stdout to remain empty, got %q", stdout.String())
+	}
+	if !strings.Contains(stderr.String(), "error: writing report:") {
+		t.Fatalf("expected write error on stderr, got %q", stderr.String())
 	}
 }
 
@@ -530,6 +545,9 @@ func TestRun_CleanDryRun(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "DRY RUN") {
 		t.Fatalf("expected DRY RUN output, got: %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Disk usage report") {
+		t.Fatalf("expected post-clean report, got: %s", stdout.String())
 	}
 }
 
