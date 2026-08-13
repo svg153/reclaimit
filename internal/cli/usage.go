@@ -41,6 +41,10 @@ Flags:
       number of largest direct children under root to show
   -min-candidate-size BYTES
       minimum candidate size in bytes
+  -max-depth N
+      maximum traversal depth (0 means unlimited)
+  -workers N
+      number of concurrent scanner workers
   -out FILE
       write the report to a file
   -ignore-file FILE
