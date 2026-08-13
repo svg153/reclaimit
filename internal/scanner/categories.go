@@ -18,6 +18,8 @@ var categories = []Category{
 	newDirCategory("next-cache", ".next / .nuxt", "Frontend framework build caches.", ".next", ".nuxt"),
 	newDirCategory("generic-cache", ".cache", "Generic caches. Review first because some tools keep useful offline assets here.", ".cache"),
 	newDirCategory("bun-cache", ".bun", "Bun global cache that is safe to remove.", ".bun"),
+	newDirCategory("pip-cache", "~/.cache/pip", "pip download and wheel cache. Packages are downloaded again when needed.", ".cache/pip"),
+	newDirCategory("pipx-data", "~/.local/pipx", "pipx-managed applications and environments. Removing this requires reinstalling those applications.", ".local/pipx"),
 	newFileCategory("ds-store", ".DS_Store", "macOS desktop storage file that is regenerated automatically.", ".DS_Store"),
 	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight indexing database.", ".Spotlight-V100"),
 	newDirCategory("macos-trash", ".Trashes", "macOS trash folder.", ".Trashes"),
