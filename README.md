@@ -43,7 +43,7 @@ reclaimit is different. It **categorizes** cleanup targets by type and lets you 
 - `.pytest_cache`, `.mypy_cache`
 - `dist`, `build`, `target`
 - `.next`, `.nuxt`
-- `.cache` (generic caches), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)
+- `.cache` (generic caches), `.cache/pip` (pip downloads), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)\n- `.local/pipx` (pipx-managed applications; removing them requires reinstalling the applications)
 - `.DS_Store`, `.Spotlight-V100`, `.Trashes` (macOS Finder metadata, index caches, and trash folders)
 
 ## Usage
@@ -180,7 +180,7 @@ task check      # full quality gate
 Yes. The `clean` command requires `--yes` to delete anything. The `analyze` and `tui` commands only read — they never modify files.
 
 **What directories does reclaimit recognize?**
-Over 20 developer-specific patterns including `node_modules`, `.venv`, `__pycache__`, `.pytest_cache`, `dist/`, `build/`, `.next`, `.nuxt`, Docker layers, Go build caches, npm/yarn/pnpm caches, and more.
+Over 20 developer-specific patterns including `node_modules`, `.venv`, `__pycache__`, `.pytest_cache`, `dist/`, `build/`, `.next`, `.nuxt`, `.cache/pip`, `.local/pipx`, Docker layers, Go build caches, npm/yarn/pnpm caches, and more.
 
 **Can I exclude specific paths?**
 Yes. Use `--exclude-path` for exact paths or `--exclude-group` for prefix-based exclusions. You can also create a config file for persistent exclusions.
