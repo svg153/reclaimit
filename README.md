@@ -43,7 +43,8 @@ reclaimit is different. It **categorizes** cleanup targets by type and lets you 
 - `.pytest_cache`, `.mypy_cache`
 - `dist`, `build`, `target`
 - `.next`, `.nuxt`
-- `.cache` (generic caches), `.cache/pip` (pip downloads), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)\n- `.local/pipx` (pipx-managed applications; removing them requires reinstalling the applications)
+- `.cache` (generic caches), `.cache/pip` (pip downloads), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)
+- `.local/pipx` (pipx-managed applications; removing them requires reinstalling the applications)
 - `.DS_Store`, `.Spotlight-V100`, `.Trashes` (macOS Finder metadata, index caches, and trash folders)
 
 ## Usage
@@ -133,6 +134,8 @@ task build
 `--format plain\|markdown` — Output format
 `--group-mode repo\|depth` — Grouping strategy
 `--group-depth N` — Depth for grouping (when using `--group-mode depth`)
+`--max-depth N` — Maximum traversal depth; `0` means unlimited
+`--workers N` — Concurrent scanner workers (default: `8`)
 `--exclude-group PATH` — Exclude by path prefix
 `--exclude-path PATH` — Exact path exclusion
 `--out FILE` — Write report to file
@@ -189,7 +192,7 @@ Yes. Use `--exclude-path` for exact paths or `--exclude-group` for prefix-based 
 Yes. reclaimit is written in Go and supports Linux, macOS, and Windows.
 
 **How fast is it?**
-A single binary with no external dependencies. Scans 100K+ files in seconds. Benchmarks are in [docs/architecture.md](docs/architecture.md).
+A single binary with no external dependencies. Uses bounded concurrency for large directory trees and can report traversal metrics in JSON. Scans 100K+ files in seconds. Benchmarks are in [docs/architecture.md](docs/architecture.md).
 
 **Is there a GUI?**
 No — reclaimit is terminal-first. The TUI uses `tview` for an interactive tree interface. A web UI is on the roadmap.
