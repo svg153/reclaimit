@@ -75,10 +75,10 @@ func TestValidLogLevel_Invalid(t *testing.T) {
 }
 
 func TestValidLogLevel_CaseInsensitive(t *testing.T) {
-	if !ValidLogLevel("debug") {
+	if !ValidLogLevel("DEBUG") {
 		t.Error("expected DEBUG (uppercase) to be valid")
 	}
-	if !ValidLogLevel("info") {
+	if !ValidLogLevel("Info") {
 		t.Error("expected Info (mixed case) to be valid")
 	}
 }
