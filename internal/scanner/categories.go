@@ -18,8 +18,8 @@ var categories = []Category{
 	newDirCategory("next-cache", ".next / .nuxt", "Frontend framework build caches.", ".next", ".nuxt"),
 	newDirCategory("generic-cache", ".cache", "Generic caches. Review first because some tools keep useful offline assets here.", ".cache"),
 	newDirCategory("bun-cache", ".bun", "Bun global cache that is safe to remove.", ".bun"),
-	newDirCategory("pip-cache", "~/.cache/pip", "pip download and wheel cache. Packages are downloaded again when needed.", ".cache/pip"),
-	newDirCategory("pipx-data", "~/.local/pipx", "pipx-managed applications and environments. Removing this requires reinstalling those applications.", ".local/pipx"),
+	newDirPathCategory("pip-cache", "~/.cache/pip", "pip download and wheel cache. Packages are downloaded again when needed.", ".cache", "pip"),
+	newDirPathCategory("pipx-data", "~/.local/pipx", "pipx-managed applications and environments. Removing this requires reinstalling those applications.", ".local", "pipx"),
 	newFileCategory("ds-store", ".DS_Store", "macOS desktop storage file that is regenerated automatically.", ".DS_Store"),
 	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight indexing database.", ".Spotlight-V100"),
 	newDirCategory("macos-trash", ".Trashes", "macOS trash folder.", ".Trashes"),
@@ -35,6 +35,18 @@ func newDirCategory(key, display, description string, names ...string) Category 
 		Display:        display,
 		Description:    description,
 		DirectoryNames: dirNames,
+		DirectoryPaths: map[string]struct{}{},
+		FileExtensions: map[string]struct{}{},
+	}
+}
+
+func newDirPathCategory(key, display, description string, pathParts ...string) Category {
+	return Category{
+		Key:            key,
+		Display:        display,
+		Description:    description,
+		DirectoryNames: map[string]struct{}{},
+		DirectoryPaths: map[string]struct{}{filepath.Join(pathParts...): {}},
 		FileExtensions: map[string]struct{}{},
 	}
 }
@@ -49,6 +61,7 @@ func newFileCategory(key, display, description string, exts ...string) Category 
 		Display:        display,
 		Description:    description,
 		DirectoryNames: map[string]struct{}{},
+		DirectoryPaths: map[string]struct{}{},
 		FileExtensions: fileExts,
 	}
 }
@@ -64,13 +77,25 @@ func IncludeCategory(category string, includeSet, excludeSet map[string]struct{}
 	return allowed
 }
 
-func MatchDirectory(name string) (Category, bool) {
+func MatchDirectory(path string) (Category, bool) {
+	name := filepath.Base(path)
 	for _, category := range categories {
 		if _, ok := category.DirectoryNames[name]; ok {
 			return category, true
 		}
+		for relativePath := range category.DirectoryPaths {
+			if hasPathSuffix(path, relativePath) {
+				return category, true
+			}
+		}
 	}
 	return Category{}, false
+}
+
+func hasPathSuffix(path, suffix string) bool {
+	path = filepath.ToSlash(filepath.Clean(path))
+	suffix = strings.Trim(filepath.ToSlash(filepath.Clean(suffix)), "/")
+	return path == suffix || strings.HasSuffix(path, "/"+suffix)
 }
 
 func MatchFile(path string) (Category, bool) {
@@ -79,7 +104,7 @@ func MatchFile(path string) (Category, bool) {
 
 	// First: try case-insensitive extension match for real extensions (.pyc, .pyo, etc.)
 	for _, category := range categories {
-		if len(category.DirectoryNames) == 0 && len(category.FileExtensions) > 0 {
+		if len(category.DirectoryNames) == 0 && len(category.DirectoryPaths) == 0 && len(category.FileExtensions) > 0 {
 			for catExt := range category.FileExtensions {
 				if ext != "" && len(ext) > 1 && strings.EqualFold(ext, catExt) {
 					return category, true
@@ -89,10 +114,9 @@ func MatchFile(path string) (Category, bool) {
 	}
 
 	// Second: exact name match for dotfiles where Ext returns the full name (e.g., .DS_Store)
-	// filepath.Ext(".DS_Store") == ".DS_Store" — ext equals name for these
 	if ext == name && strings.HasPrefix(name, ".") {
 		for _, category := range categories {
-			if len(category.DirectoryNames) == 0 && len(category.FileExtensions) > 0 {
+			if len(category.DirectoryNames) == 0 && len(category.DirectoryPaths) == 0 && len(category.FileExtensions) > 0 {
 				if _, ok := category.FileExtensions[ext]; ok {
 					return category, true
 				}
