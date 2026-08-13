@@ -54,7 +54,7 @@ func TestCandidateRowsLimit(t *testing.T) {
 	}
 }
 
-func TestCandidateRowsSorting(t *testing.T) {
+func TestCandidateRowsPreservesInputOrder(t *testing.T) {
 	items := []scanner.Candidate{
 		{Path: "/tmp/a", Bytes: 100},
 		{Path: "/tmp/b", Bytes: 500},
@@ -64,9 +64,9 @@ func TestCandidateRowsSorting(t *testing.T) {
 	if len(limited) != 3 {
 		t.Fatalf("expected 3 rows, got %d", len(limited))
 	}
-	// Check sorting: largest first
+	// candidateRows formats the already ordered input without re-sorting it
 	if !strings.Contains(limited[0], "/tmp/a") {
-		t.Errorf("first row should be /tmp/a (sorted by path), got: %s", limited[0])
+		t.Errorf("first row should preserve /tmp/a from the input, got: %s", limited[0])
 	}
 	if !strings.Contains(limited[2], "/tmp/c") {
 		t.Errorf("last row should be /tmp/c, got: %s", limited[2])
