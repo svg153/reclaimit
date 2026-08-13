@@ -53,6 +53,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		if err != nil {
 			return exitf(stderr, "error: %v\n", err)
 		}
+		scanner.ApplySelection(&report, selection.ExcludedGroups, selection.ExcludedPaths)
 		output, err := renderer.RenderReport(report, cfg.Format)
 		if err != nil {
 			return exitf(stderr, "error: %v\n", err)
@@ -60,7 +61,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		if err := writeSelection(stdout, cfg, selection); err != nil {
 			return exitf(stderr, "error: %v\n", err)
 		}
-		return writeOutput(stdout, cfg.OutFile, output)
+		return writeOutput(stdout, stderr, cfg.OutFile, output)
 	}
 
 	if cfg.Command == "clean" {
@@ -88,10 +89,23 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			if err != nil {
 				return exitf(stderr, "error: %v\n", err)
 			}
+			postCleanReport, err := scanner.AnalyzeWithOptions(
+				cfg.Command,
+				toScannerOpts(cfg),
+				cfg.Logger,
+			)
+			if err != nil {
+				return exitf(stderr, "error: refreshing report after clean: %v\n", err)
+			}
+			report = postCleanReport
 			report.DeletedBytes = deleted
 		}
 
-		return writeOutput(stdout, cfg.OutFile, "")
+		output, err := renderer.RenderReport(report, cfg.Format)
+		if err != nil {
+			return exitf(stderr, "error: %v\n", err)
+		}
+		return writeOutput(stdout, stderr, cfg.OutFile, output)
 	}
 
 	output, err := renderer.RenderReport(report, cfg.Format)
@@ -99,7 +113,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		return exitf(stderr, "error: %v\n", err)
 	}
 
-	return writeOutput(stdout, cfg.OutFile, output)
+	return writeOutput(stdout, stderr, cfg.OutFile, output)
 }
 
 func toScannerOpts(cfg cli.Options) scanner.AnalyzeOptions {
@@ -146,10 +160,10 @@ func writeSelection(stdout io.Writer, cfg cli.Options, selection tui.Selection) 
 	return nil
 }
 
-func writeOutput(stdout io.Writer, outFile string, output string) int {
+func writeOutput(stdout, stderr io.Writer, outFile string, output string) int {
 	if outFile != "" {
 		if err := os.WriteFile(outFile, []byte(output), 0o644); err != nil {
-			exitf(stdout, "error: writing report: %v\n", err)
+			return exitf(stderr, "error: writing report: %v\n", err)
 		}
 		return 0
 	}
