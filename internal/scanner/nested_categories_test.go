@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -13,9 +14,6 @@ func TestMatchDirectoryPathSpecificCategories(t *testing.T) {
 		filepath.Join(root, ".cache", "pip"),
 		filepath.Join(root, ".local", "pipx"),
 	} {
-		if _, err := os.Stat(filepath.Dir(path)); err != nil {
-			_ = err
-		}
 		cat, ok := MatchDirectory(path)
 		if !ok {
 			t.Fatalf("MatchDirectory(%q) did not match", path)
