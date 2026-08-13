@@ -59,6 +59,6 @@ Flags:
 }
 
 func ValidLogLevel(name string) bool {
-	name = strings.TrimSpace(name)
+	name = strings.ToLower(strings.TrimSpace(name))
 	return name == "debug" || name == "info" || name == "warn" || name == "error"
 }
