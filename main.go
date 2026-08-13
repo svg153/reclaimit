@@ -125,6 +125,8 @@ func toScannerOpts(cfg cli.Options) scanner.AnalyzeOptions {
 		TopGroups:         cfg.TopGroups,
 		TopEntries:        cfg.TopEntries,
 		MinCandidateSize:  cfg.MinCandidateSize,
+		MaxDepth:          cfg.MaxDepth,
+		Workers:           cfg.Workers,
 		IncludeCategories: cfg.IncludeCategories,
 		ExcludeCategories: cfg.ExcludeCategories,
 		ExcludeGroups:     cfg.ExcludeGroups,
