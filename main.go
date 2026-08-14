@@ -14,7 +14,6 @@ import (
 
 var Version = "dev"
 
-
 func Run(args []string, stdout, stderr io.Writer) int {
 	cfg, err := cli.ParseConfig(args)
 	if err != nil {
@@ -75,20 +74,25 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			}
 		}
 
+		cleanResult, err := scanner.CleanWithOptions(report.SelectedCandidates, scanner.CleanOptions{
+			DryRun: cfg.DryRun,
+			Logger: cfg.Logger,
+		})
+		if err != nil {
+			return exitf(stderr, "error: %v\n", err)
+		}
+
 		if cfg.DryRun {
-			deleted, err := scanner.DryRun(report.SelectedCandidates)
-			if err != nil {
-				return exitf(stderr, "error: %v\n", err)
-			}
-			report.DeletedBytes = deleted
-			if err := writef(stdout, "\n[DRY RUN] Would delete %s across %d candidates\n", humanizeBytes(deleted), len(report.SelectedCandidates)); err != nil {
+			report.DeletedBytes = 0
+			if err := writef(stdout,
+				"\n[DRY RUN] Would delete %s across %d verified candidates (skipped %d)\n",
+				humanizeBytes(cleanResult.VerifiedBytes),
+				 cleanResult.Candidates-cleanResult.SkippedCandidates-cleanResult.FailedCandidates,
+				 cleanResult.SkippedCandidates,
+			); err != nil {
 				return exitf(stderr, "error: %v\n", err)
 			}
 		} else {
-			deleted, err := scanner.Clean(report.SelectedCandidates)
-			if err != nil {
-				return exitf(stderr, "error: %v\n", err)
-			}
 			postCleanReport, err := scanner.AnalyzeWithOptions(
 				cfg.Command,
 				toScannerOpts(cfg),
@@ -98,14 +102,35 @@ func Run(args []string, stdout, stderr io.Writer) int {
 				return exitf(stderr, "error: refreshing report after clean: %v\n", err)
 			}
 			report = postCleanReport
-			report.DeletedBytes = deleted
+			report.DeletedBytes = cleanResult.DeletedBytes
+			if err := writef(stdout,
+				"\n[CLEAN] Deleted %s across %d candidates (expected %s, skipped %d, failed %d)\n",
+				humanizeBytes(cleanResult.DeletedBytes),
+				cleanResult.DeletedCandidates,
+				humanizeBytes(cleanResult.ExpectedBytes),
+				cleanResult.SkippedCandidates,
+				cleanResult.FailedCandidates,
+			); err != nil {
+				return exitf(stderr, "error: %v\n", err)
+			}
 		}
+		report.ExpectedDeletedBytes = cleanResult.ExpectedBytes
+		report.VerifiedDeletedBytes = cleanResult.VerifiedBytes
+		report.SkippedCleanCandidates = cleanResult.SkippedCandidates
+		report.FailedCleanCandidates = cleanResult.FailedCandidates
 
 		output, err := renderer.RenderReport(report, cfg.Format)
 		if err != nil {
 			return exitf(stderr, "error: %v\n", err)
 		}
-		return writeOutput(stdout, stderr, cfg.OutFile, output)
+		status := writeOutput(stdout, stderr, cfg.OutFile, output)
+		if status != 0 {
+			return status
+		}
+		if cleanResult.FailedCandidates > 0 {
+			return 1
+		}
+		return 0
 	}
 
 	output, err := renderer.RenderReport(report, cfg.Format)

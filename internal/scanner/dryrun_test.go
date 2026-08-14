@@ -2,7 +2,6 @@ package scanner
 
 import (
 	"os"
-
 	"path/filepath"
 	"testing"
 )
@@ -19,13 +18,13 @@ func TestDryRunReturnsTotalWithoutDeleting(t *testing.T) {
 		t.Fatalf("write: %v", err)
 	}
 
-	candidates := []Candidate{{Path: target, Bytes: 123, IsDir: true}}
+	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 	deleted, err := DryRun(candidates)
 	if err != nil {
 		t.Fatalf("DryRun returned error: %v", err)
 	}
-	if deleted != 123 {
-		t.Fatalf("expected dry-run total 123, got %d", deleted)
+	if deleted != 1 {
+		t.Fatalf("expected dry-run total 1, got %d", deleted)
 	}
 	// File must still exist — DryRun never deletes
 	if _, err := os.Stat(target); err != nil {
@@ -76,15 +75,15 @@ func TestDryRunPartialMissing(t *testing.T) {
 	os.MkdirAll(existing, 0o755)
 
 	candidates := []Candidate{
-		{Path: existing, Bytes: 500},
+		{Path: existing, Bytes: 0, IsDir: true},
 		{Path: "/tmp/nonexistent_dryrun_partial", Bytes: 999},
 	}
 	total, err := DryRun(candidates)
 	if err != nil {
 		t.Fatalf("DryRun partial missing returned error: %v", err)
 	}
-	if total != 500 {
-		t.Fatalf("expected 500 bytes (only existing path), got %d", total)
+	if total != 0 {
+		t.Fatalf("expected 0 bytes (only existing path), got %d", total)
 	}
 }
 
@@ -95,15 +94,15 @@ func TestDryRunDoesNotAffectClean(t *testing.T) {
 	os.MkdirAll(target, 0o755)
 	os.WriteFile(filepath.Join(target, "dep.js"), []byte("x"), 0o644)
 
-	candidates := []Candidate{{Path: target, Bytes: 42, IsDir: true}}
+	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 
 	// DryRun first — should not delete
 	drTotal, err := DryRun(candidates)
 	if err != nil {
 		t.Fatalf("DryRun: %v", err)
 	}
-	if drTotal != 42 {
-		t.Fatalf("dry-run total: want 42, got %d", drTotal)
+	if drTotal != 1 {
+		t.Fatalf("dry-run total: want 1, got %d", drTotal)
 	}
 	// Must still exist
 	if _, err := os.Stat(target); err != nil {
@@ -115,8 +114,8 @@ func TestDryRunDoesNotAffectClean(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Clean: %v", err)
 	}
-	if deleted != 42 {
-		t.Fatalf("clean deleted: want 42, got %d", deleted)
+	if deleted != 1 {
+		t.Fatalf("clean deleted: want 1, got %d", deleted)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("target not deleted by Clean")
@@ -130,13 +129,13 @@ func TestDryRunPermissionError(t *testing.T) {
 	os.MkdirAll(target, 0o755)
 	os.WriteFile(filepath.Join(target, "f.txt"), []byte("x"), 0o644)
 
-	candidates := []Candidate{{Path: target, Bytes: 10}}
+	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 	total, err := DryRun(candidates)
 	if err != nil {
 		t.Fatalf("DryRun normal: %v", err)
 	}
-	if total != 10 {
-		t.Fatalf("want 10, got %d", total)
+	if total != 1 {
+		t.Fatalf("want 1, got %d", total)
 	}
 }
 
@@ -186,13 +185,13 @@ func TestDryRunReportShowsDeletedBytes(t *testing.T) {
 	os.MkdirAll(target, 0o755)
 	os.WriteFile(filepath.Join(target, "dep.js"), []byte("x"), 0o644)
 
-	candidates := []Candidate{{Path: target, Bytes: 512, IsDir: true}}
+	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 	deleted, err := DryRun(candidates)
 	if err != nil {
 		t.Fatalf("DryRun: %v", err)
 	}
-	if deleted != 512 {
-		t.Fatalf("expected 512 bytes, got %d", deleted)
+	if deleted != 1 {
+		t.Fatalf("expected 1 byte, got %d", deleted)
 	}
 	// File must still exist — DryRun never deletes
 	if _, err := os.Stat(target); err != nil {

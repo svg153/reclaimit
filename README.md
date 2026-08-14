@@ -152,6 +152,9 @@ task build
 `--include-category CATEGORY` — Only clean this category (e.g., `python-venv`)
 `--exclude-category CATEGORY` — Skip this category
 `--yes` — Confirm deletion (required for safety)
+`--dry-run` — Run the same preflight without deleting anything
+
+Before any deletion, reclaimit verifies that every selected path still exists, has the same file/directory type, and has the same measured bytes and modification snapshot as the scan. Changed or missing candidates are skipped; failures are logged per candidate and do not stop the remaining cleanup. The final report distinguishes expected, verified, deleted, skipped, and failed outcomes.
 
 ## Architecture
 
