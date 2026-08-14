@@ -20,14 +20,13 @@ func TestCleanRemovesCandidates(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Clean returned error: %v", err)
 	}
-	if deleted != 123 {
+	if deleted != 1 {
 		t.Fatalf("expected deleted bytes 1, got %d", deleted)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("expected target to be deleted, stat err=%v", err)
 	}
 }
-
 
 func TestCleanSkipsChangedCandidateAndContinues(t *testing.T) {
 	root := t.TempDir()
