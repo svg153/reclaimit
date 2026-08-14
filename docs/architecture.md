@@ -136,6 +136,7 @@ sequenceDiagram
     participant Select as applySelection
     participant TUI as RunTUI
     participant Render as RenderReport
+    participant Clean as CleanWithOptions
     participant FS as Local filesystem
 
     User->>CLI: reclaimit analyze|tui|clean
@@ -154,7 +155,9 @@ sequenceDiagram
         TUI-->>CLI: selection snapshot
     end
     alt clean command
-        CLI->>FS: RemoveAll(candidate.Path)
+        CLI->>Clean: Preflight selected candidates
+        Clean->>FS: Verify path, type, size, and modification snapshot
+        Clean->>FS: Delete verified paths and post-check removal
         CLI->>Analyze: Re-run after deletion
     end
     CLI->>Render: RenderReport(report, format)
@@ -212,3 +215,10 @@ stateDiagram-v2
 `MaxDepth` is relative to the scan root. A value of 0 preserves unlimited traversal. When a positive limit is reached, directories are not descended into; they are counted as truncated so callers can distinguish a complete scan from a bounded one.
 
 The scanner records `entries_scanned`, `entries_skipped`, `truncated_directories`, and `max_depth_reached`. These values are emitted in the completion log and included in JSON reports for automation and performance comparisons. Filesystem errors below the root are logged as warnings and skipped, while an invalid or unreadable root remains a fatal error.
+
+
+## Clean preflight and outcome contract
+
+The clean path always runs through `CleanWithOptions`, including `--dry-run`. It first normalizes nested candidates, then verifies every candidate before deleting any of them. A candidate is eligible only if it still exists, its file/directory type is unchanged, its measured bytes match the scan, and its latest modification snapshot is unchanged when available.
+
+Missing or changed candidates are skipped instead of being removed. Filesystem failures and post-delete verification failures are recorded per candidate; the remaining candidates continue. Successful deletion is counted from the verified bytes at deletion time, while the report keeps expected, verified, skipped, and failed totals separate. This is deliberately explicit: direct filesystem deletion cannot promise rollback after bytes have been permanently removed, so the implementation does not claim transactional recovery it cannot guarantee.
