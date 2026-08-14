@@ -120,15 +120,27 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		report.SkippedCleanCandidates = cleanResult.SkippedCandidates
 		report.FailedCleanCandidates = cleanResult.FailedCandidates
 
+		output, err := renderer.RenderReport(report, cfg.Format)
+		if err != nil {
+			return exitf(stderr, "error: %v\\n", err)
+		}
+		status := writeOutput(stdout, stderr, cfg.OutFile, output)
+		if status != 0 {
+			return status
+		}
+		if cleanResult.FailedCandidates > 0 {
+			return 1
+		}
+		return 0
+	}
 
 	output, err := renderer.RenderReport(report, cfg.Format)
 	if err != nil {
-		return exitf(stderr, "error: %v\n", err)
+		return exitf(stderr, "error: %v\\n", err)
 	}
 
 	return writeOutput(stdout, stderr, cfg.OutFile, output)
 }
-
 func toScannerOpts(cfg cli.Options) scanner.AnalyzeOptions {
 	return scanner.AnalyzeOptions{
 		Root:              cfg.Root,
