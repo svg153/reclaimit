@@ -10,6 +10,11 @@
 
 Traditional disk analyzers answer **“what is large?”**. `reclaimit` adds the developer context needed to answer **“what can I recreate if I delete it?”**.
 
+![Animated reclaimit terminal demo showing read-only analysis, TUI review, and a cleanup dry run on a synthetic 20 MiB fixture](assets/reclaimit-demo.svg)
+
+The demo uses generated files and makes no typical-savings claim. Its exact
+fixture and commands are documented in [docs/demo.md](docs/demo.md).
+
 ## Install
 
 ```bash
@@ -133,12 +138,17 @@ go build -o ./bin/reclaimit ./cmd/reclaimit
 
 The optional [Task](https://taskfile.dev/) shortcuts are documented in `Taskfile.yml`. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [docs/architecture.md](docs/architecture.md) for the design, scanner limits, and cleanup contract.
 
+Performance measurements include their fixture, environment, raw command, and
+interpretation limits in [docs/benchmarks.md](docs/benchmarks.md). Growth is
+tracked without product telemetry in [docs/growth.md](docs/growth.md).
+
 ## Roadmap
 
 - Expand cleanup categories only with explicit safety descriptions and tests.
 - Keep behavioral coverage above 90% overall and in every production package.
 - Add age-based filters and export/import of reviewed selections.
-- Publish reproducible benchmarks and real-world, opt-in scan summaries.
+- Review release acquisition after 30 days and select new cleanup categories
+  from opt-in, privacy-preserving evidence.
 
 Focused pull requests, bug reports, category proposals, and documentation improvements are welcome.
 
