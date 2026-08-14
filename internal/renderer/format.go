@@ -2,11 +2,11 @@ package renderer
 
 import (
 	"encoding/json"
-
-	"github.com/svg153/reclaimit/internal/scanner"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/svg153/reclaimit/internal/scanner"
 )
 
 func RenderReport(report scanner.Report, format string) (string, error) {
