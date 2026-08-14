@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strconv"
 	"testing"
 )
 
@@ -19,12 +20,12 @@ func scannerTestOptions(root string, workers int) AnalyzeOptions {
 func TestAnalyzeConcurrentTraversalIsDeterministic(t *testing.T) {
 	root := t.TempDir()
 	for i := 0; i < 12; i++ {
-		dir := filepath.Join(root, "repo-"+string(rune('a'+i)), "node_modules")
+		dir := filepath.Join(root, "repo-"+strconv.Itoa(i), "node_modules")
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
 		for j := 0; j < 5; j++ {
-			path := filepath.Join(dir, "dependency-"+string(rune('a'+j))+".js")
+			path := filepath.Join(dir, "dependency-"+strconv.Itoa(j)+".js")
 			if err := os.WriteFile(path, []byte("dependency"), 0o644); err != nil {
 				t.Fatal(err)
 			}
@@ -43,9 +44,7 @@ func TestAnalyzeConcurrentTraversalIsDeterministic(t *testing.T) {
 	serialCandidates := candidateKeys(serial)
 	parallelCandidates := candidateKeys(parallel)
 	if !reflect.DeepEqual(serialCandidates, parallelCandidates) {
-		t.Fatalf("serial and parallel candidates differ:
-serial=%v
-parallel=%v", serialCandidates, parallelCandidates)
+		t.Fatalf("serial and parallel candidates differ:\nserial=%v\nparallel=%v", serialCandidates, parallelCandidates)
 	}
 	if parallel.EntriesScanned == 0 || parallel.MaxDepthReached == 0 {
 		t.Fatalf("expected traversal metrics, got %#v", parallel)
@@ -95,12 +94,12 @@ func candidateKeys(report Report) []string {
 func BenchmarkAnalyzeManyFiles(b *testing.B) {
 	root := b.TempDir()
 	for i := 0; i < 16; i++ {
-		dir := filepath.Join(root, "repo-"+string(rune('a'+i)), "node_modules")
+		dir := filepath.Join(root, "repo-"+strconv.Itoa(i), "node_modules")
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			b.Fatal(err)
 		}
 		for j := 0; j < 32; j++ {
-			path := filepath.Join(dir, "dependency-"+string(rune(j))+".js")
+			path := filepath.Join(dir, "dependency-"+strconv.Itoa(j)+".js")
 			if err := os.WriteFile(path, []byte("dependency"), 0o644); err != nil {
 				b.Fatal(err)
 			}
