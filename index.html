@@ -749,7 +749,7 @@
 
       <div class="faq-item">
         <h3>How fast is it?</h3>
-        <p>The scanner uses configurable concurrent workers and reports scanned, skipped, and truncated entries. Performance depends on the filesystem, tree shape, and storage hardware.</p>
+        <p>The scanner enforces one configurable concurrency ceiling across the complete traversal, supports clean cancellation, and reports scanned, skipped, and truncated entries. Performance depends on the filesystem, tree shape, and storage hardware.</p>
       </div>
 
       <div class="faq-item">

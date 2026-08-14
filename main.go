@@ -1,6 +1,7 @@
 package reclaimit
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,11 @@ var Version = "dev"
 var runTUI = tui.Run
 
 func Run(args []string, stdout, stderr io.Writer) int {
+	return RunContext(context.Background(), args, stdout, stderr)
+}
+
+// RunContext executes the CLI and cancels queued scanner work when ctx ends.
+func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	cfg, err := cli.ParseConfig(args)
 	if err != nil {
 		return exitf(stderr, "error: %v\n", err)
@@ -39,7 +45,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	}
 	cfg.Logger = logger.NewLogger(cfg.LogLevel, stderr)
 
-	report, err := scanner.AnalyzeWithOptions(
+	report, err := scanner.AnalyzeWithContext(
+		ctx,
 		cfg.Command,
 		toScannerOpts(cfg),
 		cfg.Logger,
@@ -94,7 +101,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 				return exitf(stderr, "error: %v\n", err)
 			}
 		} else {
-			postCleanReport, err := scanner.AnalyzeWithOptions(
+			postCleanReport, err := scanner.AnalyzeWithContext(
+				ctx,
 				cfg.Command,
 				toScannerOpts(cfg),
 				cfg.Logger,

@@ -32,8 +32,9 @@ else
   echo "Total coverage: ${total}% (minimum ${minimum}%)"
 fi
 
-# These exclusions have no production behavior to exercise: the process-only
-# entrypoint, test-support packages, and a declarations-only types package.
+# These exclusions are not meaningful per-package unit-test targets: the
+# process signal/bootstrap boundary, test-support code, and declarations-only
+# types. The testable command and cancellation behavior lives in the root package.
 module="$(go list -m)"
 readonly module
 readonly -a excluded_packages=(

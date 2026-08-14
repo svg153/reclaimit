@@ -108,7 +108,7 @@ func ParseConfig(args []string) (Options, error) {
 	fs.IntVar(&cfg.TopEntries, "top-entries", cfg.TopEntries, "number of largest direct children under root to show")
 	fs.Int64Var(&cfg.MinCandidateSize, "min-candidate-size", cfg.MinCandidateSize, "minimum candidate size in bytes")
 	fs.IntVar(&cfg.MaxDepth, "max-depth", cfg.MaxDepth, "maximum traversal depth; 0 means unlimited")
-	fs.IntVar(&cfg.Workers, "workers", cfg.Workers, "number of concurrent scanner workers")
+	fs.IntVar(&cfg.Workers, "workers", cfg.Workers, "maximum concurrent workers across the complete traversal")
 	fs.StringVar(&cfg.OutFile, "out", "", "write the report to a file")
 	fs.StringVar(&cfg.IgnoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
 	fs.BoolVar(&cfg.Yes, "yes", false, "confirm destructive cleanup when using clean")

@@ -12,6 +12,8 @@ or path, and lets users review candidates before deletion.
 - Plain-text, Markdown, and JSON reports.
 - Interactive terminal UI.
 - Read-only analysis and non-destructive cleanup dry runs.
+- One configurable worker ceiling across the complete scan, with interrupt-safe
+  cancellation of queued traversal work.
 - Pre-delete checks for path identity, type, measured size, and modification
   snapshot, followed by an atomic same-filesystem quarantine and revalidation.
   Changed data is preserved with a reported recovery path.

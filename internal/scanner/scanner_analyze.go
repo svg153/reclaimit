@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -17,7 +18,7 @@ const defaultWorkers = 8
 
 // AnalyzeOptions are scanner-specific options independent from CLI routing.
 // MaxDepth is the maximum traversal depth below Root; zero means unlimited.
-// Workers controls the bounded worker pool used for directory entries.
+// Workers controls the traversal-wide worker pool.
 type AnalyzeOptions struct {
 	Root              string
 	GroupMode         string
@@ -44,7 +45,53 @@ type scanChildResult struct {
 	summary scanSummary
 }
 
+type scanTask struct {
+	id             int
+	parentID       int
+	path           string
+	inCandidateDir bool
+	depth          int
+}
+
+type scanInspection struct {
+	task            scanTask
+	summary         scanSummary
+	entries         []os.DirEntry
+	dirCategory     Category
+	dirIsCandidate  bool
+	nextInCandidate bool
+	isDirectory     bool
+	err             error
+}
+
+type directoryState struct {
+	task           scanTask
+	summary        scanSummary
+	remaining      int
+	dirCategory    Category
+	dirIsCandidate bool
+}
+
+type scanOperations struct {
+	lstat   func(string) (os.FileInfo, error)
+	readDir func(string) ([]os.DirEntry, error)
+}
+
+var defaultScanOperations = scanOperations{
+	lstat:   os.Lstat,
+	readDir: os.ReadDir,
+}
+
 func AnalyzeWithOptions(command string, opts AnalyzeOptions, logger *slog.Logger) (Report, error) {
+	return AnalyzeWithContext(context.Background(), command, opts, logger)
+}
+
+// AnalyzeWithContext runs a scan with traversal-wide cancellation. At most
+// opts.Workers filesystem entries are inspected concurrently.
+func AnalyzeWithContext(ctx context.Context, command string, opts AnalyzeOptions, logger *slog.Logger) (Report, error) {
+	if err := ctx.Err(); err != nil {
+		return Report{}, err
+	}
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
@@ -81,15 +128,19 @@ func AnalyzeWithOptions(command string, opts AnalyzeOptions, logger *slog.Logger
 		includeSet:     ListToSet(opts.IncludeCategories),
 		excludeSet:     ListToSet(opts.ExcludeCategories),
 		logger:         logger,
+		operations:     defaultScanOperations,
 	}
 
-	entries, err := os.ReadDir(opts.Root)
+	entries, err := sc.operations.readDir(opts.Root)
 	if err != nil {
 		return Report{}, err
 	}
 
 	logger.Debug("scan started", "root", opts.Root, "entries", len(entries), "workers", opts.Workers, "max_depth", opts.MaxDepth)
-	rootResults := sc.scanEntries(opts.Root, entries, false, 1)
+	rootResults, err := sc.scanTree(ctx, opts.Root, entries)
+	if err != nil {
+		return Report{}, err
+	}
 	for _, result := range rootResults {
 		report.TotalBytes += result.summary.bytes
 		if result.summary.bytes > 0 {
@@ -141,6 +192,7 @@ type scanContext struct {
 	includeSet     map[string]struct{}
 	excludeSet     map[string]struct{}
 	logger         *slog.Logger
+	operations     scanOperations
 
 	mu                   sync.Mutex
 	entriesScanned       atomic.Int64
@@ -149,99 +201,185 @@ type scanContext struct {
 	maxDepthReached      atomic.Int64
 }
 
-func (sc *scanContext) scanEntries(parent string, entries []os.DirEntry, inCandidateDir bool, depth int) []scanChildResult {
+func (sc *scanContext) scanTree(ctx context.Context, parent string, entries []os.DirEntry) ([]scanChildResult, error) {
 	if len(entries) == 0 {
-		return nil
+		return nil, nil
 	}
-	workers := sc.opts.Workers
-	if workers > len(entries) {
-		workers = len(entries)
+	workerCount := sc.opts.Workers
+	if workerCount <= 0 {
+		workerCount = defaultWorkers
 	}
-	jobs := make(chan os.DirEntry)
-	results := make(chan scanChildResult, len(entries))
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	jobs := make(chan scanTask)
+	results := make(chan scanInspection, workerCount)
 	var wg sync.WaitGroup
-	for i := 0; i < workers; i++ {
+	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for entry := range jobs {
-				childPath := filepath.Join(parent, entry.Name())
-				summary, err := sc.scan(childPath, inCandidateDir, depth)
-				if err != nil {
-					sc.skip(childPath, err)
-					continue
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case task, ok := <-jobs:
+					if !ok {
+						return
+					}
+					inspection := sc.inspect(task)
+					select {
+					case results <- inspection:
+					case <-ctx.Done():
+						return
+					}
 				}
-				results <- scanChildResult{path: childPath, summary: summary}
 			}
 		}()
 	}
+
+	nextID := 0
+	queue := make([]scanTask, 0, len(entries))
 	for _, entry := range entries {
-		jobs <- entry
+		queue = append(queue, scanTask{
+			id:       nextID,
+			parentID: -1,
+			path:     filepath.Join(parent, entry.Name()),
+			depth:    1,
+		})
+		nextID++
 	}
-	close(jobs)
-	wg.Wait()
-	close(results)
 
-	collected := make([]scanChildResult, 0, len(results))
-	for result := range results {
-		collected = append(collected, result)
-	}
-	return collected
-}
+	states := make(map[int]*directoryState)
+	collected := make([]scanChildResult, 0, len(entries))
 
-func (sc *scanContext) scan(path string, inCandidateDir bool, depth int) (scanSummary, error) {
-	info, err := os.Lstat(path)
-	if err != nil {
-		return scanSummary{}, err
-	}
-	sc.entriesScanned.Add(1)
-	sc.updateMaxDepth(depth)
-	if info.Mode()&os.ModeSymlink != 0 {
-		sc.logger.Debug("skipping symlink", "path", path)
-		return scanSummary{}, nil
-	}
-	if info.IsDir() && sc.opts.MaxDepth > 0 && depth >= sc.opts.MaxDepth {
-		sc.truncatedDirectories.Add(1)
-		return scanSummary{modifiedAt: info.ModTime()}, nil
-	}
-	if info.IsDir() {
-		return sc.scanDir(path, info, inCandidateDir, depth)
-	}
-	if !info.Mode().IsRegular() {
-		return scanSummary{}, nil
-	}
-	return sc.scanFile(path, info, inCandidateDir), nil
-}
-
-func (sc *scanContext) scanDir(path string, info os.FileInfo, inCandidateDir bool, depth int) (scanSummary, error) {
-	dirCategory, dirIsCandidate := MatchDirectory(path)
-	nextInCandidate := inCandidateDir || dirIsCandidate
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		return scanSummary{}, err
-	}
-	children := sc.scanEntries(path, entries, nextInCandidate, depth+1)
-	var total int64
-	latestModified := info.ModTime()
-	for _, child := range children {
-		total += child.summary.bytes
-		if child.summary.modifiedAt.After(latestModified) {
-			latestModified = child.summary.modifiedAt
+	finalizeDirectory := func(state *directoryState) {
+		if state.dirIsCandidate && (!state.task.inCandidateDir || len(state.dirCategory.DirectoryPaths) > 0) &&
+			IncludeCategory(state.dirCategory.Key, sc.includeSet, sc.excludeSet) && state.summary.bytes >= sc.opts.MinCandidateSize {
+			sc.addCandidate(Candidate{
+				Category:    state.dirCategory.Display,
+				CategoryKey: state.dirCategory.Key,
+				Path:        state.task.path,
+				Group:       sc.groupFor(state.task.path),
+				Bytes:       state.summary.bytes,
+				Description: state.dirCategory.Description,
+				ModifiedAt:  state.summary.modifiedAt,
+				IsDir:       true,
+			})
 		}
 	}
-	if dirIsCandidate && (!inCandidateDir || len(dirCategory.DirectoryPaths) > 0) && IncludeCategory(dirCategory.Key, sc.includeSet, sc.excludeSet) && total >= sc.opts.MinCandidateSize {
-		sc.addCandidate(Candidate{
-			Category:    dirCategory.Display,
-			CategoryKey: dirCategory.Key,
-			Path:        path,
-			Group:       sc.groupFor(path),
-			Bytes:       total,
-			Description: dirCategory.Description,
-			ModifiedAt:  latestModified,
-			IsDir:       true,
-		})
+
+	complete := func(parentID int, path string, summary scanSummary) {
+		for parentID >= 0 {
+			state := states[parentID]
+			state.summary.bytes += summary.bytes
+			if summary.modifiedAt.After(state.summary.modifiedAt) {
+				state.summary.modifiedAt = summary.modifiedAt
+			}
+			state.remaining--
+			if state.remaining > 0 {
+				return
+			}
+			finalizeDirectory(state)
+			delete(states, parentID)
+			path = state.task.path
+			summary = state.summary
+			parentID = state.task.parentID
+		}
+		collected = append(collected, scanChildResult{path: path, summary: summary})
 	}
-	return scanSummary{bytes: total, modifiedAt: latestModified}, nil
+
+	stopWorkers := func() {
+		close(jobs)
+		wg.Wait()
+	}
+
+	for len(collected) < len(entries) {
+		var jobsOut chan<- scanTask
+		var next scanTask
+		if len(queue) > 0 {
+			jobsOut = jobs
+			next = queue[0]
+		}
+		select {
+		case <-ctx.Done():
+			cancel()
+			stopWorkers()
+			return nil, ctx.Err()
+		case jobsOut <- next:
+			queue = queue[1:]
+		case inspection := <-results:
+			if inspection.err != nil {
+				sc.skip(inspection.task.path, inspection.err)
+				complete(inspection.task.parentID, inspection.task.path, scanSummary{})
+				continue
+			}
+			if !inspection.isDirectory {
+				complete(inspection.task.parentID, inspection.task.path, inspection.summary)
+				continue
+			}
+
+			state := &directoryState{
+				task:           inspection.task,
+				summary:        inspection.summary,
+				remaining:      len(inspection.entries),
+				dirCategory:    inspection.dirCategory,
+				dirIsCandidate: inspection.dirIsCandidate,
+			}
+			if state.remaining == 0 {
+				finalizeDirectory(state)
+				complete(state.task.parentID, state.task.path, state.summary)
+				continue
+			}
+			states[state.task.id] = state
+			for _, entry := range inspection.entries {
+				queue = append(queue, scanTask{
+					id:             nextID,
+					parentID:       state.task.id,
+					path:           filepath.Join(state.task.path, entry.Name()),
+					inCandidateDir: inspection.nextInCandidate,
+					depth:          state.task.depth + 1,
+				})
+				nextID++
+			}
+		}
+	}
+
+	stopWorkers()
+	return collected, nil
+}
+
+func (sc *scanContext) inspect(task scanTask) scanInspection {
+	inspection := scanInspection{task: task}
+	info, err := sc.operations.lstat(task.path)
+	if err != nil {
+		inspection.err = err
+		return inspection
+	}
+	sc.entriesScanned.Add(1)
+	sc.updateMaxDepth(task.depth)
+	if info.Mode()&os.ModeSymlink != 0 {
+		sc.logger.Debug("skipping symlink", "path", task.path)
+		return inspection
+	}
+	if info.IsDir() && sc.opts.MaxDepth > 0 && task.depth >= sc.opts.MaxDepth {
+		sc.truncatedDirectories.Add(1)
+		inspection.summary.modifiedAt = info.ModTime()
+		return inspection
+	}
+	if info.IsDir() {
+		inspection.isDirectory = true
+		inspection.summary.modifiedAt = info.ModTime()
+		inspection.dirCategory, inspection.dirIsCandidate = MatchDirectory(task.path)
+		inspection.nextInCandidate = task.inCandidateDir || inspection.dirIsCandidate
+		inspection.entries, inspection.err = sc.operations.readDir(task.path)
+		return inspection
+	}
+	if !info.Mode().IsRegular() {
+		return inspection
+	}
+	inspection.summary = sc.scanFile(task.path, info, task.inCandidateDir)
+	return inspection
 }
 
 func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bool) scanSummary {

@@ -89,7 +89,7 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--format plain|markdown|json`: report format.
 - `--group-mode repo|depth`: group by Git repository or path depth.
 - `--max-depth N`: traversal limit; `0` means unlimited.
-- `--workers N`: scanner workers per directory; defaults to `8`.
+- `--workers N`: global scanner concurrency ceiling; defaults to `8`.
 - `--include-category VALUE`: include one category; repeatable.
 - `--exclude-category VALUE`: exclude one category; repeatable.
 - `--exclude-group PATH`: exclude a path prefix; repeatable.

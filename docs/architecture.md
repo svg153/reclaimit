@@ -78,7 +78,7 @@ C4Component
     Container_Boundary(cli, "Go binary") {
         Component(main_entry, "Run / parseConfig", "main.go + options.go", "Routes commands and validates CLI configuration")
         Component(analyze_component, "Analyze", "scanner_analyze.go", "Builds Report from filesystem traversal")
-        Component(scan_node, "AnalyzeWithOptions / scanContext.scan", "scanner_analyze.go", "Scanner core API and recursive traversal")
+        Component(scan_node, "AnalyzeWithContext / scanTree", "scanner_analyze.go", "Cancellable global scheduler and worker pool")
         Component(grouping, "DetermineGroup / findRepoRoot / ancestorGroup", "grouping.go", "Assigns candidate groups")
         Component(selection_component, "applySelection / filterCandidates", "selection.go", "Filters report by excluded groups and paths")
         Component(render_component, "RenderReport", "format.go", "Formats reports as plain text, Markdown, or JSON")
@@ -106,7 +106,7 @@ flowchart TD
     B -->|clean| C
     C --> D[Analyze]
     D --> E[filesystemUsage]
-    D --> F[scanContext.scan recursion]
+    D --> F[scanTree global work queue]
     F --> G{Matched candidate?}
     G -->|yes| H[addCandidate]
     G -->|no| I[Continue traversal]
@@ -133,7 +133,7 @@ sequenceDiagram
     actor User
     participant CLI as Run(main.go)
     participant Analyze as Analyze
-    participant Scan as scanContext.scan
+    participant Scan as scanTree scheduler
     participant Select as applySelection
     participant TUI as RunTUI
     participant Render as RenderReport
@@ -145,9 +145,9 @@ sequenceDiagram
     Analyze->>FS: filesystemUsage(root)
     Analyze->>FS: ReadDir(root)
     loop per entry
-        Analyze->>Scan: scan(path, inCandidateDir)
-        Scan->>FS: Lstat / ReadDir
-        Scan-->>Analyze: scanSummary + candidates
+        Analyze->>Scan: queue path and ancestry context
+        Scan->>FS: worker Lstat / ReadDir
+        Scan-->>Analyze: aggregate child summaries + candidates
     end
     Analyze->>Select: applySelection(report, excludes)
     Select-->>Analyze: selected candidates and summaries
@@ -205,13 +205,27 @@ stateDiagram-v2
 ## Notes for Maintainers
 
 - `Analyze` is the core module. Both `tui` and `clean` reuse it rather than implementing their own scan logic.
-- `scanContext.scan` and helpers (`scanDir`, `scanFile`) concentrate most traversal behavior and remain the primary extension seam.
+- `scanContext.scanTree` owns traversal scheduling and bottom-up directory
+  aggregation; `inspect` and `scanFile` are the filesystem-entry extension seams.
 - Selection is a seam: exclusion logic is centralized in `selection.go` and reused by CLI flags and TUI output.
 - The Windows filesystem adapter calls `GetDiskFreeSpaceExW` and returns real metrics with overflow-safe clamping.
 
 ## Scanner limits, concurrency, and observability
 
-`AnalyzeWithOptions` uses a bounded worker pool per directory. `Workers` defaults to 8 and can be reduced to 1 for deterministic debugging or increased cautiously for fast local storage. Shared report state is protected while filesystem traversal remains parallel.
+`AnalyzeWithOptions` delegates to `AnalyzeWithContext` and uses one worker pool
+for the complete traversal. `Workers` defaults to 8 and is a global concurrency
+ceiling, independent of tree depth or the number of directories. A coordinator
+owns the work queue and aggregates completed children bottom-up, so workers
+never recursively wait for another worker and cannot deadlock by exhausting the
+pool. Shared report state remains protected while filesystem inspection runs in
+parallel.
+
+`AnalyzeWithContext` stops dispatching queued entries when its context is
+cancelled, signals every worker, waits for them to exit, and returns the context
+error. The executable connects terminal interrupt signals to this context.
+Filesystem calls already in progress must return before their worker can exit;
+queued work is not started. Deterministic tests use blocking filesystem seams to
+assert both the maximum active count and zero active workers after cancellation.
 
 `MaxDepth` is relative to the scan root. A value of 0 preserves unlimited traversal. When a positive limit is reached, directories are not descended into; they are counted as truncated so callers can distinguish a complete scan from a bounded one.
 
