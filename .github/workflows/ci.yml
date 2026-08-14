@@ -17,28 +17,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Test with coverage
-        run: |
-          set -e
-          go test ./... -coverprofile=coverage.out
-          go tool cover -func=coverage.out | tee coverage.txt
-          total=$(grep total: coverage.txt | awk '{print $3}' | sed 's/%//')
-          minimum=67.5
-          target=90
-          {
-            echo "### Coverage"
-            awk '/^total:/ {print "* Total coverage: " $3}' coverage.txt
-            echo "* Ratchet floor: ${minimum}%"
-            echo "* Target: ${target}%"
-          } >> "$GITHUB_STEP_SUMMARY"
-          if awk -v cov="$total" -v floor="$minimum" 'BEGIN {exit cov<floor?1:0}'; then
-            echo "Coverage ratchet OK: ${total}%"
-          else
-            echo "Coverage ${total}% is below ratchet floor ${minimum}%" >&2
-            exit 1
-          fi
-          if awk -v cov="$total" -v target="$target" 'BEGIN {exit cov<target?0:1}'; then
-            echo "::notice::Coverage ${total}% is below the ${target}% target"
-          fi
+        run: ./scripts/check-coverage.sh
       - name: Generate coverage html
         run: go tool cover -html=coverage.out -o coverage.html
       - name: Upload coverage artifacts

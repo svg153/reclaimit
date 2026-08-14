@@ -75,17 +75,7 @@ tasks:
       - task: build
   coverage-check:
     cmds:
-      - go test ./... -coverprofile=coverage.out
-      - go tool cover -func=coverage.out | tee coverage.txt
-      - |
-        total=$(grep total: coverage.txt | awk '{print $3}' | sed 's/%//')
-        minimum=67.5
-        target=90
-        echo "Coverage: ${total}%"
-        echo "Ratchet floor: ${minimum}% | Target: ${target}%"
-        awk '/^total:/ {print "Total coverage: " $3}' coverage.txt
-        if [ $(awk -v cov="$total" -v floor="$minimum" 'BEGIN {print (cov>=floor)?0:1}') -ne 0 ]; then echo "Coverage ${total}% is below ratchet floor ${minimum}%"; exit 1; fi
-        if [ $(awk -v cov="$total" -v target="$target" 'BEGIN {print (cov>=target)?0:1}') -ne 0 ]; then echo "Coverage target not reached: ${total}% < ${target}%"; fi
+      - ./scripts/check-coverage.sh
   dist:
     cmds:
       - echo "Building local dist via goreleaser (requires goreleaser installed locally)"

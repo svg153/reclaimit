@@ -3,6 +3,8 @@ package reclaimit
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -592,5 +594,149 @@ func TestRun_AnalyzeWithYesFlag(t *testing.T) {
 	code := Run([]string{"analyze", "--root", root, "--yes", "--min-candidate-size", "0"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("write failed")
+}
+
+type failNthWriter struct {
+	writes int
+	failAt int
+}
+
+func (writer *failNthWriter) Write(p []byte) (int, error) {
+	if writer.writes == writer.failAt {
+		return 0, errors.New("write failed")
+	}
+	writer.writes++
+	return len(p), nil
+}
+
+func TestRunReportsWriterAndRootErrors(t *testing.T) {
+	for name, args := range map[string][]string{
+		"help":    {"help"},
+		"version": {"version"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var stderr bytes.Buffer
+			if code := Run(args, failingWriter{}, &stderr); code != 1 {
+				t.Fatalf("code = %d, stderr=%q", code, stderr.String())
+			}
+		})
+	}
+	var stderr bytes.Buffer
+	if code := Run([]string{"analyze", "--root", filepath.Join(t.TempDir(), "missing")}, io.Discard, &stderr); code != 1 {
+		t.Fatalf("missing root code = %d", code)
+	}
+}
+
+func TestRunTUIWithInjectedSelection(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "node_modules")
+	mustMkdirRootTest(t, target)
+	original := runTUI
+	t.Cleanup(func() { runTUI = original })
+	runTUI = func(report tui.Report) (tui.Selection, error) {
+		if len(report.Candidates) != 1 {
+			t.Fatalf("expected one TUI candidate, got %#v", report.Candidates)
+		}
+		return tui.Selection{ExcludedPaths: []string{target}, Saved: true}, nil
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"tui", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Reproduce this selection") || !strings.Contains(stdout.String(), target) {
+		t.Fatalf("selection output missing: %s", stdout.String())
+	}
+}
+
+func TestRunTUIError(t *testing.T) {
+	original := runTUI
+	t.Cleanup(func() { runTUI = original })
+	runTUI = func(tui.Report) (tui.Selection, error) {
+		return tui.Selection{}, errors.New("terminal unavailable")
+	}
+	var stderr bytes.Buffer
+	if code := Run([]string{"tui", "--root", t.TempDir()}, io.Discard, &stderr); code != 1 {
+		t.Fatalf("code=%d", code)
+	}
+	if !strings.Contains(stderr.String(), "terminal unavailable") {
+		t.Fatalf("unexpected stderr: %q", stderr.String())
+	}
+}
+
+func TestRunCleanDeletesCandidate(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "node_modules")
+	mustMkdirRootTest(t, target)
+	if err := os.WriteFile(filepath.Join(target, "dep.js"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"clean", "--root", root, "--yes", "--min-candidate-size", "1"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%q", code, stderr.String())
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("candidate still exists: %v", err)
+	}
+	if !strings.Contains(stdout.String(), "[CLEAN] Deleted 1 B") {
+		t.Fatalf("unexpected output: %s", stdout.String())
+	}
+}
+
+func TestWriteSelectionAndOutputPropagateWriterErrors(t *testing.T) {
+	if err := writeSelection(failingWriter{}, cli.Options{Root: "/tmp"}, tui.Selection{}); err == nil {
+		t.Fatal("writeSelection should fail")
+	}
+	if code := writeOutput(failingWriter{}, io.Discard, "", "report"); code != 1 {
+		t.Fatalf("writeOutput code = %d", code)
+	}
+}
+
+func TestWriteSelectionPropagatesEveryWriteFailure(t *testing.T) {
+	selection := tui.Selection{
+		ExcludedGroups: []string{"/tmp/group"},
+		ExcludedPaths:  []string{"/tmp/path"},
+	}
+	for failAt := 0; failAt < 6; failAt++ {
+		writer := &failNthWriter{failAt: failAt}
+		if err := writeSelection(writer, cli.Options{Root: "/tmp"}, selection); err == nil {
+			t.Fatalf("expected failure at write %d", failAt)
+		}
+	}
+}
+
+func TestRunCleanPropagatesPreviewAndSummaryWriteErrors(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "node_modules")
+	mustMkdirRootTest(t, target)
+	if err := os.WriteFile(filepath.Join(target, "dep.js"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, dryRun := range []bool{true, false} {
+		args := []string{"clean", "--root", root, "--min-candidate-size", "1"}
+		if dryRun {
+			args = append(args, "--dry-run")
+		} else {
+			args = append(args, "--yes")
+		}
+		writer := &failNthWriter{failAt: 1}
+		if code := Run(args, writer, io.Discard); code != 1 {
+			t.Fatalf("dryRun=%v code=%d", dryRun, code)
+		}
+		if !dryRun {
+			// Recreate the candidate removed before the summary write failed.
+			mustMkdirRootTest(t, target)
+			if err := os.WriteFile(filepath.Join(target, "dep.js"), []byte("x"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
 }

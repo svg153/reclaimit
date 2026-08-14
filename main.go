@@ -13,6 +13,7 @@ import (
 )
 
 var Version = "dev"
+var runTUI = tui.Run
 
 func Run(args []string, stdout, stderr io.Writer) int {
 	cfg, err := cli.ParseConfig(args)
@@ -48,7 +49,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	}
 
 	if cfg.Command == "tui" {
-		selection, err := tui.Run(report)
+		selection, err := runTUI(report)
 		if err != nil {
 			return exitf(stderr, "error: %v\n", err)
 		}

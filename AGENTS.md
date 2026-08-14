@@ -15,7 +15,7 @@
 - Table-driven tests preferred over single-test functions
 - Test names: `TestFunctionName/TestCaseDescription`
 - Use `t.TempDir()` and simulation adapters for filesystem and terminal tests
-- Coverage ratchet: 67.5% minimum; target: 90% with no untested critical paths
+- Coverage floor: 90% overall and in every production package with executable behavior
 
 ## CLI
 

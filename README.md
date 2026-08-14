@@ -127,7 +127,7 @@ The optional [Task](https://taskfile.dev/) shortcuts are documented in `Taskfile
 ## Roadmap
 
 - Expand cleanup categories only with explicit safety descriptions and tests.
-- Improve testability and raise coverage, especially around the interactive TUI.
+- Keep behavioral coverage above 90% overall and in every production package.
 - Add age-based filters and export/import of reviewed selections.
 - Publish reproducible benchmarks and real-world, opt-in scan summaries.
 

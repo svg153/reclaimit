@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -211,5 +212,72 @@ func TestRenderMarkdownSummary(t *testing.T) {
 	}
 	if !strings.Contains(result, "|") {
 		t.Error("expected table format")
+	}
+}
+
+func TestRenderReportRejectsUnknownFormat(t *testing.T) {
+	if _, err := RenderReport(scanner.Report{}, "xml"); err == nil {
+		t.Fatal("expected unsupported format error")
+	}
+}
+
+func TestRenderSelectionAndCleanupBranches(t *testing.T) {
+	groups := make([]scanner.GroupSummary, 9)
+	for i := range groups {
+		groups[i] = scanner.GroupSummary{
+			Group: "/tmp/group-" + string(rune('a'+i)),
+			Bytes: int64(i+2) << 30,
+		}
+	}
+	report := scanner.Report{
+		Command:                   "clean",
+		Root:                      "/tmp/root",
+		Candidates:                []scanner.Candidate{{Path: "/tmp/a"}, {Path: "/tmp/b"}},
+		SelectedCandidates:        []scanner.Candidate{{Path: "/tmp/a", Group: "/tmp/g|1", Bytes: 1, IsDir: true}},
+		SelectedBytes:             1,
+		DeletedBytes:              1,
+		ExpectedDeletedBytes:      2,
+		VerifiedDeletedBytes:      1,
+		SkippedCleanCandidates:    1,
+		FailedCleanCandidates:     1,
+		SelectedCategorySummaries: []scanner.CategorySummary{{CategoryKey: "cache", Bytes: 1, Count: 1}},
+		SelectedGroupSummaries:    groups,
+	}
+	plain, err := RenderReport(report, "plain")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(plain, "selected after exclusions") || !strings.Contains(plain, "verified") {
+		t.Fatalf("plain output missed cleanup branches: %s", plain)
+	}
+	markdown, err := RenderReport(report, "markdown")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"Selected after exclusions", "Cleanup verification", "group-h", "\\|"} {
+		if !strings.Contains(markdown, want) {
+			t.Fatalf("markdown missing %q: %s", want, markdown)
+		}
+	}
+}
+
+func TestChartAndEscapingEdgeCases(t *testing.T) {
+	if got := escapePlant(`a"b`); got != `a\"b` {
+		t.Fatalf("escapePlant = %q", got)
+	}
+	groups := make([]scanner.GroupSummary, 10)
+	for i := range groups {
+		groups[i] = scanner.GroupSummary{Group: filepath.Join("/tmp", "g"+string(rune('a'+i))), Bytes: int64(i+1) << 30}
+	}
+	chart := renderMarkdownTopGroupsChart(groups)
+	if strings.Contains(chart, `"gi"`) || !strings.Contains(chart, "8.5") {
+		t.Fatalf("chart limit or scale is wrong: %s", chart)
+	}
+	plant := renderPlantUMLOverview(groups)
+	if strings.Contains(plant, "** gi ") {
+		t.Fatalf("PlantUML should be limited to eight groups: %s", plant)
+	}
+	if got := renderMarkdownDetails("Title", "Header\n", []string{"row\n"}); !strings.Contains(got, "<details>") {
+		t.Fatalf("unexpected details: %s", got)
 	}
 }

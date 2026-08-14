@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -319,5 +321,61 @@ func TestParseConfigQuietOverridesLogLevel(t *testing.T) {
 	}
 	if cfg.LogLevel != "debug" {
 		t.Fatalf("expected logLevel 'debug' (quiet override happens in main.go)")
+	}
+}
+
+func TestStringListValidationAndFormatting(t *testing.T) {
+	var values stringList
+	if err := values.Set(""); err == nil {
+		t.Fatal("empty stringList value should fail")
+	}
+	if err := values.Set("one"); err != nil {
+		t.Fatalf("Set: %v", err)
+	}
+	if err := values.Set("two"); err != nil {
+		t.Fatalf("Set: %v", err)
+	}
+	if got := values.String(); got != "one,two" {
+		t.Fatalf("String = %q", got)
+	}
+}
+
+func TestParseConfigIgnoreFile(t *testing.T) {
+	root := t.TempDir()
+	ignore := filepath.Join(root, ".reclaimitignore")
+	if err := os.WriteFile(ignore, []byte("# comment\ncache\n\nnode_modules\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := ParseConfig([]string{"--root", root, "--ignore-file", ignore})
+	if err != nil {
+		t.Fatalf("ParseConfig: %v", err)
+	}
+	want := []string{filepath.Join(root, "cache"), filepath.Join(root, "node_modules")}
+	if len(cfg.ExcludePaths) != len(want) {
+		t.Fatalf("ExcludePaths = %#v", cfg.ExcludePaths)
+	}
+	for i := range want {
+		if cfg.ExcludePaths[i] != want[i] {
+			t.Fatalf("ExcludePaths[%d] = %q, want %q", i, cfg.ExcludePaths[i], want[i])
+		}
+	}
+}
+
+func TestParseConfigMissingIgnoreFile(t *testing.T) {
+	_, err := ParseConfig([]string{"--ignore-file", filepath.Join(t.TempDir(), "missing")})
+	if err == nil || !strings.Contains(err.Error(), "loading ignore file") {
+		t.Fatalf("expected ignore-file error, got %v", err)
+	}
+}
+
+func TestParseConfigRejectsRemainingInvalidNumbers(t *testing.T) {
+	for _, args := range [][]string{
+		{"--top-entries", "0"},
+		{"--max-depth", "-1"},
+		{"--workers", "0"},
+	} {
+		if _, err := ParseConfig(args); err == nil {
+			t.Fatalf("expected error for %v", args)
+		}
 	}
 }

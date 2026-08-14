@@ -163,7 +163,14 @@ func ParseConfig(args []string) (Options, error) {
 		if err != nil {
 			return cfg, fmt.Errorf("loading ignore file: %w", err)
 		}
+		ignoreRoot, err := filepath.Abs(cfg.Root)
+		if err != nil {
+			return cfg, err
+		}
 		for _, p := range patterns {
+			if !filepath.IsAbs(p) {
+				p = filepath.Join(ignoreRoot, p)
+			}
 			absPath, err := filepath.Abs(p)
 			if err != nil {
 				return cfg, err

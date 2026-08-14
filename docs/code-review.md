@@ -21,15 +21,17 @@ not release-ready at the start of this audit:
   that were not implemented or published.
 - Overall statement coverage was 68.3%, not the 90% target.
 
-The current change fixes the correctness, lint, release, Pages, installer, and
-documentation defects. Coverage and deletion race-hardening remain explicit
-follow-up work.
+The current change fixes the correctness, lint, release, Pages, installer,
+documentation, and coverage defects. Deletion race-hardening and traversal-wide
+concurrency remain explicit follow-up work because they require focused design
+and review.
 
 ## Validation Results
 
 | Check | Result |
 | --- | --- |
 | `go test ./...` | Pass after fixes |
+| Coverage gate | 92.5% overall; every production package is at least 90% |
 | `go test -race ./...` | Pass after fixes |
 | `go vet ./...` | Pass |
 | `golangci-lint v2.1.6` | Pass, 0 issues |
@@ -50,29 +52,29 @@ updates, but they are not currently reachable findings.
 
 ## Coverage
 
-The current overall statement coverage is **68.3%**.
+The current overall statement coverage is **92.5%**.
 
 | Package | Coverage |
 | --- | ---: |
+| root command orchestration package | 91.5% |
+| `internal/cli` | 90.9% |
 | `internal/filesystem` | 100.0% |
 | `internal/logger` | 100.0% |
-| `internal/renderer` | 87.8% |
-| `internal/scanner` | 85.9% |
-| `internal/testhelpers` | 77.8% |
-| `internal/cli` | 75.0% |
-| root command orchestration package | 67.9% |
-| `internal/tui` | 26.5% |
-| `cmd/reclaimit` entrypoint | 0.0% |
+| `internal/renderer` | 99.5% |
+| `internal/scanner` | 90.7% |
+| `internal/tui` | 92.3% |
 
-The 90% target is not met. The largest gap is interactive TUI construction and
-event handling. The tiny `cmd/reclaimit` entrypoint contains only
-`os.Exit(Run(...))`; a per-file 90% rule should explicitly exclude this
-process boundary or refactor it behind a testable helper.
+The gate enforces 90% both overall and in every package with executable
+production behavior. It discovers packages with `go list`, so a new production
+package cannot silently avoid the check. Three categories are explicitly not
+applicable to the per-package rule: the one-line `cmd/reclaimit` process
+boundary, test-support packages, and the declarations-only `internal/types`
+package. They remain in the overall coverage profile.
 
-CI now uses a 67.5% ratchet floor so the existing baseline cannot regress while
-retaining 90% as a visible target. Raising the target should be done with
-behavioral tests and a simulated terminal screen, not by excluding production
-packages from the coverage profile.
+The TUI tests use a simulated terminal and exercise rendering, navigation,
+save, and cancel flows. CLI, scanner, renderer, cleanup orchestration, and
+writer-failure tests cover the other former gaps. The reusable local and CI
+gate is `scripts/check-coverage.sh`.
 
 ## Correctness and Performance Fixes
 
@@ -161,29 +163,27 @@ larger discoverability problems.
 
 ### High priority
 
-1. **Coverage target:** add simulation-screen tests for TUI setup, tree
-   rendering, keyboard events, and selection flows; then raise the ratchet in
-   small verified steps.
-2. **Cleanup race window:** a candidate can change after preflight and before
+1. **Cleanup race window:** a candidate can change after preflight and before
    `RemoveAll`. Explore quarantine-by-rename on the same filesystem and
    descriptor-relative deletion where supported.
-3. **Concurrency bound:** `Workers` applies per directory. Deep, wide trees can
+2. **Concurrency bound:** `Workers` applies per directory. Deep, wide trees can
    create more goroutines than the flag implies. Replace nested pools with one
    traversal-wide scheduler after profiling and cancellation design.
-4. **Installer integrity:** verify the selected archive against the release
+3. **Installer integrity:** verify the selected archive against the release
    checksum before installation.
 
 ### Medium priority
 
 1. Pin third-party GitHub Actions to immutable commit SHAs.
-2. Add a feature request issue template and a repository configuration template.
-3. Add a reproducible end-to-end Pages smoke check for canonical assets.
-4. Add categories such as npm, Yarn, pnpm, Go, and Docker only after defining
+2. Add a reproducible end-to-end Pages smoke check for canonical assets.
+3. Add categories such as npm, Yarn, pnpm, Go, and Docker only after defining
    exact safe paths and regeneration semantics.
 
 ## Merge Recommendation
 
-Do not claim that the repository has 90% coverage: it does not. The current
-change is suitable as a focused repair PR once the complete local validation
-suite remains green. Merge it independently from the coverage, cleanup race,
-and global scheduler work so each risk receives dedicated tests and review.
+The current change is suitable to merge: the complete local validation suite is
+green and coverage exceeds 90% overall and per production package. GitHub-hosted
+checks may remain unavailable when Actions minutes are exhausted; the same
+commands have been run locally. Keep cleanup race-hardening and the global
+scheduler in focused follow-up PRs so each risk receives dedicated tests and
+review.
