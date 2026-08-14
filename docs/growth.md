@@ -5,6 +5,17 @@ benchmarks with methodology, precise safety documentation, and category work
 chosen from user evidence. Unsupported recovery totals, generic speed claims,
 and unverified competitor comparisons are excluded.
 
+The search position is deliberately specific: **developer disk cleanup CLI**
+for regenerable artifacts, used alongside general disk analyzers. README and
+landing copy may name ncdu, gdu, dust, and dua for that complementary workflow,
+but must not claim they lack features without checking their current official
+documentation. “Alternative” queries should explain the product boundary, not
+pretend reclaimit is a drop-in replacement.
+
+Do not publish the supplied marketing report's “30–50 GB”, “47 GB”, Homebrew,
+Docker-layer, Xcode-cache, plugin-system, or expected-traffic claims. They are
+not supported by the current code, distribution channels, or measured data.
+
 ## Baseline
 
 The initial audit snapshot was taken on 2026-08-14 before the corrected patch

@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>reclaimit — Find developer files you can safely clean up</title>
-  <meta name="description" content="A Go CLI and terminal UI that finds regenerable developer artifacts, groups them by project, and lets you review them before disk cleanup.">
+  <title>Developer disk cleanup CLI and TUI | reclaimit</title>
+  <meta name="description" content="Review regenerable build artifacts and caches by project with reclaimit, a cross-platform developer disk cleanup CLI and TUI for use alongside ncdu, gdu, dust, or dua.">
   <meta name="author" content="Sergio Valverde">
   <meta name="robots" content="index, follow">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="reclaimit — Find developer files you can safely clean up">
-  <meta property="og:description" content="Developer-aware disk cleanup with project grouping, dry runs, and same-filesystem quarantine.">
+  <meta property="og:title" content="reclaimit — Developer disk cleanup CLI and TUI">
+  <meta property="og:description" content="Review regenerable build artifacts by project with dry runs and guarded cleanup.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://svg153.github.io/reclaimit/">
   <meta property="og:site_name" content="reclaimit">
@@ -41,6 +41,8 @@
     "operatingSystem": "Linux, macOS, Windows",
     "description": "A Go CLI and terminal UI that finds regenerable developer artifacts and lets users review them before disk cleanup.",
     "url": "https://svg153.github.io/reclaimit/",
+    "codeRepository": "https://github.com/svg153/reclaimit",
+    "programmingLanguage": "Go",
     "downloadUrl": "https://github.com/svg153/reclaimit/releases/latest",
     "softwareRequirements": "Go 1.25.12 or a prebuilt release binary",
     "license": "https://opensource.org/licenses/MIT",
@@ -432,30 +434,35 @@
 
     .faq-item:last-child { border-bottom: none; }
 
-    .faq-item h3 {
+    .faq-item summary {
       font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 8px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      list-style: none;
     }
 
-    .faq-item h3::after {
+    .faq-item summary::-webkit-details-marker { display: none; }
+
+    .faq-item summary::after {
       content: '+';
       color: var(--text-muted);
       font-size: 1.25rem;
       font-weight: 300;
     }
 
-    .faq-item h3:hover { color: var(--accent); }
+    .faq-item[open] summary::after { content: '−'; }
+
+    .faq-item summary:hover { color: var(--accent); }
 
     .faq-item p {
       color: var(--text-muted);
       font-size: 0.9rem;
       line-height: 1.6;
       padding-left: 4px;
+      margin-top: 8px;
     }
 
     /* CTA */
@@ -586,22 +593,22 @@
     <div class="container">
       <div class="hero-badge">Developer-aware · Review-first · Cross-platform</div>
       <h1>
-        Find regenerable developer files<br>
-        <span class="gradient">before you clean up</span>
+        Developer disk cleanup<br>
+        <span class="gradient">with project context</span>
       </h1>
       <p class="subtitle">
         <strong>reclaimit</strong> is a Go CLI and terminal UI that recognizes known build artifacts and caches, groups them by project, and lets you review a dry run before deletion.
       </p>
 
       <div class="install-box">
-        <div class="label">Install in one line</div>
+        <div class="label">Install audited main · Go 1.25.12+</div>
         <code>
           <button type="button" class="copy-btn" onclick="copyInstall(this)">Copy</button>
-          <span class="install-text">curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash</span>
+          <span class="install-text">go install github.com/svg153/reclaimit/cmd/reclaimit@main</span>
         </code>
         <div class="install-methods">
-          <a href="https://github.com/svg153/reclaimit/releases/latest">Release archives</a>
-          <a href="https://github.com/svg153/reclaimit#install">Go install</a>
+          <a href="https://github.com/svg153/reclaimit/issues/48">Release status</a>
+          <a href="https://github.com/svg153/reclaimit#install">Install notes</a>
           <a href="https://github.com/svg153/reclaimit#build-and-contribute">Build from source</a>
         </div>
       </div>
@@ -641,7 +648,7 @@
 
         <div class="feature-card">
           <div class="feature-icon">🛡️</div>
-          <h3>Safe by design</h3>
+          <h3>Guarded cleanup</h3>
           <p>Preview before delete. <code>--yes</code> flag required. Context nodes that never imply deleting the repository root itself.</p>
         </div>
 
@@ -666,7 +673,7 @@
         <div class="feature-card">
           <div class="feature-icon">⚡</div>
           <h3>Single binary</h3>
-          <p>~10MB Go binary, no dependencies. No Python, no Node, no runtime setup.</p>
+          <p>Prebuilt releases are standalone executables. Building current source requires Go 1.25.12 or newer.</p>
         </div>
       </div>
     </div>
@@ -678,10 +685,10 @@
       <h2 class="section-title">Usage</h2>
       <p class="section-subtitle">Three commands. Three ways to reclaim space.</p>
 
-      <div class="usage-tabs">
-        <button type="button" class="usage-tab active" onclick="showUsage('analyze')">analyze</button>
-        <button type="button" class="usage-tab" onclick="showUsage('tui')">tui</button>
-        <button type="button" class="usage-tab" onclick="showUsage('clean')">clean</button>
+      <div class="usage-tabs" role="tablist" aria-label="reclaimit commands">
+        <button type="button" class="usage-tab active" role="tab" aria-selected="true" aria-controls="code-analyze" onclick="showUsage('analyze', this)">analyze</button>
+        <button type="button" class="usage-tab" role="tab" aria-selected="false" aria-controls="code-tui" onclick="showUsage('tui', this)">tui</button>
+        <button type="button" class="usage-tab" role="tab" aria-selected="false" aria-controls="code-clean" onclick="showUsage('clean', this)">clean</button>
       </div>
 
       <div id="code-analyze" class="usage-code active">
@@ -704,55 +711,38 @@
   <!-- Comparison -->
   <section id="comparison">
     <div class="container">
-      <h2 class="section-title">How it compares</h2>
-      <p class="section-subtitle">reclaimit is purpose-built for developers, not general disk usage.</p>
+      <h2 class="section-title">reclaimit vs ncdu, gdu, dust, and dua</h2>
+      <p class="section-subtitle">Choose by job: map the whole disk with a general analyzer, then review known developer artifacts with reclaimit.</p>
 
       <div class="table-scroll">
         <table class="comparison-table">
           <thead>
             <tr>
-              <th>Feature</th>
-              <th class="tool-name">reclaimit</th>
-              <th>du / ncdu</th>
-              <th>gdu</th>
-              <th>dust</th>
+              <th>Need</th>
+              <th>Best fit</th>
+              <th>Reason</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Developer-aware patterns</td>
-              <td class="check">✅ 17 categories</td>
-              <td>Raw sizes</td>
-              <td>Raw sizes</td>
-              <td>Raw sizes</td>
+              <td>Understand usage across an arbitrary disk or directory</td>
+              <td>ncdu, gdu, dust, or dua</td>
+              <td>General filesystem exploration and size analysis</td>
             </tr>
             <tr>
-              <td>Safe delete preview</td>
-              <td class="check">✅ Review first</td>
-              <td>Tool-dependent</td>
-              <td>Tool-dependent</td>
-              <td>Tool-dependent</td>
+              <td>Find known regenerable developer artifacts</td>
+              <td class="tool-name">reclaimit</td>
+              <td>17 named categories with regeneration context</td>
             </tr>
             <tr>
-              <td>Markdown reports</td>
-              <td class="check">✅ Tables + Mermaid</td>
-              <td>Not a report format</td>
-              <td>Tool-dependent</td>
-              <td>Tool-dependent</td>
+              <td>Review cleanup candidates by Git project</td>
+              <td class="tool-name">reclaimit</td>
+              <td>Repository grouping, TUI selection, and dry run</td>
             </tr>
             <tr>
-              <td>Repository grouping</td>
-              <td class="check">✅ Group by project</td>
-              <td>Filesystem tree</td>
-              <td>Filesystem tree</td>
-              <td>Filesystem tree</td>
-            </tr>
-            <tr>
-              <td>JSON automation output</td>
-              <td class="check">✅</td>
-              <td>Tool-dependent</td>
-              <td>Tool-dependent</td>
-              <td>Tool-dependent</td>
+              <td>Export candidate metadata for automation</td>
+              <td class="tool-name">reclaimit</td>
+              <td>Plain text, Markdown, and JSON output</td>
             </tr>
           </tbody>
         </table>
@@ -766,49 +756,54 @@
       <h2 class="section-title">FAQ</h2>
       <p class="section-subtitle">Common questions about reclaimit.</p>
 
-      <div class="faq-item">
-        <h3>Is reclaimit safe to use?</h3>
+      <details class="faq-item" open>
+        <summary>Is reclaimit safe to use?</summary>
         <p><code>analyze</code> and <code>tui</code> are read-only. Cleanup requires <code>--yes</code>, revalidates each candidate, and atomically moves it into a private same-filesystem quarantine before deletion. Changed data is preserved with a reported recovery path. Deletion remains irreversible, so review a <code>--dry-run</code> first and keep backups for valuable data.</p>
-      </div>
+      </details>
 
-      <div class="faq-item">
-        <h3>What directories does reclaimit recognize?</h3>
-        <p>Seventeen categories including <code>node_modules</code>, Python virtual environments and caches, <code>dist</code>, <code>build</code>, Rust <code>target</code>, <code>.next</code>, <code>.nuxt</code>, pip and pipx data, Bun caches, and macOS metadata.</p>
-      </div>
+      <details class="faq-item">
+        <summary>What directories does reclaimit recognize?</summary>
+        <p>Seventeen categories including <code>node_modules</code>, Python virtual environments and caches, <code>dist</code>, <code>build</code>, Rust <code>target</code>, <code>.next</code>, <code>.nuxt</code>, pip and pipx data, <code>.bun/install/cache</code>, and macOS metadata.</p>
+      </details>
 
-      <div class="faq-item">
-        <h3>Can I exclude specific paths?</h3>
+      <details class="faq-item">
+        <summary>Is reclaimit an alternative to ncdu?</summary>
+        <p>It covers a different step. ncdu, gdu, dust, and dua are better for exploring arbitrary disk usage. reclaimit focuses on recognized developer artifacts, project grouping, and review-before-cleanup. They work well together.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I exclude specific paths?</summary>
         <p>Yes. Use <code>--exclude-path</code> for exact paths or <code>--exclude-group</code> for prefix-based exclusions.</p>
-      </div>
+      </details>
 
-      <div class="faq-item">
-        <h3>Does it work on Windows?</h3>
+      <details class="faq-item">
+        <summary>Does it work on Windows?</summary>
         <p>Yes. reclaimit is written in Go and supports Linux, macOS, and Windows.</p>
-      </div>
+      </details>
 
-      <div class="faq-item">
-        <h3>How fast is it?</h3>
+      <details class="faq-item">
+        <summary>How fast is it?</summary>
         <p>The scanner enforces one configurable concurrency ceiling across the complete traversal, supports clean cancellation, and reports scanned, skipped, and truncated entries. Performance depends on the filesystem, tree shape, and storage hardware.</p>
-      </div>
+      </details>
 
-      <div class="faq-item">
-        <h3>Can I export the report?</h3>
+      <details class="faq-item">
+        <summary>Can I export the report?</summary>
         <p>Yes. <code>analyze --format markdown --out report.md</code> produces a Markdown report with tables, Mermaid diagrams, and PlantUML blocks.</p>
-      </div>
+      </details>
     </div>
   </section>
 
   <!-- CTA -->
   <section class="cta">
     <div class="container">
-      <h2>Ready to reclaim your disk space?</h2>
-      <p>Install it in seconds. No dependencies. No setup.</p>
+      <h2>Review developer disk cleanup candidates</h2>
+      <p>Start with read-only analysis, inspect the result, then decide what to clean.</p>
       <div class="cta-buttons">
         <a href="https://github.com/svg153/reclaimit" class="btn-primary" target="_blank" rel="noopener">
           ⭐ Star on GitHub
         </a>
         <a href="https://github.com/svg153/reclaimit/releases/latest" class="btn-secondary">
-          📦 Install now
+          📦 View releases
         </a>
       </div>
     </div>
@@ -830,11 +825,15 @@
   </footer>
 
   <script>
-    function showUsage(cmd) {
+    function showUsage(cmd, button) {
       document.querySelectorAll('.usage-code').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.usage-tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.usage-tab').forEach(el => {
+        el.classList.remove('active');
+        el.setAttribute('aria-selected', 'false');
+      });
       document.getElementById('code-' + cmd).classList.add('active');
-      event.target.classList.add('active');
+      button.classList.add('active');
+      button.setAttribute('aria-selected', 'true');
     }
 
     function copyInstall(btn) {

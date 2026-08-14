@@ -31,7 +31,7 @@ assets remain operational follow-up work.
 | Check | Result |
 | --- | --- |
 | `go test ./...` | Pass after fixes |
-| Coverage gate | 93.4% overall; every production package is at least 90% |
+| Coverage gate | 93.5% overall; every production package is at least 90% |
 | `go test -race ./...` | Pass after fixes |
 | `go vet ./...` | Pass |
 | `golangci-lint v2.1.6` | Pass, 0 issues |
@@ -52,7 +52,7 @@ updates, but they are not currently reachable findings.
 
 ## Coverage
 
-The current overall statement coverage is **93.4%**.
+The current overall statement coverage is **93.5%**.
 
 | Package | Coverage |
 | --- | ---: |
@@ -61,7 +61,7 @@ The current overall statement coverage is **93.4%**.
 | `internal/filesystem` | 100.0% |
 | `internal/logger` | 100.0% |
 | `internal/renderer` | 100.0% |
-| `internal/scanner` | 93.0% |
+| `internal/scanner` | 93.2% |
 | `internal/tui` | 92.3% |
 
 The gate enforces 90% both overall and in every package with executable
