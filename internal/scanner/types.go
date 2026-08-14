@@ -60,6 +60,10 @@ type Report struct {
 	SelectedCategorySummaries []CategorySummary
 	SelectedGroupSummaries    []GroupSummary
 	DeletedBytes              int64
+	ExpectedDeletedBytes      int64
+	VerifiedDeletedBytes      int64
+	SkippedCleanCandidates    int
+	FailedCleanCandidates     int
 	EntriesScanned            int64
 	EntriesSkipped            int64
 	TruncatedDirectories      int64
