@@ -12,8 +12,9 @@ or path, and lets users review candidates before deletion.
 - Plain-text, Markdown, and JSON reports.
 - Interactive terminal UI.
 - Read-only analysis and non-destructive cleanup dry runs.
-- Pre-delete checks for path existence, type, measured size, and modification
-  snapshot. Changed or missing candidates are skipped.
+- Pre-delete checks for path identity, type, measured size, and modification
+  snapshot, followed by an atomic same-filesystem quarantine and revalidation.
+  Changed data is preserved with a reported recovery path.
 - Prebuilt release archives for Linux, macOS, and Windows.
 
 ## Install
@@ -35,13 +36,14 @@ reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
 ## Safety
 
 Deletion is irreversible and cannot be transactional on a normal filesystem.
-Users should review dry-run output and keep backups for valuable data.
+Symbolic links and special files are skipped. Users should review dry-run output
+and keep backups for valuable data.
 
 ## Canonical links
 
-- Website: https://svg153.github.io/reclaimit/
-- Source: https://github.com/svg153/reclaimit
-- Releases: https://github.com/svg153/reclaimit/releases/latest
-- Documentation: https://github.com/svg153/reclaimit/tree/main/docs
-- Issues: https://github.com/svg153/reclaimit/issues
+- [Website](https://svg153.github.io/reclaimit/)
+- [Source](https://github.com/svg153/reclaimit)
+- [Releases](https://github.com/svg153/reclaimit/releases/latest)
+- [Documentation](https://github.com/svg153/reclaimit/tree/main/docs)
+- [Issues](https://github.com/svg153/reclaimit/issues)
 - License: MIT

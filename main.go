@@ -119,6 +119,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		report.VerifiedDeletedBytes = cleanResult.VerifiedBytes
 		report.SkippedCleanCandidates = cleanResult.SkippedCandidates
 		report.FailedCleanCandidates = cleanResult.FailedCandidates
+		report.CleanIssues = cleanResult.Issues
 
 		output, err := renderer.RenderReport(report, cfg.Format)
 		if err != nil {

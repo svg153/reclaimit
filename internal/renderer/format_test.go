@@ -242,22 +242,33 @@ func TestRenderSelectionAndCleanupBranches(t *testing.T) {
 		FailedCleanCandidates:     1,
 		SelectedCategorySummaries: []scanner.CategorySummary{{CategoryKey: "cache", Bytes: 1, Count: 1}},
 		SelectedGroupSummaries:    groups,
+		CleanIssues: []scanner.CleanIssue{{
+			Path: "/tmp/a|b", QuarantinePath: "/tmp/.reclaimit-quarantine-1/candidate",
+			Status: "failed", Reason: "changed|preserved", Bytes: 1,
+		}},
 	}
 	plain, err := RenderReport(report, "plain")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(plain, "selected after exclusions") || !strings.Contains(plain, "verified") {
+	if !strings.Contains(plain, "selected after exclusions") || !strings.Contains(plain, "verified") || !strings.Contains(plain, "recoverable at") {
 		t.Fatalf("plain output missed cleanup branches: %s", plain)
 	}
 	markdown, err := RenderReport(report, "markdown")
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Selected after exclusions", "Cleanup verification", "group-h", "\\|"} {
+	for _, want := range []string{"Selected after exclusions", "Cleanup verification", "Cleanup issues", "reclaimit-quarantine", "group-h", "\\|"} {
 		if !strings.Contains(markdown, want) {
 			t.Fatalf("markdown missing %q: %s", want, markdown)
 		}
+	}
+	jsonOutput, err := RenderReport(report, "json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(jsonOutput, `"quarantine_path"`) || !strings.Contains(jsonOutput, `"clean_issues"`) {
+		t.Fatalf("JSON cleanup audit trail is missing: %s", jsonOutput)
 	}
 }
 
