@@ -84,3 +84,25 @@ func TestReleasePublishesNonRootMultiPlatformContainer(t *testing.T) {
 		t.Fatal("runtime container must declare a non-root user")
 	}
 }
+
+func TestBuildsUsePatchedGoToolchains(t *testing.T) {
+	requiredByFile := map[string][]string{
+		"go.mod":                        {"go 1.25.12"},
+		"Dockerfile":                    {"FROM golang:1.25.12-alpine"},
+		".github/workflows/ci.yml":      {`go-version: ["1.25.12", "1.26.5"]`, `go-version: "1.26.5"`},
+		".github/workflows/release.yml": {`go-version: "1.25.12"`},
+	}
+
+	for path, requiredValues := range requiredByFile {
+		contents, err := os.ReadFile(filepath.Join(repoRoot(), filepath.FromSlash(path)))
+		if err != nil {
+			t.Errorf("read %s: %v", path, err)
+			continue
+		}
+		for _, required := range requiredValues {
+			if !strings.Contains(string(contents), required) {
+				t.Errorf("%s is missing patched toolchain setting %q", path, required)
+			}
+		}
+	}
+}

@@ -16,7 +16,7 @@ Traditional disk analyzers answer **“what is large?”**. `reclaimit` adds the
 # macOS or Linux: download the latest matching release
 curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
 
-# Or install from source with Go 1.24+
+# Or install from source with Go 1.25.12+
 go install github.com/svg153/reclaimit/cmd/reclaimit@latest
 ```
 

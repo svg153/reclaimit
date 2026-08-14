@@ -8,7 +8,7 @@ Thank you for your interest in contributing to `reclaimit`! This guide outlines 
 
 ### Prerequisites
 
-- **Go**: Version 1.24+ is required (see `go.mod`).
+- **Go**: Version 1.25.12+ is required (see `go.mod`).
 - **Task** (optional): [Task](https://taskfile.dev) provides shortcuts for
   build, lint, and test commands. The underlying Go commands also work
   directly.

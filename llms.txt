@@ -26,7 +26,7 @@ or path, and lets users review candidates before deletion.
 ```bash
 curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
 
-# Or with Go 1.24+
+# Or with Go 1.25.12+
 go install github.com/svg153/reclaimit/cmd/reclaimit@latest
 ```
 
