@@ -31,7 +31,7 @@ assets remain operational follow-up work.
 | Check | Result |
 | --- | --- |
 | `go test ./...` | Pass after fixes |
-| Coverage gate | 93.5% overall; every production package is at least 90% |
+| Coverage gate | 94.1% overall; every production package and file is at least 90% |
 | `go test -race ./...` | Pass after fixes |
 | `go vet ./...` | Pass |
 | `golangci-lint v2.1.6` | Pass, 0 issues |
@@ -52,7 +52,7 @@ updates, but they are not currently reachable findings.
 
 ## Coverage
 
-The current overall statement coverage is **93.5%**.
+The current overall statement coverage is **94.1%**.
 
 | Package | Coverage |
 | --- | ---: |
@@ -61,14 +61,16 @@ The current overall statement coverage is **93.5%**.
 | `internal/filesystem` | 100.0% |
 | `internal/logger` | 100.0% |
 | `internal/renderer` | 100.0% |
-| `internal/scanner` | 93.2% |
+| `internal/scanner` | 94.8% |
 | `internal/tui` | 92.3% |
 
-The gate enforces 90% both overall and in every package with executable
-production behavior. It discovers packages with `go list`, so a new production
-package cannot silently avoid the check. The process signal/bootstrap boundary
-in `cmd/reclaimit` and test-support packages are explicitly not applicable to
-the per-package rule. They remain in the overall coverage profile.
+The gate enforces 90% overall and in every package and source file with
+executable production behavior. It discovers packages with `go list`, so a new
+production package cannot silently avoid the check, and calculates per-file
+statement totals from the complete profile so one high-risk file cannot hide
+behind its package average. The process signal/bootstrap boundary in
+`cmd/reclaimit` and test-support packages are explicitly not applicable. They
+remain in the overall coverage profile.
 
 The TUI tests use a simulated terminal and exercise rendering, navigation,
 save, and cancel flows. CLI, scanner, renderer, cleanup orchestration, and
@@ -186,7 +188,7 @@ larger discoverability problems.
 ## Merge Recommendation
 
 The current change is suitable to merge: the complete local validation suite is
-green and coverage exceeds 90% overall and per production package. GitHub-hosted
+green and coverage exceeds 90% overall and per production package and file. GitHub-hosted
 checks may remain unavailable when Actions minutes are exhausted; the same
 commands have been run locally. Keep publication as a focused release operation
 so generated archives, packages, checksums, and images can be verified together.

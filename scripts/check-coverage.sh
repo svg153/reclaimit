@@ -78,11 +78,45 @@ while IFS= read -r package; do
   fi
 done < <(go list ./...)
 
+# Enforce the same floor for every production source file. This catches a
+# lightly tested high-risk file hidden by strong coverage elsewhere in its
+# package. Bootstrap and test-support paths use the same exclusions as above.
+if ! awk -v floor="${minimum}" -v module="${module}" '
+  NR == 1 { next }
+  {
+    split($1, location, ":")
+    file = location[1]
+    total[file] += $2
+    if ($3 > 0) covered[file] += $2
+  }
+  END {
+    failed = 0
+    for (file in total) {
+      if (file == module "/cmd/reclaimit/main.go" ||
+          index(file, module "/internal/test/") == 1 ||
+          index(file, module "/internal/testhelpers/") == 1) {
+        continue
+      }
+      coverage = 100 * covered[file] / total[file]
+      display = file
+      sub("^" module "/", "", display)
+      printf "Coverage file: %s %.1f%%\n", display, coverage
+      if (coverage + 0.000001 < floor) {
+        printf "File coverage %.1f%% is below %.1f%%: %s\n", coverage, floor, display > "/dev/stderr"
+        failed = 1
+      }
+    }
+    exit failed
+  }
+' coverage.out; then
+	failed=1
+fi
+
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   {
     echo "### Coverage"
     echo "* Total coverage: ${total}%"
-    echo "* Minimum overall and per production package: ${minimum}%"
+    echo "* Minimum overall and per production package and file: ${minimum}%"
   } >> "${GITHUB_STEP_SUMMARY}"
 fi
 

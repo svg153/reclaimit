@@ -153,7 +153,8 @@ tracked without product telemetry in [docs/growth.md](docs/growth.md).
 ## Roadmap
 
 - Expand cleanup categories only with explicit safety descriptions and tests.
-- Keep behavioral coverage above 90% overall and in every production package.
+- Keep behavioral coverage above 90% overall and in every production package
+  and source file.
 - Add age-based filters and export/import of reviewed selections.
 - Review release acquisition after 30 days and select new cleanup categories
   from opt-in, privacy-preserving evidence.

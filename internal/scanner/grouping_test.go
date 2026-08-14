@@ -108,10 +108,24 @@ func TestFindRepoRoot_AtRoot_ReturnsEmpty(t *testing.T) {
 	}
 }
 
+func TestFindRepoRootStopsAtFilesystemRootOutsideScanRoot(t *testing.T) {
+	cache := make(map[string]string)
+	if got := findRepoRoot(string(filepath.Separator), t.TempDir(), cache); got != "" {
+		t.Fatalf("findRepoRoot(filesystem root) = %q", got)
+	}
+}
+
 func TestAncestorGroup_DefaultDepth(t *testing.T) {
 	result := ancestorGroup("/root/a/file.txt", "/root", 1)
 	if result != "/root/a" {
 		t.Errorf("expected /root/a, got %s", result)
+	}
+}
+
+func TestAncestorGroupRootPath(t *testing.T) {
+	root := t.TempDir()
+	if got := ancestorGroup(root, root, 1); got != root {
+		t.Fatalf("ancestorGroup(root) = %q, want %q", got, root)
 	}
 }
 

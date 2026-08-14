@@ -49,9 +49,6 @@ func ancestorGroup(path, root string, depth int) string {
 		return root
 	}
 	parts := strings.Split(relative, string(filepath.Separator))
-	if len(parts) == 0 {
-		return root
-	}
 	if len(parts) < depth {
 		depth = len(parts)
 	}
