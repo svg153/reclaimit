@@ -94,6 +94,12 @@ func renderMarkdown(report scanner.Report) string {
 	}
 	if report.Command == "clean" {
 		fmt.Fprintf(&b, "- **Deleted:** %s\n", humanizeBytes(report.DeletedBytes))
+		fmt.Fprintf(&b, "- **Cleanup verification:** %s verified of %s expected; %d skipped; %d failed\n",
+			humanizeBytes(report.VerifiedDeletedBytes),
+			humanizeBytes(report.ExpectedDeletedBytes),
+			report.SkippedCleanCandidates,
+			report.FailedCleanCandidates,
+		)
 	}
 	b.WriteString("\n")
 	b.WriteString(renderMarkdownSummary(report, selectionMode))
