@@ -2,11 +2,11 @@ package renderer
 
 import (
 	"encoding/json"
-
-	"github.com/svg153/reclaimit/internal/scanner"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/svg153/reclaimit/internal/scanner"
 )
 
 func RenderReport(report scanner.Report, format string) (string, error) {
@@ -158,6 +158,10 @@ type jsonReport struct {
 	CandidateBytes          int64            `json:"candidate_bytes"`
 	SelectedBytes           int64            `json:"selected_bytes"`
 	DeletedBytes            int64            `json:"deleted_bytes"`
+	EntriesScanned          int64            `json:"entries_scanned"`
+	EntriesSkipped          int64            `json:"entries_skipped"`
+	TruncatedDirectories    int64            `json:"truncated_directories"`
+	MaxDepthReached         int              `json:"max_depth_reached"`
 	Command                 string           `json:"command"`
 	TopEntries              []scanner.PathSize       `json:"top_entries"`
 	TopFiles                []scanner.PathSize       `json:"top_files"`
@@ -202,6 +206,10 @@ func renderJSON(report scanner.Report) string {
 		CandidateBytes:          report.CandidateBytes,
 		SelectedBytes:           report.SelectedBytes,
 		DeletedBytes:            report.DeletedBytes,
+		EntriesScanned:          report.EntriesScanned,
+		EntriesSkipped:          report.EntriesSkipped,
+		TruncatedDirectories:    report.TruncatedDirectories,
+		MaxDepthReached:         report.MaxDepthReached,
 		Command:                 report.Command,
 		TopEntries:              report.TopEntries,
 		TopFiles:                report.TopFiles,
