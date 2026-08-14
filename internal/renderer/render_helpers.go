@@ -127,7 +127,14 @@ func candidateRows(items []scanner.Candidate, max int) []string {
 }
 
 func escapeMarkdownCell(value string) string {
-	return strings.ReplaceAll(value, "|", "\\|")
+	return strings.NewReplacer(
+		"\\", "\\\\",
+		"|", "\\|",
+		"`", "\\`",
+		"\r", "\\r",
+		"\n", "\\n",
+		"\x1b", "\\x1b",
+	).Replace(value)
 }
 
 func humanizeTimestamp(value time.Time) string {
