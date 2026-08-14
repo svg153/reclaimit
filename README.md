@@ -105,7 +105,12 @@ Run `reclaimit help analyze`, `reclaimit help tui`, or `reclaimit help clean` fo
 
 `analyze` and `tui` are read-only. `clean` requires either `--dry-run` or `--yes`.
 
-Before deleting, `reclaimit` collapses nested selections and checks that each path still exists and matches the type, size, and modification snapshot observed by the scan. It records expected, verified, deleted, skipped, and failed outcomes separately.
+Before deleting, `reclaimit` collapses nested selections and checks that each
+path still exists and matches the type, identity, size, and modification
+snapshot observed by the scan. It then atomically renames each verified item
+into a private same-filesystem quarantine, checks it again, and only deletes the
+quarantined object. Changed data is preserved and its recovery path is included
+in plain-text, Markdown, and JSON cleanup results.
 
 Deletion is still irreversible and cannot be transactional on a normal filesystem. Review the dry run, keep backups for valuable data, and avoid running cleanup against paths you do not understand.
 

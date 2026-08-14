@@ -157,8 +157,9 @@ sequenceDiagram
     end
     alt clean command
         CLI->>Clean: Preflight selected candidates
-        Clean->>FS: Verify path, type, size, and modification snapshot
-        Clean->>FS: Delete verified paths and post-check removal
+        Clean->>FS: Verify path, identity, type, size, and modification snapshot
+        Clean->>FS: Rename into a private same-filesystem quarantine
+        Clean->>FS: Revalidate identity and contents, then delete quarantine
         CLI->>Analyze: Re-run after deletion
     end
     CLI->>Render: RenderReport(report, format)
@@ -218,6 +219,42 @@ The scanner records `entries_scanned`, `entries_skipped`, `truncated_directories
 
 ## Clean preflight and outcome contract
 
-The clean path always runs through `CleanWithOptions`, including `--dry-run`. It first normalizes nested candidates, then verifies every candidate before deleting any of them. A candidate is eligible only if it still exists, its file/directory type is unchanged, its measured bytes match the scan, and its latest modification snapshot is unchanged when available.
+The clean path always runs through `CleanWithOptions`, including `--dry-run`.
+It first normalizes nested candidates, protects empty paths and filesystem
+roots, then verifies every candidate before mutating any of them. A candidate
+is eligible only if it still exists, is a
+regular file or directory, has the same filesystem identity and type, matches
+the measured bytes from the scan, and has the same latest modification snapshot
+when available. Symbolic links and special files are skipped.
 
-Missing or changed candidates are skipped instead of being removed. Filesystem failures and post-delete verification failures are recorded per candidate; the remaining candidates continue. Successful deletion is counted from the verified bytes at deletion time, while the report keeps expected, verified, skipped, and failed totals separate. This is deliberately explicit: direct filesystem deletion cannot promise rollback after bytes have been permanently removed, so the implementation does not claim transactional recovery it cannot guarantee.
+Immediately before deletion, the candidate is revalidated and renamed into a
+new mode-0700 `.reclaimit-quarantine-*` sibling directory. The rename is atomic
+and stays on the candidate's filesystem because the quarantine is created in
+the same parent. The implementation then compares `os.SameFile` identity and
+remeasures the quarantined tree. Only that detached, unchanged object is passed
+to `RemoveAll`; anything created later at the original public path is outside
+the deletion target.
+
+If identity or contents change during the handoff, deletion stops and the
+quarantine path is returned in `CleanIssue.QuarantinePath` and rendered in
+plain-text, Markdown, and JSON reports. Automatic rollback is deliberately not
+attempted: a concurrent process may already have recreated the original name,
+and a portable rename-back could overwrite it on Unix. The private quarantine
+therefore preserves data for explicit recovery. Candidates continue
+independently after a partial failure.
+
+On Linux and macOS, a symlink is rejected by `Lstat` before quarantine and a
+mounted directory normally fails the rename rather than crossing a filesystem.
+On Windows, symbolic links, junctions, mounted folders, and other name-surrogate
+reparse points are reported by `Lstat` as non-regular entries and are skipped;
+open handles or filesystem policy may reject the rename, which is reported as a
+per-candidate failure. No platform fallback performs a copy followed by delete,
+because that would reintroduce both the race and partial-copy ambiguity.
+
+Successful deletion is counted from the verified bytes at deletion time, while
+the report keeps expected, verified, skipped, failed, and warning outcomes
+separate. Deletion remains irreversible after the quarantine is removed and is
+not claimed to be transactional. Descriptor-relative deletion can further
+harden against a malicious same-user process that discovers and races the
+random quarantine path, but the public preflight-to-delete path substitution is
+closed by the atomic detach and identity check.

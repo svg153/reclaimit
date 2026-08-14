@@ -10,7 +10,7 @@
 
   <!-- Open Graph -->
   <meta property="og:title" content="reclaimit — Find developer files you can safely clean up">
-  <meta property="og:description" content="Developer-aware disk cleanup with project grouping, dry runs, and pre-delete revalidation.">
+  <meta property="og:description" content="Developer-aware disk cleanup with project grouping, dry runs, and same-filesystem quarantine.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://svg153.github.io/reclaimit/">
   <meta property="og:site_name" content="reclaimit">
@@ -729,7 +729,7 @@
 
       <div class="faq-item">
         <h3>Is reclaimit safe to use?</h3>
-        <p><code>analyze</code> and <code>tui</code> are read-only. Cleanup requires <code>--yes</code> and revalidates candidates, but filesystem deletion is irreversible. Review a <code>--dry-run</code> first and keep backups for valuable data.</p>
+        <p><code>analyze</code> and <code>tui</code> are read-only. Cleanup requires <code>--yes</code>, revalidates each candidate, and atomically moves it into a private same-filesystem quarantine before deletion. Changed data is preserved with a reported recovery path. Deletion remains irreversible, so review a <code>--dry-run</code> first and keep backups for valuable data.</p>
       </div>
 
       <div class="faq-item">

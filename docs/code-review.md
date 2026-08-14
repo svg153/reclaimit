@@ -22,16 +22,16 @@ not release-ready at the start of this audit:
 - Overall statement coverage was 68.3%, not the 90% target.
 
 The current change fixes the correctness, lint, release, Pages, installer,
-documentation, and coverage defects. Deletion race-hardening and traversal-wide
-concurrency remain explicit follow-up work because they require focused design
-and review.
+documentation, coverage, and public-path deletion race defects.
+Traversal-wide concurrency remains explicit follow-up work because it requires
+focused design and review.
 
 ## Validation Results
 
 | Check | Result |
 | --- | --- |
 | `go test ./...` | Pass after fixes |
-| Coverage gate | 92.5% overall; every production package is at least 90% |
+| Coverage gate | 93.1% overall; every production package is at least 90% |
 | `go test -race ./...` | Pass after fixes |
 | `go vet ./...` | Pass |
 | `golangci-lint v2.1.6` | Pass, 0 issues |
@@ -52,16 +52,16 @@ updates, but they are not currently reachable findings.
 
 ## Coverage
 
-The current overall statement coverage is **92.5%**.
+The current overall statement coverage is **93.1%**.
 
 | Package | Coverage |
 | --- | ---: |
-| root command orchestration package | 91.5% |
+| root command orchestration package | 91.6% |
 | `internal/cli` | 90.9% |
 | `internal/filesystem` | 100.0% |
 | `internal/logger` | 100.0% |
-| `internal/renderer` | 99.5% |
-| `internal/scanner` | 90.7% |
+| `internal/renderer` | 100.0% |
+| `internal/scanner` | 92.1% |
 | `internal/tui` | 92.3% |
 
 The gate enforces 90% both overall and in every package with executable
@@ -163,13 +163,10 @@ larger discoverability problems.
 
 ### High priority
 
-1. **Cleanup race window:** a candidate can change after preflight and before
-   `RemoveAll`. Explore quarantine-by-rename on the same filesystem and
-   descriptor-relative deletion where supported.
-2. **Concurrency bound:** `Workers` applies per directory. Deep, wide trees can
+1. **Concurrency bound:** `Workers` applies per directory. Deep, wide trees can
    create more goroutines than the flag implies. Replace nested pools with one
    traversal-wide scheduler after profiling and cancellation design.
-3. **Installer integrity:** verify the selected archive against the release
+2. **Installer integrity:** verify the selected archive against the release
    checksum before installation.
 
 ### Medium priority
@@ -184,6 +181,6 @@ larger discoverability problems.
 The current change is suitable to merge: the complete local validation suite is
 green and coverage exceeds 90% overall and per production package. GitHub-hosted
 checks may remain unavailable when Actions minutes are exhausted; the same
-commands have been run locally. Keep cleanup race-hardening and the global
-scheduler in focused follow-up PRs so each risk receives dedicated tests and
-review.
+commands have been run locally. Keep the global scheduler and release
+supply-chain work in focused follow-up PRs so each risk receives dedicated
+tests and review.
