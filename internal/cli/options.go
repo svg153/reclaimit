@@ -69,20 +69,36 @@ func ParseConfig(args []string) (Options, error) {
 	if len(args) > 0 {
 		switch args[0] {
 		case "help":
+			if len(args) > 2 {
+				return cfg, fmt.Errorf("unexpected arguments after help topic: %q", strings.Join(args[2:], " "))
+			}
 			cfg.Command = "help"
 			if len(args) > 1 {
 				cfg.HelpTopic = args[1]
+				if !validHelpTopic(cfg.HelpTopic) {
+					return cfg, fmt.Errorf("unknown help topic %q", cfg.HelpTopic)
+				}
 			}
 			return cfg, nil
 		case "-h", "--help":
+			if len(args) > 1 {
+				return cfg, fmt.Errorf("unexpected arguments after %s: %q", args[0], strings.Join(args[1:], " "))
+			}
 			cfg.Command = "help"
 			return cfg, nil
 		case "--version", "version":
+			if len(args) > 1 {
+				return cfg, fmt.Errorf("unexpected arguments after %s: %q", args[0], strings.Join(args[1:], " "))
+			}
 			cfg.Command = "version"
 			return cfg, nil
 		case "analyze", "clean", "tui":
 			cfg.Command = args[0]
 			args = args[1:]
+		default:
+			if !strings.HasPrefix(args[0], "-") {
+				return cfg, fmt.Errorf("unknown command %q", args[0])
+			}
 		}
 	}
 	for _, arg := range args {
@@ -133,6 +149,9 @@ func ParseConfig(args []string) (Options, error) {
 		}
 		return cfg, err
 	}
+	if fs.NArg() > 0 {
+		return cfg, fmt.Errorf("unexpected positional arguments: %q", strings.Join(fs.Args(), " "))
+	}
 
 	cfg.IncludeCategories = append(cfg.IncludeCategories, includeCategories...)
 	cfg.ExcludeCategories = append(cfg.ExcludeCategories, excludeCategories...)
@@ -150,6 +169,9 @@ func ParseConfig(args []string) (Options, error) {
 	}
 	if cfg.TopFiles < 1 || cfg.TopGroups < 1 || cfg.TopEntries < 1 {
 		return cfg, errors.New("top limits must be >= 1")
+	}
+	if cfg.MinCandidateSize < 0 {
+		return cfg, errors.New("min-candidate-size must be >= 0")
 	}
 	if cfg.MaxDepth < 0 {
 		return cfg, errors.New("max-depth must be >= 0")
@@ -204,6 +226,15 @@ func ParseConfig(args []string) (Options, error) {
 	}
 
 	return cfg, nil
+}
+
+func validHelpTopic(topic string) bool {
+	switch topic {
+	case "analyze", "clean", "tui":
+		return true
+	default:
+		return false
+	}
 }
 
 func loadIgnoreFile(path string) ([]string, error) {
