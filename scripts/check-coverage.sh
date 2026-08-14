@@ -33,15 +33,14 @@ else
 fi
 
 # These exclusions are not meaningful per-package unit-test targets: the
-# process signal/bootstrap boundary, test-support code, and declarations-only
-# types. The testable command and cancellation behavior lives in the root package.
+# process signal/bootstrap boundary and test-support code. The testable command
+# and cancellation behavior lives in the root package.
 module="$(go list -m)"
 readonly module
 readonly -a excluded_packages=(
   "${module}/cmd/reclaimit"
   "${module}/internal/test"
   "${module}/internal/testhelpers"
-  "${module}/internal/types"
 )
 
 is_excluded() {

@@ -1,11 +1,13 @@
-bin/
+/bin/
+/reclaimit
+/dist/
+/_site/
+/.opencode/
 coverage.out
 coverage.html
 coverage.txt
 disk-usage
 disk-usage.bin
-dist/
-_site/
 # Generated documentation site (authored docs under docs/ are tracked)
 docs/index.md
 docs/.nojekyll
