@@ -14,7 +14,6 @@ import (
 
 var Version = "dev"
 
-
 func Run(args []string, stdout, stderr io.Writer) int {
 	cfg, err := cli.ParseConfig(args)
 	if err != nil {
@@ -87,7 +86,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			report.DeletedBytes = 0
 			if err := writef(stdout,
 				"\n[DRY RUN] Would delete %s across %d verified candidates (skipped %d)\n",
-				 humanizeBytes(cleanResult.VerifiedBytes),
+				humanizeBytes(cleanResult.VerifiedBytes),
 				 cleanResult.Candidates-cleanResult.SkippedCandidates-cleanResult.FailedCandidates,
 				 cleanResult.SkippedCandidates,
 			); err != nil {
