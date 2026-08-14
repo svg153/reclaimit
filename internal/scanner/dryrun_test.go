@@ -75,7 +75,7 @@ func TestDryRunPartialMissing(t *testing.T) {
 	os.MkdirAll(existing, 0o755)
 
 	candidates := []Candidate{
-		{Path: existing, Bytes: 0},
+		{Path: existing, Bytes: 0, IsDir: true},
 		{Path: "/tmp/nonexistent_dryrun_partial", Bytes: 999},
 	}
 	total, err := DryRun(candidates)
@@ -129,7 +129,7 @@ func TestDryRunPermissionError(t *testing.T) {
 	os.MkdirAll(target, 0o755)
 	os.WriteFile(filepath.Join(target, "f.txt"), []byte("x"), 0o644)
 
-	candidates := []Candidate{{Path: target, Bytes: 1}}
+	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 	total, err := DryRun(candidates)
 	if err != nil {
 		t.Fatalf("DryRun normal: %v", err)
