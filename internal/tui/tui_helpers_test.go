@@ -53,10 +53,10 @@ func TestTrimForTree(t *testing.T) {
 		max  int
 		want string
 	}{
-		{"hello", 10, "hello"},         // shorter than max
-		{"hello world", 5, "hell…"},    // 5-1=4 chars + …
-		{"hi", 1, "h"},                  // max=1 → first char only
-		{"a", 0, ""},                    // max=0 → empty
+		{"hello", 10, "hello"},      // shorter than max
+		{"hello world", 5, "hell…"}, // 5-1=4 chars + …
+		{"hi", 1, "h"},              // max=1 → first char only
+		{"a", 0, ""},                // max=0 → empty
 	}
 	for _, tc := range tests {
 		got := trimForTree(tc.val, tc.max)

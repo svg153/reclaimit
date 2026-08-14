@@ -27,7 +27,7 @@ Use "reclaimit <command> --help" for more information about a command.
 Flags:
   -root PATH
       path to scan
-  -format plain|markdown
+  -format plain|markdown|json
       output format
   -group-mode repo|depth
       group candidates by repository or path depth

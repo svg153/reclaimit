@@ -74,6 +74,27 @@ func TestExcludeGroupSkipsNestedCandidates(t *testing.T) {
 	}
 }
 
+func TestAnalyzeTotalBytesIncludesEntriesOutsideTopList(t *testing.T) {
+	root := t.TempDir()
+	mustWriteFile(t, filepath.Join(root, "largest.bin"), strings.Repeat("a", 30))
+	mustWriteFile(t, filepath.Join(root, "second.bin"), strings.Repeat("b", 20))
+	mustWriteFile(t, filepath.Join(root, "third.bin"), strings.Repeat("c", 10))
+
+	report, err := AnalyzeWithOptions("analyze", AnalyzeOptions{
+		Root: root, GroupMode: "depth", GroupDepth: 1,
+		TopFiles: 10, TopGroups: 10, TopEntries: 1, MinCandidateSize: 1,
+	}, nil)
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+	if report.TotalBytes != 60 {
+		t.Fatalf("expected all 60 bytes in total, got %d", report.TotalBytes)
+	}
+	if len(report.TopEntries) != 1 || report.TopEntries[0].Bytes != 30 {
+		t.Fatalf("unexpected top entries: %#v", report.TopEntries)
+	}
+}
+
 func TestMatchHelpersAndSummaries(t *testing.T) {
 	if _, ok := MatchDirectory("node_modules"); !ok {
 		t.Fatalf("expected node_modules to match directory category")

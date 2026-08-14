@@ -137,7 +137,7 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 
 func TestAnalyzeFindsMacOSCandidates(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, ".git"), 0o755)
+	mustMkdir(t, filepath.Join(root, ".git"))
 
 	// 1. .DS_Store file candidate
 	mustWriteFile(t, filepath.Join(root, ".DS_Store"), strings.Repeat("d", 1024))

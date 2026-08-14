@@ -87,8 +87,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			if err := writef(stdout,
 				"\n[DRY RUN] Would delete %s across %d verified candidates (skipped %d)\n",
 				humanizeBytes(cleanResult.VerifiedBytes),
-				 cleanResult.Candidates-cleanResult.SkippedCandidates-cleanResult.FailedCandidates,
-				 cleanResult.SkippedCandidates,
+				cleanResult.Candidates-cleanResult.SkippedCandidates-cleanResult.FailedCandidates,
+				cleanResult.SkippedCandidates,
 			); err != nil {
 				return exitf(stderr, "error: %v\n", err)
 			}

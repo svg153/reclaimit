@@ -2,6 +2,7 @@ package reclaimit
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,13 @@ import (
 	"github.com/svg153/reclaimit/internal/cli"
 	"github.com/svg153/reclaimit/internal/tui"
 )
+
+func mustMkdirRootTest(t *testing.T, path string) {
+	t.Helper()
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		t.Fatalf("mkdir %s: %v", path, err)
+	}
+}
 
 func TestRun_Version(t *testing.T) {
 	old := Version
@@ -58,8 +66,12 @@ func TestRun_InvalidCommand(t *testing.T) {
 
 func TestRun_QuietMode(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, ".git"), 0o755)
-	os.WriteFile(filepath.Join(root, ".DS_Store"), []byte("x"), 0o644)
+	if err := os.MkdirAll(filepath.Join(root, ".git"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".DS_Store"), []byte("x"), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
 
 	var buf bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--quiet"}, &buf, &buf)
@@ -224,7 +236,6 @@ func TestWritef(t *testing.T) {
 	}
 }
 
-
 func TestRun_AnalyzeInvalidFormat(t *testing.T) {
 	var stderr bytes.Buffer
 	code := Run([]string{"analyze", "--format", "xml", "--root", t.TempDir()}, &bytes.Buffer{}, &stderr)
@@ -250,7 +261,7 @@ func TestRun_AnalyzeMissingRoot(t *testing.T) {
 func TestRun_AnalyzeQuietMode(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 	code := Run([]string{"analyze", "--root", root, "--quiet", "--min-candidate-size", "0"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("expected exit code 0, got %d: stderr=%q", code, stderr.String())
@@ -264,7 +275,7 @@ func TestRun_AnalyzeQuietMode(t *testing.T) {
 func TestRun_AnalyzeWithSelection(t *testing.T) {
 	root := t.TempDir()
 	// Create a node_modules directory to be detected as a candidate
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -280,7 +291,9 @@ func TestRun_AnalyzeWithIgnoreFile(t *testing.T) {
 	root := t.TempDir()
 	// Create a .reclaimitignore file
 	ignoreFile := filepath.Join(root, ".reclaimitignore")
-	os.WriteFile(ignoreFile, []byte("node_modules\n"), 0o644)
+	if err := os.WriteFile(ignoreFile, []byte("node_modules\n"), 0o644); err != nil {
+		t.Fatalf("write ignore file: %v", err)
+	}
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--ignore-file", ignoreFile, "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -291,7 +304,7 @@ func TestRun_AnalyzeWithIgnoreFile(t *testing.T) {
 
 func TestRun_AnalyzeWithSelectionFile(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -312,20 +325,19 @@ func TestRun_AnalyzeWithInvalidLogLevel(t *testing.T) {
 }
 
 func TestRun_AnalyzeWithJSONOutput(t *testing.T) {
-	// json is not a supported format — this should fail
-	var stderr bytes.Buffer
-	code := Run([]string{"analyze", "--root", t.TempDir(), "--format", "json"}, &bytes.Buffer{}, &stderr)
-	if code != 1 {
-		t.Fatalf("expected exit code 1, got %d", code)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"analyze", "--root", t.TempDir(), "--format", "json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
 	}
-	if !strings.Contains(stderr.String(), "unsupported format") {
-		t.Fatalf("expected error about unsupported format, got %q", stderr.String())
+	if !json.Valid(stdout.Bytes()) {
+		t.Fatalf("expected valid JSON, got %q", stdout.String())
 	}
 }
 
 func TestRun_AnalyzeWithMarkdownOutput(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--format", "markdown", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -339,7 +351,7 @@ func TestRun_AnalyzeWithMarkdownOutput(t *testing.T) {
 
 func TestRun_AnalyzeWithOutputFile(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	outputFile := filepath.Join(root, "output.txt")
 	var stdout, stderr bytes.Buffer
@@ -358,7 +370,7 @@ func TestRun_AnalyzeWithOutputFile(t *testing.T) {
 
 func TestRun_AnalyzeWithMinCandidateSize(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -369,7 +381,7 @@ func TestRun_AnalyzeWithMinCandidateSize(t *testing.T) {
 
 func TestRun_AnalyzeWithExcludePath(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--exclude-path", filepath.Join(root, "node_modules"), "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -380,7 +392,7 @@ func TestRun_AnalyzeWithExcludePath(t *testing.T) {
 
 func TestRun_AnalyzeWithIncludeCategory(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--include-category", "cache", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -400,10 +412,9 @@ func TestRun_CleanHelp(t *testing.T) {
 	}
 }
 
-
 func TestRun_AnalyzeWithGroupModeDepth(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--group-mode", "depth", "--group-depth", "2", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -414,7 +425,7 @@ func TestRun_AnalyzeWithGroupModeDepth(t *testing.T) {
 
 func TestRun_AnalyzeWithGroupModeRepo(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--group-mode", "repo", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -425,7 +436,7 @@ func TestRun_AnalyzeWithGroupModeRepo(t *testing.T) {
 
 func TestRun_AnalyzeWithTopEntries(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--top-entries", "5", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -436,7 +447,7 @@ func TestRun_AnalyzeWithTopEntries(t *testing.T) {
 
 func TestRun_AnalyzeWithTopFiles(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--top-files", "10", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -447,7 +458,7 @@ func TestRun_AnalyzeWithTopFiles(t *testing.T) {
 
 func TestRun_AnalyzeWithTopGroups(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--top-groups", "3", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -458,7 +469,7 @@ func TestRun_AnalyzeWithTopGroups(t *testing.T) {
 
 func TestRun_AnalyzeWithExcludeGroup(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--exclude-group", filepath.Join(root, "node_modules"), "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -469,7 +480,7 @@ func TestRun_AnalyzeWithExcludeGroup(t *testing.T) {
 
 func TestRun_AnalyzeWithExcludeCategory(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--exclude-category", "cache", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -480,7 +491,7 @@ func TestRun_AnalyzeWithExcludeCategory(t *testing.T) {
 
 func TestRun_AnalyzeWithMultipleCategories(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--include-category", "cache", "--include-category", "build", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -513,7 +524,7 @@ func TestRun_HelpFlag(t *testing.T) {
 
 func TestRun_AnalyzeWithLogLevelWarn(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--log-level", "warn", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -524,7 +535,7 @@ func TestRun_AnalyzeWithLogLevelWarn(t *testing.T) {
 
 func TestRun_AnalyzeWithLogLevelError(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--log-level", "error", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -533,10 +544,9 @@ func TestRun_AnalyzeWithLogLevelError(t *testing.T) {
 	}
 }
 
-
 func TestRun_CleanDryRun(t *testing.T) {
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"clean", "--root", root, "--dry-run", "--yes", "--min-candidate-size", "0"}, &stdout, &stderr)
@@ -576,7 +586,7 @@ func TestRun_TUIHelp(t *testing.T) {
 func TestRun_AnalyzeWithYesFlag(t *testing.T) {
 	// --yes is a clean flag but should not cause issues when analyzing
 	root := t.TempDir()
-	os.MkdirAll(filepath.Join(root, "node_modules"), 0o755)
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", root, "--yes", "--min-candidate-size", "0"}, &stdout, &stderr)

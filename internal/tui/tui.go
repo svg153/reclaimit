@@ -19,7 +19,6 @@ const (
 	nodeCandidate selectionNodeKind = "candidate"
 )
 
-
 // Aliases to keep the TUI interface clean.
 type Candidate = scanner.Candidate
 type Report = scanner.Report
@@ -38,7 +37,7 @@ type selectionNode struct {
 }
 
 type Selection struct {
-	SelectedBytes int64
+	SelectedBytes  int64
 	ExcludedGroups []string
 	ExcludedPaths  []string
 	Saved          bool

@@ -100,7 +100,7 @@ func ParseConfig(args []string) (Options, error) {
 	}
 
 	fs.StringVar(&cfg.Root, "root", cfg.Root, "path to scan")
-	fs.StringVar(&cfg.Format, "format", cfg.Format, "output format: plain or markdown")
+	fs.StringVar(&cfg.Format, "format", cfg.Format, "output format: plain, markdown or json")
 	fs.StringVar(&cfg.GroupMode, "group-mode", cfg.GroupMode, "group candidates by repo or depth")
 	fs.IntVar(&cfg.GroupDepth, "group-depth", cfg.GroupDepth, "depth to use when group-mode=depth")
 	fs.IntVar(&cfg.TopFiles, "top-files", cfg.TopFiles, "number of largest files to show")
@@ -139,7 +139,7 @@ func ParseConfig(args []string) (Options, error) {
 	cfg.ExcludeGroups = append(cfg.ExcludeGroups, excludeGroups...)
 	cfg.ExcludePaths = append(cfg.ExcludePaths, excludePaths...)
 
-	if cfg.Format != "plain" && cfg.Format != "markdown" {
+	if cfg.Format != "plain" && cfg.Format != "markdown" && cfg.Format != "json" {
 		return cfg, fmt.Errorf("unsupported format %q", cfg.Format)
 	}
 	if cfg.GroupMode != "repo" && cfg.GroupMode != "depth" {
@@ -204,8 +204,9 @@ func loadIgnoreFile(path string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read ignore file: %w", err)
 	}
-	var patterns []string
-	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	patterns := make([]string, 0, len(lines))
+	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue

@@ -140,6 +140,16 @@ func TestParseConfigInvalidFormat(t *testing.T) {
 	}
 }
 
+func TestParseConfigJSONFormat(t *testing.T) {
+	cfg, err := ParseConfig([]string{"analyze", "--format", "json"})
+	if err != nil {
+		t.Fatalf("ParseConfig json: %v", err)
+	}
+	if cfg.Format != "json" {
+		t.Fatalf("expected format 'json', got %q", cfg.Format)
+	}
+}
+
 func TestParseConfigInvalidGroupMode(t *testing.T) {
 	_, err := ParseConfig([]string{"--group-mode", "invalid"})
 	if err == nil {

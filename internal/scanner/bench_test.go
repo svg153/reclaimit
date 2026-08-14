@@ -108,5 +108,3 @@ func FuzzHumanizeBytes(f *testing.F) {
 		}
 	})
 }
-
-

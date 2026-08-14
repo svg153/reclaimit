@@ -9,7 +9,7 @@ import (
 
 func TestRenderPlain(t *testing.T) {
 	report := scanner.Report{
-		Root:   "/tmp/test",
+		Root:       "/tmp/test",
 		TotalBytes: 1048676,
 		FreeBytes:  738858448896,
 		Candidates: []scanner.Candidate{

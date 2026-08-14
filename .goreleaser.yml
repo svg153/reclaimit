@@ -58,14 +58,3 @@ nfpms:
         dst: /usr/share/doc/reclaimit/README.md
       - src: LICENSE
         dst: /usr/share/doc/reclaimit/LICENSE
-
-homebrew_casks:
-  - name: reclaimit
-    repository:
-      owner: svg153
-      name: reclaimit
-    homepage: "https://github.com/svg153/reclaimit"
-    description: "Portable Go CLI/TUI for reclaimable disk space"
-    commit_author:
-      name: "reclaimit CI"
-      email: "noreply@github.com"
