@@ -22,15 +22,16 @@ not release-ready at the start of this audit:
 - Overall statement coverage was 68.3%, not the 90% target.
 
 The current change fixes the correctness, lint, release, Pages, installer,
-documentation, coverage, public-path deletion race, and traversal concurrency
-defects. Release supply-chain hardening remains explicit follow-up work.
+documentation, coverage, public-path deletion race, traversal concurrency, and
+release supply-chain defects. Publishing the corrected release and growth
+assets remain operational follow-up work.
 
 ## Validation Results
 
 | Check | Result |
 | --- | --- |
 | `go test ./...` | Pass after fixes |
-| Coverage gate | 93.3% overall; every production package is at least 90% |
+| Coverage gate | 93.2% overall; every production package is at least 90% |
 | `go test -race ./...` | Pass after fixes |
 | `go vet ./...` | Pass |
 | `golangci-lint v2.1.6` | Pass, 0 issues |
@@ -51,7 +52,7 @@ updates, but they are not currently reachable findings.
 
 ## Coverage
 
-The current overall statement coverage is **93.3%**.
+The current overall statement coverage is **93.2%**.
 
 | Package | Coverage |
 | --- | ---: |
@@ -129,9 +130,13 @@ configuration:
 - generated release notes
 - a tagged non-root container image on GHCR
 
-The installer gained a testable `RECLAIMIT_INSTALL_DIR` override and extracts
-archives without attempting to preserve archive ownership. Its release
-checksum verification remains follow-up security work.
+The installer gained a testable `RECLAIMIT_INSTALL_DIR` override, extracts
+archives without attempting to preserve archive ownership, and refuses to
+install unless the selected filename has a matching SHA-256 entry in the
+GoReleaser manifest. Tests cover valid, missing, malformed, and mismatched
+manifests before any destination write. Every workflow action is pinned to a
+full commit SHA with a readable version comment; Dependabot's GitHub Actions
+ecosystem remains enabled for updates.
 
 ## Documentation and Discoverability
 
@@ -172,14 +177,9 @@ larger discoverability problems.
 
 ## Open Engineering Risks
 
-### High priority
+### Remaining priorities
 
-1. **Installer integrity:** verify the selected archive against the release
-   checksum before installation.
-
-### Medium priority
-
-1. Pin third-party GitHub Actions to immutable commit SHAs.
+1. Publish a corrected patch release and verify all generated assets.
 2. Add a reproducible end-to-end Pages smoke check for canonical assets.
 3. Add categories such as npm, Yarn, pnpm, Go, and Docker only after defining
    exact safe paths and regeneration semantics.
@@ -189,5 +189,5 @@ larger discoverability problems.
 The current change is suitable to merge: the complete local validation suite is
 green and coverage exceeds 90% overall and per production package. GitHub-hosted
 checks may remain unavailable when Actions minutes are exhausted; the same
-commands have been run locally. Keep release supply-chain work in a focused
-follow-up PR so that risk receives dedicated tests and review.
+commands have been run locally. Keep publication as a focused release operation
+so generated archives, packages, checksums, and images can be verified together.

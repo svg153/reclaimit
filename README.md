@@ -20,7 +20,10 @@ curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | 
 go install github.com/svg153/reclaimit/cmd/reclaimit@latest
 ```
 
-The installer places the binary in `$HOME/.local/bin`. Prebuilt archives for Linux, macOS, and Windows are available on the [releases page](https://github.com/svg153/reclaimit/releases/latest).
+The installer verifies the selected archive against the release SHA-256
+manifest before writing to `$HOME/.local/bin`. Prebuilt archives for Linux,
+macOS, and Windows are available on the
+[releases page](https://github.com/svg153/reclaimit/releases/latest).
 
 ## What it does
 
@@ -28,7 +31,8 @@ The installer places the binary in `$HOME/.local/bin`. Prebuilt archives for Lin
 - Groups candidates by Git repository or path depth instead of presenting one flat list.
 - Produces plain-text, Markdown, or JSON reports and includes an interactive TUI.
 - Requires explicit confirmation for cleanup and supports a non-destructive `--dry-run`.
-- Revalidates type, measured size, and modification snapshot before deletion; changed or missing candidates are skipped.
+- Revalidates identity, type, size, and modification snapshot, then uses a
+  same-filesystem quarantine so changed data is preserved.
 - Ships as one Go binary for Linux, macOS, and Windows.
 
 ## Quick start

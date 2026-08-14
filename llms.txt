@@ -18,6 +18,8 @@ or path, and lets users review candidates before deletion.
   snapshot, followed by an atomic same-filesystem quarantine and revalidation.
   Changed data is preserved with a reported recovery path.
 - Prebuilt release archives for Linux, macOS, and Windows.
+- Installer verification against the release SHA-256 manifest before any
+  destination write.
 
 ## Install
 
