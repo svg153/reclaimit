@@ -47,7 +47,7 @@ func renderMarkdownTopGroupsChart(groups []scanner.GroupSummary) string {
 		if i > 0 {
 			b.WriteString(", ")
 		}
-		fmt.Fprintf(&b, "\"%s\"", filepath.Base(group.Group))
+		fmt.Fprintf(&b, "\"%s\"", escapePlant(filepath.Base(group.Group)))
 	}
 	b.WriteString("]\n    y-axis \"GiB\" 0 --> ")
 	maxGiB := 1.0
