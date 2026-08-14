@@ -23,12 +23,15 @@ or path, and lets users review candidates before deletion.
 
 ## Install
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
+The corrected release is awaiting publication in issue #48. Until then, use
+the audited current source with Go 1.25.12 or newer:
 
-# Or with Go 1.25.12+
-go install github.com/svg153/reclaimit/cmd/reclaimit@latest
+```bash
+go install github.com/svg153/reclaimit/cmd/reclaimit@main
 ```
+
+The release installer intentionally rejects the older release because it has
+no SHA-256 manifest.
 
 ## Example
 

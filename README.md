@@ -1,4 +1,4 @@
-# reclaimit — Find developer files you can safely clean up
+# reclaimit — Developer disk cleanup CLI
 
 [![Latest release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest)
 [![Go version](https://img.shields.io/github/go-mod/go-version/svg153/reclaimit)](go.mod)
@@ -6,7 +6,9 @@
 
 ![reclaimit terminal disk cleanup analyzer](assets/reclaimit-hero.svg)
 
-`reclaimit` is a cross-platform Go CLI and terminal UI that finds regenerable developer artifacts, groups them by project, and lets you review them before deletion.
+`reclaimit` is a cross-platform Go CLI and terminal UI for developer disk
+cleanup. It finds regenerable build artifacts and caches, groups them by
+project, and lets you review them before deletion.
 
 Traditional disk analyzers answer **“what is large?”**. `reclaimit` adds the developer context needed to answer **“what can I recreate if I delete it?”**.
 
@@ -17,18 +19,18 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 
 ## Install
 
-```bash
-# macOS or Linux: download the latest matching release
-curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
+The corrected release is awaiting publication in
+[issue #48](https://github.com/svg153/reclaimit/issues/48). Until it is
+published, install the audited current source with Go 1.25.12 or newer:
 
-# Or install from source with Go 1.25.12+
-go install github.com/svg153/reclaimit/cmd/reclaimit@latest
+```bash
+go install github.com/svg153/reclaimit/cmd/reclaimit@main
 ```
 
-The installer verifies the selected archive against the release SHA-256
-manifest before writing to `$HOME/.local/bin`. Prebuilt archives for Linux,
-macOS, and Windows are available on the
-[releases page](https://github.com/svg153/reclaimit/releases/latest).
+Do not use the one-line release installer yet: it intentionally refuses the
+older release because that release has no SHA-256 manifest. Once #48 is closed,
+the installer and prebuilt Linux, macOS, and Windows archives will be the
+recommended paths.
 
 ## What it does
 
@@ -67,15 +69,21 @@ reclaimit clean --root "$HOME/code" --include-category python-venv --yes
 | Python | `.venv`, `venv`, `__pycache__`, `*.pyc`, `*.pyo`, `.pytest_cache`, `.mypy_cache`, `.tox` |
 | Python package tools | `.cache/pip`, `.local/pipx` |
 | Rust | `target` |
-| Bun | `.bun` |
+| Bun | `.bun/install/cache` |
 | Generic caches | `.cache` |
 | macOS | `.DS_Store`, `.Spotlight-V100`, `.Trashes` |
 
 Generic caches and pipx-managed environments can contain useful or costly-to-recreate data. `reclaimit` describes these candidates but leaves the decision to you.
 
-## Why not just use `du` or `ncdu`?
+## reclaimit vs ncdu, gdu, dust, and dua
 
-Those are excellent general-purpose disk usage tools. `reclaimit` is narrower: it recognizes developer artifacts and adds a guarded cleanup workflow.
+[`ncdu`](https://dev.yorhel.nl/ncdu),
+[`gdu`](https://github.com/dundee/gdu),
+[`dust`](https://github.com/bootandy/dust), and
+[`dua`](https://github.com/Byron/dua-cli) are general disk usage analyzers.
+`reclaimit` is narrower: it recognizes developer artifacts and adds a guarded,
+project-aware cleanup workflow. It is a companion for these tools, not a
+drop-in replacement.
 
 | Capability | reclaimit | General disk analyzer |
 | --- | --- | --- |
