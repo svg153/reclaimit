@@ -262,6 +262,27 @@
       background: rgba(88, 166, 255, 0.05);
     }
 
+    .demo-figure {
+      margin: 0;
+    }
+
+    .demo-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #0b1120;
+    }
+
+    .demo-figure figcaption {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 14px;
+    }
+
+    .demo-figure a { color: var(--accent); }
+
     /* Sections */
     section {
       padding: 60px 0;
@@ -526,6 +547,7 @@
       .hero h1 { font-size: 2rem; }
       .hero .subtitle { font-size: 1.05rem; }
       .nav-links { gap: 16px; }
+      .nav-links a:not(.btn-github) { display: none; }
       .features-grid { grid-template-columns: 1fr; }
       .comparison-table { font-size: 0.8rem; }
       .comparison-table th, .comparison-table td { padding: 10px 8px; }
@@ -549,6 +571,7 @@
     <div class="container">
       <a href="./" class="logo">🧹 <span>reclaimit</span></a>
       <div class="nav-links">
+        <a href="#demo">Demo</a>
         <a href="#features">Features</a>
         <a href="#usage">Usage</a>
         <a href="#comparison">Compare</a>
@@ -561,13 +584,13 @@
   <!-- Hero -->
   <section class="hero">
     <div class="container">
-      <div class="hero-badge">⚡ Fast · Safe · Developer-aware</div>
+      <div class="hero-badge">Developer-aware · Review-first · Cross-platform</div>
       <h1>
-        Reclaim disk space<br>
-        <span class="gradient">without the guesswork</span>
+        Find regenerable developer files<br>
+        <span class="gradient">before you clean up</span>
       </h1>
       <p class="subtitle">
-        <strong>reclaimit</strong> is a Go CLI that finds reclaimable disk space on developer workstations — by understanding <strong>what is safe enough to delete</strong>.
+        <strong>reclaimit</strong> is a Go CLI and terminal UI that recognizes known build artifacts and caches, groups them by project, and lets you review a dry run before deletion.
       </p>
 
       <div class="install-box">
@@ -585,12 +608,28 @@
     </div>
   </section>
 
+  <section id="demo">
+    <div class="container">
+      <h2 class="section-title">Analyze, review, then dry-run</h2>
+      <p class="section-subtitle">
+        A synthetic workspace shows the complete workflow without exposing a real home directory or deleting a file.
+      </p>
+      <figure class="demo-figure">
+        <img src="assets/reclaimit-demo.svg" width="1280" height="720" alt="Animated terminal demo: reclaimit finds a synthetic node_modules and Python virtual environment, reviews node_modules in the TUI, then verifies it in a dry run without deleting files">
+        <figcaption>
+          The 20 MiB belongs to generated test files, not typical user savings.
+          <a href="https://github.com/svg153/reclaimit/blob/main/docs/demo.md">Reproduce the fixture and commands.</a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
   <!-- Features -->
   <section id="features">
     <div class="container">
       <h2 class="section-title">Why reclaimit?</h2>
       <p class="section-subtitle">
-        Most disk tools answer "what is big?". reclaimit answers "what can I safely clean up?"
+        Most disk tools answer “what is big?”. reclaimit identifies known developer artifacts and explains how they are regenerated.
       </p>
 
       <div class="features-grid">

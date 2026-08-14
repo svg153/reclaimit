@@ -1,28 +1,67 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
-  <title id="title">reclaimit demo</title>
-  <desc id="desc">Stylized terminal screenshot showing reclaimit TUI selection flow.</desc>
+  <title id="title">reclaimit analyze, review, and dry-run demo</title>
+  <desc id="desc">Animated terminal demo using a synthetic workspace. It cycles through an analysis with two cleanup candidates, TUI review, and a dry run that removes nothing.</desc>
+  <style>
+    text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .frame { opacity: 0; animation: scene 12s infinite; }
+    .frame-1 { opacity: 1; animation-delay: 0s; }
+    .frame-2 { animation-delay: 4s; }
+    .frame-3 { animation-delay: 8s; }
+    @keyframes scene {
+      0%, 29% { opacity: 1; }
+      33%, 100% { opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .frame { animation: none; opacity: 0; }
+      .frame-1 { opacity: 1; }
+    }
+  </style>
   <rect width="1280" height="720" rx="24" fill="#0b1120"/>
-  <rect x="24" y="24" width="1232" height="672" rx="18" fill="#020617" stroke="#1e293b"/>
-  <rect x="44" y="44" width="740" height="560" rx="12" fill="#0f172a" stroke="#1e293b"/>
-  <rect x="804" y="44" width="432" height="560" rx="12" fill="#111827" stroke="#1e293b"/>
-  <rect x="44" y="624" width="1192" height="52" rx="12" fill="#111827" stroke="#1e293b"/>
-  <text x="68" y="80" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24" fill="#cbd5e1">Cleanup tree</text>
-  <text x="828" y="80" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24" fill="#cbd5e1">Details</text>
-  <text x="70" y="132" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#94a3b8">▾ 📁 REPOSITORIOS  6 candidates  2.8 GiB</text>
-  <text x="94" y="176" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#22c55e">◐ 📁 markdown-ads-docs  102.9 MiB</text>
-  <text x="118" y="220" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#38bdf8">● 🧹 node_modules  88.3 MiB</text>
-  <text x="118" y="264" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#a78bfa">○ 🧹 .venv  14.6 MiB</text>
-  <text x="94" y="308" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#22c55e">● 📁 reclaimit  1.3 GiB</text>
-  <text x="118" y="352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#38bdf8">● 🧹 dist  442 MiB</text>
-  <text x="118" y="396" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#38bdf8">● 🧹 .cache  891 MiB</text>
-  <text x="828" y="132" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#22c55e">Selected target: node_modules</text>
-  <text x="828" y="184" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" fill="#e2e8f0">Full path</text>
-  <text x="828" y="214" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#94a3b8">/home/user/REPOSITORIOS/markdown-ads-docs/node_modules</text>
-  <text x="828" y="272" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" fill="#e2e8f0">Size</text>
-  <text x="828" y="302" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#94a3b8">88.3 MiB</text>
-  <text x="828" y="360" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" fill="#e2e8f0">Last modified</text>
-  <text x="828" y="390" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#94a3b8">2026-05-19 18:44</text>
-  <text x="828" y="448" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" fill="#e2e8f0">Category</text>
-  <text x="828" y="478" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#94a3b8">JavaScript dependencies safe to reinstall from lockfiles</text>
-  <text x="68" y="657" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" fill="#cbd5e1">Keys: j/k move • space toggle • enter expand • q save • esc cancel</text>
+  <rect x="24" y="24" width="1232" height="672" rx="18" fill="#020617" stroke="#334155" stroke-width="2"/>
+  <circle cx="58" cy="58" r="8" fill="#f87171"/>
+  <circle cx="84" cy="58" r="8" fill="#fbbf24"/>
+  <circle cx="110" cy="58" r="8" fill="#4ade80"/>
+  <text x="640" y="66" text-anchor="middle" font-size="20" fill="#94a3b8">reclaimit · synthetic fixture · no personal scan data</text>
+
+  <g class="frame frame-1">
+    <text x="60" y="118" font-size="20" fill="#38bdf8">1 / 3 · ANALYZE</text>
+    <text x="60" y="166" font-size="24" fill="#e2e8f0">$ reclaimit analyze --root /tmp/reclaimit-demo</text>
+    <text x="60" y="222" font-size="22" fill="#cbd5e1">Potential cleanup: <tspan fill="#4ade80">20.0 MiB</tspan> across 2 candidates</text>
+    <text x="60" y="286" font-size="21" fill="#94a3b8">Cleanup by category</text>
+    <text x="84" y="332" font-size="22" fill="#e2e8f0">12.0 MiB  node-modules  web-app/node_modules</text>
+    <text x="84" y="374" font-size="22" fill="#e2e8f0"> 8.0 MiB  python-venv  python-api/.venv</text>
+    <text x="60" y="456" font-size="21" fill="#94a3b8">Candidates are grouped by project and category.</text>
+    <text x="60" y="498" font-size="21" fill="#94a3b8">Analysis is read-only.</text>
+  </g>
+
+  <g class="frame frame-2">
+    <text x="60" y="118" font-size="20" fill="#38bdf8">2 / 3 · REVIEW IN THE TUI</text>
+    <rect x="58" y="144" width="742" height="448" rx="10" fill="#0f172a" stroke="#334155"/>
+    <rect x="820" y="144" width="378" height="448" rx="10" fill="#111827" stroke="#334155"/>
+    <text x="82" y="188" font-size="22" fill="#cbd5e1">Cleanup tree</text>
+    <text x="844" y="188" font-size="22" fill="#cbd5e1">Details</text>
+    <text x="82" y="242" font-size="21" fill="#94a3b8">▾ /tmp/reclaimit-demo  20.0 MiB</text>
+    <text x="108" y="288" font-size="21" fill="#4ade80">▾ web-app  12.0 MiB</text>
+    <text x="136" y="334" font-size="21" fill="#38bdf8">● node_modules  12.0 MiB</text>
+    <text x="108" y="380" font-size="21" fill="#cbd5e1">▸ python-api  8.0 MiB</text>
+    <text x="844" y="248" font-size="20" fill="#4ade80">Selected candidate</text>
+    <text x="844" y="292" font-size="18" fill="#e2e8f0">web-app/node_modules</text>
+    <text x="844" y="356" font-size="20" fill="#cbd5e1">Category</text>
+    <text x="844" y="396" font-size="18" fill="#94a3b8">JavaScript dependencies</text>
+    <text x="844" y="430" font-size="18" fill="#94a3b8">recreated from lockfiles</text>
+    <text x="82" y="640" font-size="19" fill="#94a3b8">j/k move · space toggle · enter expand · q save · esc cancel</text>
+  </g>
+
+  <g class="frame frame-3">
+    <text x="60" y="118" font-size="20" fill="#38bdf8">3 / 3 · DRY RUN</text>
+    <text x="60" y="166" font-size="23" fill="#e2e8f0">$ reclaimit clean --root /tmp/reclaimit-demo \\</text>
+    <text x="88" y="208" font-size="23" fill="#e2e8f0">--include-category node-modules --dry-run</text>
+    <text x="60" y="280" font-size="22" fill="#cbd5e1">Deleting 1 candidate totaling 12.0 MiB:</text>
+    <text x="84" y="326" font-size="22" fill="#e2e8f0">- web-app/node_modules</text>
+    <rect x="58" y="382" width="1128" height="84" rx="10" fill="#052e16" stroke="#22c55e"/>
+    <text x="84" y="434" font-size="22" fill="#4ade80">[DRY RUN] Would delete 12.0 MiB across 1 verified candidate</text>
+    <text x="60" y="530" font-size="21" fill="#94a3b8">No files were removed. Run without --dry-run only after review.</text>
+  </g>
+
+  <text x="60" y="674" font-size="17" fill="#64748b">Reproduce this fixture with scripts/demo.sh · values describe generated test files, not typical user savings.</text>
 </svg>
