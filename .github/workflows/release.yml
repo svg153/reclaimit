@@ -2,25 +2,41 @@ name: Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
 permissions:
   contents: write
   packages: write
+  pull-requests: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      published: ${{ steps.release.outputs.release_created == 'true' || startsWith(github.ref, 'refs/tags/') }}
+      version: ${{ steps.release.outputs.tag_name || github.ref_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+      - name: Prepare release PR or tag
+        id: release
+        if: github.ref == 'refs/heads/main'
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: go
+          target-branch: main
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        if: startsWith(github.ref, 'refs/tags/') || steps.release.outputs.release_created == 'true'
         with:
           go-version: "1.25.12"
       - name: Publish archives, packages, checksums, and release notes
+        if: startsWith(github.ref, 'refs/tags/') || steps.release.outputs.release_created == 'true'
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
         with:
           distribution: goreleaser
@@ -31,10 +47,13 @@ jobs:
 
   container:
     needs: release
+    if: needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
       - name: Set up QEMU
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
       - name: Set up Docker Buildx
@@ -62,4 +81,4 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: VERSION=${{ github.ref_name }}
+          build-args: VERSION=${{ needs.release.outputs.version }}
