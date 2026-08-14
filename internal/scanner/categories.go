@@ -1,7 +1,9 @@
 package scanner
 
 import (
+	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -75,6 +77,27 @@ func IncludeCategory(category string, includeSet, excludeSet map[string]struct{}
 	}
 	_, allowed := includeSet[category]
 	return allowed
+}
+
+// CategoryKeys returns the stable, sorted set accepted by category filters.
+func CategoryKeys() []string {
+	keys := make([]string, 0, len(categories))
+	for _, category := range categories {
+		keys = append(keys, category.Key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func validateCategoryFilters(include, exclude []string) error {
+	keys := CategoryKeys()
+	known := ListToSet(keys)
+	for _, filter := range append(append([]string{}, include...), exclude...) {
+		if _, ok := known[filter]; !ok {
+			return fmt.Errorf("unknown category %q (supported: %s)", filter, strings.Join(keys, ", "))
+		}
+	}
+	return nil
 }
 
 func MatchDirectory(path string) (Category, bool) {
