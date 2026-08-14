@@ -309,3 +309,51 @@ func TestCleanReportsEmptyQuarantineCleanupWarning(t *testing.T) {
 		t.Fatalf("cleanup warning was not reported: %#v", result.Issues[0])
 	}
 }
+
+func TestLegacyCleanAndDryRunSurfaceCandidateFailures(t *testing.T) {
+	invalid := Candidate{Path: "invalid\x00path", Bytes: 1}
+	if _, err := Clean([]Candidate{invalid}); err == nil || !strings.Contains(err.Error(), "clean failed") {
+		t.Fatalf("Clean error = %v", err)
+	}
+	if _, err := DryRun([]Candidate{invalid}); err == nil || !strings.Contains(err.Error(), "dry-run failed") {
+		t.Fatalf("DryRun error = %v", err)
+	}
+}
+
+func TestQuarantineReportsPreDeleteAndSetupFailures(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "missing")
+	deleted, issue := quarantineAndDelete(verifiedCandidate{
+		candidate:   Candidate{Path: missing, Bytes: 1},
+		actualBytes: 1,
+	}, defaultCleanOperations)
+	if deleted || issue == nil || issue.Status != "skipped" {
+		t.Fatalf("missing candidate outcome = (%v, %#v)", deleted, issue)
+	}
+
+	root := t.TempDir()
+	target := filepath.Join(root, "candidate.bin")
+	if err := os.WriteFile(target, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Lstat(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	item := verifiedCandidate{candidate: Candidate{Path: target, Bytes: 1}, actualBytes: 1, info: info}
+	operations := defaultCleanOperations
+	operations.mkdirTemp = func(string, string) (string, error) {
+		return "", errors.New("quarantine unavailable")
+	}
+	deleted, issue = quarantineAndDelete(item, operations)
+	if deleted || issue == nil || !strings.Contains(issue.Reason, "create quarantine") {
+		t.Fatalf("mkdir failure outcome = (%v, %#v)", deleted, issue)
+	}
+
+	operations = defaultCleanOperations
+	operations.rename = func(string, string) error { return errors.New("rename denied") }
+	operations.remove = func(string) error { return errors.New("cleanup denied") }
+	deleted, issue = quarantineAndDelete(item, operations)
+	if deleted || issue == nil || !strings.Contains(issue.Reason, "empty quarantine cleanup") {
+		t.Fatalf("rename cleanup outcome = (%v, %#v)", deleted, issue)
+	}
+}
