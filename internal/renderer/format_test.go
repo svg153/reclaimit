@@ -136,8 +136,8 @@ func TestEscapePlant(t *testing.T) {
 		expected string
 	}{
 		{"hello", "hello"},
-		{"hello\nworld", "hello\nworld"},
-		{"hello\tworld", "hello\tworld"},
+		{"hello\nworld", "hello\\nworld"},
+		{"hello\"world", "hello\\\"world"},
 		{"", ""},
 	}
 	for _, tt := range tests {
@@ -145,6 +145,33 @@ func TestEscapePlant(t *testing.T) {
 		if result != tt.expected {
 			t.Errorf("escapePlant(%q) = %q, want %q", tt.input, result, tt.expected)
 		}
+	}
+}
+
+func TestHumanFacingReportsEscapeControlCharacters(t *testing.T) {
+	hostile := "bad\nname\r\x1b[31m"
+	report := scanner.Report{
+		Root: hostile,
+		Candidates: []scanner.Candidate{{Path: hostile, Bytes: 1, IsDir: true}},
+		SelectedCandidates: []scanner.Candidate{{Path: hostile, Bytes: 1, IsDir: true}},
+		TopEntries: []scanner.PathSize{{Path: hostile, Bytes: 1}},
+		TopFiles: []scanner.PathSize{{Path: hostile, Bytes: 1}},
+	}
+
+	plain, err := RenderReport(report, "plain")
+	if err != nil {
+		t.Fatalf("plain render: %v", err)
+	}
+	if strings.ContainsAny(plain, "\r\x1b") || strings.Contains(plain, "bad\nname") {
+		t.Fatalf("plain report leaked control characters: %q", plain)
+	}
+
+	markdown, err := RenderReport(report, "markdown")
+	if err != nil {
+		t.Fatalf("markdown render: %v", err)
+	}
+	if strings.ContainsAny(markdown, "\r\x1b") || strings.Contains(markdown, "bad\nname") {
+		t.Fatalf("markdown report leaked control characters: %q", markdown)
 	}
 }
 

@@ -24,7 +24,7 @@ func RenderReport(report scanner.Report, format string) (string, error) {
 
 func renderPlain(report scanner.Report) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Disk usage report for %s\n", report.Root)
+	fmt.Fprintf(&b, "Disk usage report for %s\n", escapePlain(report.Root))
 	fmt.Fprintf(&b, "Filesystem: used %s of %s, free %s\n", humanizeBytes(report.TotalBytes), humanizeBytes(report.FilesystemBytes), humanizeBytes(report.AvailableBytes))
 	fmt.Fprintf(&b, "Potential cleanup: %s across %d candidates", humanizeBytes(report.CandidateBytes), len(report.Candidates))
 	if len(report.SelectedCandidates) != len(report.Candidates) {
@@ -43,11 +43,11 @@ func renderPlain(report scanner.Report) string {
 
 	b.WriteString("Largest direct children\n")
 	for _, item := range report.TopEntries {
-		fmt.Fprintf(&b, "  %8s  %s\n", humanizeBytes(item.Bytes), item.Path)
+		fmt.Fprintf(&b, "  %8s  %s\n", humanizeBytes(item.Bytes), escapePlain(item.Path))
 	}
 	b.WriteString("\nLargest files\n")
 	for _, item := range report.TopFiles {
-		fmt.Fprintf(&b, "  %8s  %s\n", humanizeBytes(item.Bytes), item.Path)
+		fmt.Fprintf(&b, "  %8s  %s\n", humanizeBytes(item.Bytes), escapePlain(item.Path))
 	}
 	categorySummaries := report.CategorySummaries
 	groupSummaries := report.GroupSummaries
@@ -59,7 +59,7 @@ func renderPlain(report scanner.Report) string {
 		b.WriteString("\nCleanup by category\n")
 	}
 	for _, item := range categorySummaries {
-		fmt.Fprintf(&b, "  %8s  %-18s  %3d  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Count, item.Description)
+		fmt.Fprintf(&b, "  %8s  %-18s  %3d  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Count, escapePlain(item.Description))
 	}
 	if len(report.SelectedCandidates) != len(report.Candidates) {
 		b.WriteString("\nCleanup by group (selected after exclusions)\n")
@@ -67,18 +67,18 @@ func renderPlain(report scanner.Report) string {
 		b.WriteString("\nCleanup by group\n")
 	}
 	for _, item := range groupSummaries {
-		fmt.Fprintf(&b, "  %8s  %3d  %s\n", humanizeBytes(item.Bytes), item.Count, item.Group)
+		fmt.Fprintf(&b, "  %8s  %3d  %s\n", humanizeBytes(item.Bytes), item.Count, escapePlain(item.Group))
 	}
 	b.WriteString("\nTop cleanup candidates\n")
 	for _, item := range limitCandidates(report.SelectedCandidates, 25) {
-		fmt.Fprintf(&b, "  %8s  %-18s  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Path)
+		fmt.Fprintf(&b, "  %8s  %-18s  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, escapePlain(item.Path))
 	}
 	if len(report.CleanIssues) > 0 {
 		b.WriteString("\nCleanup issues\n")
 		for _, issue := range report.CleanIssues {
-			fmt.Fprintf(&b, "  %-7s  %s  %s", issue.Status, issue.Path, issue.Reason)
+			fmt.Fprintf(&b, "  %-7s  %s  %s", issue.Status, escapePlain(issue.Path), escapePlain(issue.Reason))
 			if issue.QuarantinePath != "" {
-				fmt.Fprintf(&b, " (recoverable at %s)", issue.QuarantinePath)
+				fmt.Fprintf(&b, " (recoverable at %s)", escapePlain(issue.QuarantinePath))
 			}
 			b.WriteString("\n")
 		}
@@ -96,7 +96,7 @@ func renderMarkdown(report scanner.Report) string {
 		groupSummaries = report.SelectedGroupSummaries
 	}
 
-	fmt.Fprintf(&b, "# Disk usage report for `%s`\n\n", report.Root)
+	fmt.Fprintf(&b, "# Disk usage report for `%s`\n\n", escapeMarkdownCode(report.Root))
 	fmt.Fprintf(&b, "- **Filesystem usage:** %s used of %s, %s free\n", humanizeBytes(report.TotalBytes), humanizeBytes(report.FilesystemBytes), humanizeBytes(report.AvailableBytes))
 	fmt.Fprintf(&b, "- **Potential cleanup:** %s across %d candidates\n", humanizeBytes(report.CandidateBytes), len(report.Candidates))
 	if selectionMode {
@@ -162,7 +162,15 @@ func renderMarkdown(report scanner.Report) string {
 }
 
 func escapePlant(s string) string {
-	return strings.ReplaceAll(s, "\"", "\\\"")
+	return strings.NewReplacer("\\", "\\\\", "\"", "\\\"", "\r", "\\r", "\n", "\\n").Replace(s)
+}
+
+func escapePlain(value string) string {
+	return strings.NewReplacer("\\", "\\\\", "\r", "\\r", "\n", "\\n", "\t", "\\t", "\x1b", "\\x1b").Replace(value)
+}
+
+func escapeMarkdownCode(value string) string {
+	return escapeMarkdownCell(strings.NewReplacer("`", "\\`", "\r", "\\r", "\n", "\\n", "\x1b", "\\x1b").Replace(value))
 }
 
 func limitCandidates(items []scanner.Candidate, max int) []scanner.Candidate {

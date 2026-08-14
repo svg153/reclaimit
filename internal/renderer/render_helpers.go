@@ -47,7 +47,7 @@ func renderMarkdownTopGroupsChart(groups []scanner.GroupSummary) string {
 		if i > 0 {
 			b.WriteString(", ")
 		}
-		fmt.Fprintf(&b, "\"%s\"", filepath.Base(group.Group))
+		fmt.Fprintf(&b, "\"%s\"", escapePlant(filepath.Base(group.Group)))
 	}
 	b.WriteString("]\n    y-axis \"GiB\" 0 --> ")
 	maxGiB := 1.0
@@ -127,7 +127,14 @@ func candidateRows(items []scanner.Candidate, max int) []string {
 }
 
 func escapeMarkdownCell(value string) string {
-	return strings.ReplaceAll(value, "|", "\\|")
+	return strings.NewReplacer(
+		"\\", "\\\\",
+		"|", "\\|",
+		"`", "\\`",
+		"\r", "\\r",
+		"\n", "\\n",
+		"\x1b", "\\x1b",
+	).Replace(value)
 }
 
 func humanizeTimestamp(value time.Time) string {
