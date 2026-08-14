@@ -10,7 +10,7 @@ import (
 func TestMatchDirectory(t *testing.T) {
 	for _, name := range []string{"node_modules", ".venv", "venv", "__pycache__",
 		".pytest_cache", ".mypy_cache", ".tox", "dist", "build", "target",
-		".next", ".nuxt", ".cache", ".cache/pip", ".local/pipx"} {
+		".next", ".nuxt", ".cache", ".cache/pip", ".local/pipx", ".bun/install/cache"} {
 		cat, ok := MatchDirectory(name)
 		if !ok {
 			t.Fatalf("expected %q to match a category", name)
@@ -21,8 +21,9 @@ func TestMatchDirectory(t *testing.T) {
 	}
 
 	for name, want := range map[string]string{
-		".cache/pip":  "pip-cache",
-		".local/pipx": "pipx-data",
+		".cache/pip":         "pip-cache",
+		".local/pipx":        "pipx-data",
+		".bun/install/cache": "bun-cache",
 	} {
 		cat, ok := MatchDirectory(name)
 		if !ok || cat.Key != want {
@@ -32,6 +33,9 @@ func TestMatchDirectory(t *testing.T) {
 
 	if _, ok := MatchDirectory("unknown_dir"); ok {
 		t.Fatalf("expected unknown_dir not to match")
+	}
+	if _, ok := MatchDirectory(".bun"); ok {
+		t.Fatal("the Bun home must not be treated as a cache")
 	}
 }
 
