@@ -143,7 +143,8 @@ func TestExcludeGroupAndPathCombined(t *testing.T) {
 func TestAnalyzeFindsBunCache(t *testing.T) {
 	root := t.TempDir()
 
-	// Bun global cache: ~/.bun/install/cache (matching .bun directory name)
+	// Bun download cache: ~/.bun/install/cache. The parent can also contain the
+	// runtime and global tools, so only the exact cache subtree is a candidate.
 	bunGlobal := filepath.Join(root, ".bun", "install", "cache")
 	mustMkdir(t, bunGlobal)
 	mustWriteFile(t, filepath.Join(bunGlobal, "cache.json"), strings.Repeat("x", 1024))
@@ -156,7 +157,7 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 
 	foundGlobal := false
 	for _, c := range report.Candidates {
-		if c.CategoryKey == "bun-cache" && filepath.Base(c.Path) == ".bun" {
+		if c.CategoryKey == "bun-cache" && c.Path == bunGlobal {
 			foundGlobal = true
 			if c.Bytes != 1024 {
 				t.Errorf("expected global cache candidate size 1024, got %d", c.Bytes)
@@ -164,7 +165,7 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 		}
 	}
 	if !foundGlobal {
-		t.Error("expected to find Bun global cache (.bun) as candidate")
+		t.Error("expected to find Bun download cache as candidate")
 	}
 }
 
