@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
 )
 
 type stringList []string
@@ -199,7 +198,6 @@ func ParseConfig(args []string) (Options, error) {
 
 	return cfg, nil
 }
-
 
 func loadIgnoreFile(path string) ([]string, error) {
 	data, err := os.ReadFile(path)
