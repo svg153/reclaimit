@@ -21,7 +21,7 @@ contract:
 - plain-text, Markdown, and JSON cleanup results.
 
 See the synthetic
-[analyze → TUI → dry-run demo](https://github.com/svg153/reclaimit#reclaimit--find-developer-files-you-can-safely-clean-up)
+[analyze → TUI → dry-run demo](https://github.com/svg153/reclaimit#reclaimit--developer-disk-cleanup-cli)
 and its [reproduction steps](https://github.com/svg153/reclaimit/blob/main/docs/demo.md).
 The 20 MiB shown there belongs to generated test files; it is not a typical
 savings claim.

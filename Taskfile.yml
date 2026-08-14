@@ -33,7 +33,7 @@ tasks:
   vulncheck:
     desc: Scan dependencies and code for known vulnerabilities (SCA)
     cmds:
-      - go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./...
   bench:
     desc: Run benchmarks with allocation stats
     cmds:
