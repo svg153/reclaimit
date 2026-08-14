@@ -59,3 +59,28 @@ func TestDependabotUpdatesPinnedActions(t *testing.T) {
 		t.Fatal("Dependabot github-actions updates are not configured")
 	}
 }
+
+func TestReleasePublishesNonRootMultiPlatformContainer(t *testing.T) {
+	workflow, err := os.ReadFile(filepath.Join(repoRoot(), ".github", "workflows", "release.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	workflowText := string(workflow)
+	for _, required := range []string{
+		"docker/setup-qemu-action@",
+		"docker/setup-buildx-action@",
+		"platforms: linux/amd64,linux/arm64",
+	} {
+		if !strings.Contains(workflowText, required) {
+			t.Errorf("release workflow is missing %q", required)
+		}
+	}
+
+	dockerfile, err := os.ReadFile(filepath.Join(repoRoot(), "Dockerfile"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(dockerfile), "USER nonroot:nonroot") {
+		t.Fatal("runtime container must declare a non-root user")
+	}
+}
