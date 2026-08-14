@@ -59,7 +59,7 @@ func renderPlain(report scanner.Report) string {
 		b.WriteString("\nCleanup by category\n")
 	}
 	for _, item := range categorySummaries {
-		fmt.Fprintf(&b, "  %8s  %-18s  %3d  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Count, item.Description)
+		fmt.Fprintf(&b, "  %8s  %-18s  %3d  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, item.Count, escapePlain(item.Description))
 	}
 	if len(report.SelectedCandidates) != len(report.Candidates) {
 		b.WriteString("\nCleanup by group (selected after exclusions)\n")
@@ -67,7 +67,7 @@ func renderPlain(report scanner.Report) string {
 		b.WriteString("\nCleanup by group\n")
 	}
 	for _, item := range groupSummaries {
-		fmt.Fprintf(&b, "  %8s  %3d  %s\n", humanizeBytes(item.Bytes), item.Count, item.Group)
+		fmt.Fprintf(&b, "  %8s  %3d  %s\n", humanizeBytes(item.Bytes), item.Count, escapePlain(item.Group))
 	}
 	b.WriteString("\nTop cleanup candidates\n")
 	for _, item := range limitCandidates(report.SelectedCandidates, 25) {
