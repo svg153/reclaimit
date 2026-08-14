@@ -669,6 +669,36 @@ func TestRunTUIWithInjectedSelection(t *testing.T) {
 	}
 }
 
+func TestWriteSelectionUsesPasteSafeInstalledCommand(t *testing.T) {
+	var output bytes.Buffer
+	selection := tui.Selection{
+		ExcludedGroups: []string{"/tmp/group's $(touch unsafe)"},
+		ExcludedPaths:  []string{"/tmp/path with spaces"},
+	}
+	if err := writeSelection(&output, cli.Options{Root: "/tmp/$HOME"}, selection); err != nil {
+		t.Fatal(err)
+	}
+	got := output.String()
+	if !strings.Contains(got, "reclaimit analyze --root '/tmp/$HOME'") {
+		t.Fatalf("installed command or root quoting is wrong: %s", got)
+	}
+	if strings.Contains(got, "./bin/reclaimit") {
+		t.Fatalf("development-only binary path leaked into command: %s", got)
+	}
+	if !strings.Contains(got, "'/tmp/group'\"'\"'s $(touch unsafe)'") {
+		t.Fatalf("single quote was not safely encoded: %s", got)
+	}
+}
+
+func TestShellQuote(t *testing.T) {
+	if got := shellQuote(""); got != "''" {
+		t.Fatalf("shellQuote(empty) = %q", got)
+	}
+	if got := shellQuote("a'b"); got != "'a'\"'\"'b'" {
+		t.Fatalf("shellQuote(single quote) = %q", got)
+	}
+}
+
 func TestRunTUIError(t *testing.T) {
 	original := runTUI
 	t.Cleanup(func() { runTUI = original })

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/svg153/reclaimit/internal/cli"
 	"github.com/svg153/reclaimit/internal/logger"
@@ -177,16 +178,16 @@ func writeSelection(stdout io.Writer, cfg cli.Options, selection tui.Selection) 
 		if err := writeString(stdout, "# Reproduce this selection:\n"); err != nil {
 			return err
 		}
-		if err := writef(stdout, "./bin/reclaimit analyze --root %q", cfg.Root); err != nil {
+		if err := writef(stdout, "reclaimit analyze --root %s", shellQuote(cfg.Root)); err != nil {
 			return err
 		}
 		for _, group := range selection.ExcludedGroups {
-			if err := writef(stdout, " --exclude-group %q", group); err != nil {
+			if err := writef(stdout, " --exclude-group %s", shellQuote(group)); err != nil {
 				return err
 			}
 		}
 		for _, path := range selection.ExcludedPaths {
-			if err := writef(stdout, " --exclude-path %q", path); err != nil {
+			if err := writef(stdout, " --exclude-path %s", shellQuote(path)); err != nil {
 				return err
 			}
 		}
@@ -195,6 +196,12 @@ func writeSelection(stdout io.Writer, cfg cli.Options, selection tui.Selection) 
 		}
 	}
 	return nil
+}
+
+// shellQuote returns one POSIX-shell word without allowing expansion or
+// command substitution when a displayed reproduction command is pasted.
+func shellQuote(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "'\"'\"'") + "'"
 }
 
 func writeOutput(stdout, stderr io.Writer, outFile string, output string) int {
