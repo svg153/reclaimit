@@ -44,7 +44,7 @@ Flags:
   -max-depth N
       maximum traversal depth (0 means unlimited)
   -workers N
-      number of concurrent scanner workers
+      maximum concurrent workers across the complete traversal
   -out FILE
       write the report to a file
   -ignore-file FILE

@@ -51,9 +51,10 @@ We use standard `task` targets to validate changes locally before committing:
 Quality and testing are central to the repository:
 
 - **Coverage**: `scripts/check-coverage.sh` enforces **90% overall and per
-  production package**. The process-only entrypoint, test-support packages, and
-  declarations-only types package are explicitly not applicable. Do not add an
-  exclusion or lower the floor to make a change pass.
+  production package**. The process signal/bootstrap entrypoint, test-support
+  packages, and declarations-only types package are explicitly not applicable;
+  command and cancellation behavior is tested in the root package. Do not add
+  an exclusion or lower the floor to make a change pass.
 - **Table-Driven Tests**: We prefer table-driven test structures with explicit sub-tests using `t.Run(tt.name, ...)`.
 - **Test Names**: Use the format `TestFunctionName/TestCaseDescription`.
 - **Isolation**: Always use `t.TempDir()` for file-system tests instead of operating on real user home directories. Mock external dependencies like filesystems or CLI executions.

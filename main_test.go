@@ -2,6 +2,7 @@ package reclaimit
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -631,6 +632,18 @@ func TestRunReportsWriterAndRootErrors(t *testing.T) {
 	var stderr bytes.Buffer
 	if code := Run([]string{"analyze", "--root", filepath.Join(t.TempDir(), "missing")}, io.Discard, &stderr); code != 1 {
 		t.Fatalf("missing root code = %d", code)
+	}
+}
+
+func TestRunContextReportsCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	var stderr bytes.Buffer
+	if code := RunContext(ctx, []string{"analyze", "--root", t.TempDir()}, io.Discard, &stderr); code != 1 {
+		t.Fatalf("code = %d", code)
+	}
+	if !strings.Contains(stderr.String(), context.Canceled.Error()) {
+		t.Fatalf("stderr = %q", stderr.String())
 	}
 }
 

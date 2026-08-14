@@ -22,16 +22,15 @@ not release-ready at the start of this audit:
 - Overall statement coverage was 68.3%, not the 90% target.
 
 The current change fixes the correctness, lint, release, Pages, installer,
-documentation, coverage, and public-path deletion race defects.
-Traversal-wide concurrency remains explicit follow-up work because it requires
-focused design and review.
+documentation, coverage, public-path deletion race, and traversal concurrency
+defects. Release supply-chain hardening remains explicit follow-up work.
 
 ## Validation Results
 
 | Check | Result |
 | --- | --- |
 | `go test ./...` | Pass after fixes |
-| Coverage gate | 93.1% overall; every production package is at least 90% |
+| Coverage gate | 93.3% overall; every production package is at least 90% |
 | `go test -race ./...` | Pass after fixes |
 | `go vet ./...` | Pass |
 | `golangci-lint v2.1.6` | Pass, 0 issues |
@@ -52,24 +51,24 @@ updates, but they are not currently reachable findings.
 
 ## Coverage
 
-The current overall statement coverage is **93.1%**.
+The current overall statement coverage is **93.3%**.
 
 | Package | Coverage |
 | --- | ---: |
-| root command orchestration package | 91.6% |
+| root command orchestration package | 91.7% |
 | `internal/cli` | 90.9% |
 | `internal/filesystem` | 100.0% |
 | `internal/logger` | 100.0% |
 | `internal/renderer` | 100.0% |
-| `internal/scanner` | 92.1% |
+| `internal/scanner` | 92.9% |
 | `internal/tui` | 92.3% |
 
 The gate enforces 90% both overall and in every package with executable
 production behavior. It discovers packages with `go list`, so a new production
 package cannot silently avoid the check. Three categories are explicitly not
-applicable to the per-package rule: the one-line `cmd/reclaimit` process
-boundary, test-support packages, and the declarations-only `internal/types`
-package. They remain in the overall coverage profile.
+applicable to the per-package rule: the process signal/bootstrap boundary in
+`cmd/reclaimit`, test-support packages, and the declarations-only
+`internal/types` package. They remain in the overall coverage profile.
 
 The TUI tests use a simulated terminal and exercise rendering, navigation,
 save, and cancel flows. CLI, scanner, renderer, cleanup orchestration, and
@@ -101,6 +100,18 @@ local 10,000-item benchmark:
 
 This replaces a measured hotspot with a small bounded insertion algorithm. The
 rest of the scanner should only be optimized from representative profiles.
+
+### Traversal-wide worker scheduler
+
+The recursive per-directory worker pools were replaced by one coordinator and
+one traversal-wide pool. A deterministic blocking-filesystem test proves that
+`Workers=3` never exceeds three active inspections, and cancellation tests prove
+that queued work stops and all workers exit.
+
+On the local 16-repository, 512-file benchmark fixture (AMD EPYC 9V74, five
+iterations), the scheduler measured 2,893,472 ns/op with one worker and
+2,416,642 ns/op with eight workers. These numbers compare scheduler modes on
+one cached local fixture; they are not a general filesystem performance claim.
 
 ## Release and Installation
 
@@ -163,10 +174,7 @@ larger discoverability problems.
 
 ### High priority
 
-1. **Concurrency bound:** `Workers` applies per directory. Deep, wide trees can
-   create more goroutines than the flag implies. Replace nested pools with one
-   traversal-wide scheduler after profiling and cancellation design.
-2. **Installer integrity:** verify the selected archive against the release
+1. **Installer integrity:** verify the selected archive against the release
    checksum before installation.
 
 ### Medium priority
@@ -181,6 +189,5 @@ larger discoverability problems.
 The current change is suitable to merge: the complete local validation suite is
 green and coverage exceeds 90% overall and per production package. GitHub-hosted
 checks may remain unavailable when Actions minutes are exhausted; the same
-commands have been run locally. Keep the global scheduler and release
-supply-chain work in focused follow-up PRs so each risk receives dedicated
-tests and review.
+commands have been run locally. Keep release supply-chain work in a focused
+follow-up PR so that risk receives dedicated tests and review.
