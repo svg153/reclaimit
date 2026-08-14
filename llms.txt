@@ -1,71 +1,47 @@
-# reclaimit — Developer Disk Space Analyzer
+# reclaimit
 
-## What is reclaimit?
+> Developer-aware disk cleanup CLI and terminal UI written in Go.
 
-A fast, safe Go CLI for reclaimable disk space analysis on developer workstations. Unlike `du` or `ncdu` which just show sizes, reclaimit understands developer-specific cleanup patterns and lets you review before deleting.
+reclaimit finds regenerable developer artifacts, groups them by Git repository
+or path, and lets users review candidates before deletion.
 
-## Key Features
+## Verified capabilities
 
-- **Developer-aware**: 20+ patterns for `node_modules`, `.venv`, `__pycache__`, Docker layers, build caches
-- **Three output modes**: plain text, Markdown (tables + Mermaid), interactive TUI
-- **Safe by design**: Preview before delete, `--yes` required, never deletes repo root
-- **Single binary**: No dependencies, ~10MB Go binary
-- **Cross-platform**: Linux, macOS, Windows
-- **Docker image**: Non-root distroless on GHCR
-
-## Comparison vs Alternatives
-
-| Feature | reclaimit | `du`/`ncdu` | `gdu` | `du-dust` |
-|---------|-----------|-------------|-------|-----------|
-| Developer-aware patterns | ✅ | ❌ | ❌ | ❌ |
-| Safe delete preview | ✅ | ❌ | ❌ | ❌ |
-| Markdown reports | ✅ | ❌ | ❌ | ❌ |
-| Repository grouping | ✅ | ❌ | ❌ | ❌ |
-| Docker image | ✅ | ❌ | ❌ | ❌ |
+- 17 cleanup categories covering JavaScript, Python, Rust, frontend builds,
+  Bun, pip, pipx, generic caches, and macOS metadata.
+- Plain-text, Markdown, and JSON reports.
+- Interactive terminal UI.
+- Read-only analysis and non-destructive cleanup dry runs.
+- Pre-delete checks for path existence, type, measured size, and modification
+  snapshot. Changed or missing candidates are skipped.
+- Prebuilt release archives for Linux, macOS, and Windows.
 
 ## Install
 
 ```bash
-# Homebrew
-brew install svg153/reclaimit/reclaimit
-
-# Universal script
 curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
 
-# Go install
-go install github.com/svg153/reclaimit@latest
+# Or with Go 1.24+
+go install github.com/svg153/reclaimit/cmd/reclaimit@latest
 ```
 
-## Usage
+## Example
 
 ```bash
-# Generate Markdown report
-reclaimit analyze --root "$HOME" --format markdown --out report.md
-
-# Interactive cleanup
-reclaimit tui --root "$HOME"
-
-# Clean reviewed targets
-reclaimit clean --root "$HOME" --include-category python-venv --yes
+reclaimit analyze --root "$HOME/code" --format json --out report.json
+reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
 ```
 
-## Quick Install
+## Safety
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
-```
+Deletion is irreversible and cannot be transactional on a normal filesystem.
+Users should review dry-run output and keep backups for valuable data.
 
-## Stats
+## Canonical links
 
-- **Stars**: Check GitHub for current count
-- **Downloads**: GHCR + Homebrew + Go install
-- **Last updated**: Active development
-- **Language**: Go 1.24+
-- **License**: MIT
-
-## Links
-
-- **Source**: https://github.com/svg153/reclaimit
-- **Releases**: https://github.com/svg153/reclaimit/releases
-- **Issues**: https://github.com/svg153/reclaimit/issues
-- **Documentation**: https://github.com/svg153/reclaimit/tree/main/docs
+- Website: https://svg153.github.io/reclaimit/
+- Source: https://github.com/svg153/reclaimit
+- Releases: https://github.com/svg153/reclaimit/releases/latest
+- Documentation: https://github.com/svg153/reclaimit/tree/main/docs
+- Issues: https://github.com/svg153/reclaimit/issues
+- License: MIT

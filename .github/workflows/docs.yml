@@ -3,6 +3,7 @@ name: Publish docs
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,14 +22,16 @@ jobs:
       - uses: actions/configure-pages@v5
         with:
           enablement: true
-      - name: Prepare docs
+      - name: Prepare static site
         run: |
-          mkdir -p docs
-          awk 'BEGIN{print "---\nlayout: default\n---\n"}{print}' README.md > docs/index.md
-          touch docs/.nojekyll
+          set -euo pipefail
+          mkdir -p _site
+          cp index.html robots.txt sitemap.xml llms.txt _site/
+          cp -R assets _site/
+          touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: ./docs
+          path: ./_site
 
   deploy:
     needs: build

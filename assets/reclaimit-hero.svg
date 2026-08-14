@@ -21,6 +21,6 @@
   <text x="72" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="50" fill="url(#accent)">reclaim reclaimable disk space</text>
   <text x="72" y="158" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="26" fill="#cbd5e1">analyze • review • clean</text>
   <text x="72" y="206" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#e2e8f0">$ reclaimit analyze --root "$HOME" --format markdown</text>
-  <text x="72" y="242" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#22c55e">✓ 1.8 GiB reclaimable across node_modules, .venv, dist and caches</text>
+  <text x="72" y="242" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" fill="#22c55e">✓ candidates grouped by repository and cleanup category</text>
   <text x="72" y="278" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" fill="#94a3b8">Portable single binary • interactive TUI • markdown reports • safe preview before delete</text>
 </svg>

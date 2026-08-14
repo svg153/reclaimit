@@ -3,30 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>reclaimit — Developer Disk Space Analyzer | Go CLI Tool</title>
-  <meta name="description" content="reclaimit is a fast, safe Go CLI for reclaimable disk space analysis on developer workstations. Find what you can safely delete — node_modules, .venv, caches, build artifacts.">
-  <meta name="keywords" content="disk space, disk cleanup, developer tools, go cli, reclaim disk, node_modules cleanup, disk analyzer, du replacement, safe delete">
+  <title>reclaimit — Find developer files you can safely clean up</title>
+  <meta name="description" content="A Go CLI and terminal UI that finds regenerable developer artifacts, groups them by project, and lets you review them before disk cleanup.">
   <meta name="author" content="Sergio Valverde">
   <meta name="robots" content="index, follow">
-  
+
   <!-- Open Graph -->
-  <meta property="og:title" content="reclaimit — Developer Disk Space Analyzer">
-  <meta property="og:description" content="Find reclaimable disk space on developer workstations. Safe, fast, developer-aware.">
+  <meta property="og:title" content="reclaimit — Find developer files you can safely clean up">
+  <meta property="og:description" content="Developer-aware disk cleanup with project grouping, dry runs, and pre-delete revalidation.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://svg153.github.io/reclaimit/">
-  <meta property="og:image" content="https://svg153.github.io/reclaimit/assets/reclaimit-hero.svg">
-  
+  <meta property="og:site_name" content="reclaimit">
+  <meta property="og:image" content="https://svg153.github.io/reclaimit/assets/reclaimit-social.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="reclaimit developer disk cleanup CLI">
+
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="reclaimit — Developer Disk Space Analyzer">
-  <meta name="twitter:description" content="Find reclaimable disk space on developer workstations. Safe, fast, developer-aware.">
-  
+  <meta name="twitter:title" content="reclaimit — Developer-aware disk cleanup">
+  <meta name="twitter:description" content="Find regenerable artifacts, group them by project, and review them before deletion.">
+  <meta name="twitter:image" content="https://svg153.github.io/reclaimit/assets/reclaimit-social.png">
+  <meta name="twitter:image:alt" content="reclaimit developer disk cleanup CLI">
+
   <!-- Canonical -->
   <link rel="canonical" href="https://svg153.github.io/reclaimit/">
-  
+
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧹</text></svg>">
-  
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "reclaimit",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "description": "A Go CLI and terminal UI that finds regenerable developer artifacts and lets users review them before disk cleanup.",
+    "url": "https://svg153.github.io/reclaimit/",
+    "downloadUrl": "https://github.com/svg153/reclaimit/releases/latest",
+    "softwareRequirements": "Go 1.24 or a prebuilt release binary",
+    "license": "https://opensource.org/licenses/MIT",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
   <style>
     :root {
       --bg: #0d1117;
@@ -42,9 +68,9 @@
       --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     }
-    
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+
     body {
       font-family: var(--font-sans);
       background: var(--bg);
@@ -52,13 +78,13 @@
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
-    
+
     .container {
       max-width: 960px;
       margin: 0 auto;
       padding: 0 24px;
     }
-    
+
     /* Navigation */
     nav {
       border-bottom: 1px solid var(--border);
@@ -69,13 +95,13 @@
       backdrop-filter: blur(12px);
       z-index: 100;
     }
-    
+
     nav .container {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    
+
     .logo {
       font-size: 1.25rem;
       font-weight: 700;
@@ -85,24 +111,24 @@
       align-items: center;
       gap: 8px;
     }
-    
+
     .logo span { color: var(--accent-green); }
-    
+
     .nav-links {
       display: flex;
       gap: 24px;
       align-items: center;
     }
-    
+
     .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
       font-size: 0.9rem;
       transition: color 0.2s;
     }
-    
+
     .nav-links a:hover { color: var(--text); }
-    
+
     .nav-links .btn-github {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -111,18 +137,18 @@
       color: var(--text);
       font-weight: 500;
     }
-    
+
     .nav-links .btn-github:hover {
       border-color: var(--text-muted);
       color: var(--text);
     }
-    
+
     /* Hero */
     .hero {
       padding: 80px 0 60px;
       text-align: center;
     }
-    
+
     .hero-badge {
       display: inline-flex;
       align-items: center;
@@ -135,7 +161,7 @@
       color: var(--accent);
       margin-bottom: 24px;
     }
-    
+
     .hero h1 {
       font-size: 3rem;
       font-weight: 800;
@@ -143,14 +169,14 @@
       margin-bottom: 16px;
       letter-spacing: -0.02em;
     }
-    
+
     .hero h1 .gradient {
       background: linear-gradient(135deg, var(--accent-green), var(--accent));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    
+
     .hero .subtitle {
       font-size: 1.25rem;
       color: var(--text-muted);
@@ -158,9 +184,9 @@
       margin: 0 auto 32px;
       line-height: 1.5;
     }
-    
+
     .hero .subtitle strong { color: var(--text); }
-    
+
     /* Install box */
     .install-box {
       background: var(--bg-card);
@@ -171,7 +197,7 @@
       margin: 0 auto 40px;
       text-align: left;
     }
-    
+
     .install-box .label {
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -180,7 +206,7 @@
       margin-bottom: 8px;
       font-weight: 600;
     }
-    
+
     .install-box code {
       display: block;
       background: var(--bg-code);
@@ -193,7 +219,7 @@
       overflow-x: auto;
       position: relative;
     }
-    
+
     .install-box code .copy-btn {
       position: absolute;
       right: 8px;
@@ -207,12 +233,12 @@
       cursor: pointer;
       font-family: var(--font-sans);
     }
-    
+
     .install-box code .copy-btn:hover {
       color: var(--text);
       background: #484f58;
     }
-    
+
     .install-methods {
       display: flex;
       gap: 12px;
@@ -220,7 +246,7 @@
       margin-top: 16px;
       flex-wrap: wrap;
     }
-    
+
     .install-methods a {
       color: var(--accent);
       text-decoration: none;
@@ -230,42 +256,42 @@
       border-radius: 6px;
       transition: all 0.2s;
     }
-    
+
     .install-methods a:hover {
       border-color: var(--accent);
       background: rgba(88, 166, 255, 0.05);
     }
-    
+
     /* Sections */
     section {
       padding: 60px 0;
     }
-    
+
     section + section {
       border-top: 1px solid var(--border);
     }
-    
+
     .section-title {
       font-size: 1.75rem;
       font-weight: 700;
       margin-bottom: 12px;
       letter-spacing: -0.01em;
     }
-    
+
     .section-subtitle {
       color: var(--text-muted);
       font-size: 1.05rem;
       margin-bottom: 40px;
       max-width: 560px;
     }
-    
+
     /* Features grid */
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 16px;
     }
-    
+
     .feature-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -273,35 +299,35 @@
       padding: 24px;
       transition: border-color 0.2s;
     }
-    
+
     .feature-card:hover {
       border-color: var(--accent);
     }
-    
+
     .feature-icon {
       font-size: 1.5rem;
       margin-bottom: 12px;
     }
-    
+
     .feature-card h3 {
       font-size: 1.05rem;
       font-weight: 600;
       margin-bottom: 6px;
     }
-    
+
     .feature-card p {
       color: var(--text-muted);
       font-size: 0.9rem;
       line-height: 1.5;
     }
-    
+
     /* Usage */
     .usage-tabs {
       display: flex;
       gap: 4px;
       margin-bottom: -1px;
     }
-    
+
     .usage-tab {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -315,13 +341,13 @@
       font-weight: 500;
       transition: all 0.2s;
     }
-    
+
     .usage-tab.active {
       background: var(--bg-code);
       color: var(--text);
       border-color: var(--border);
     }
-    
+
     .usage-code {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -333,20 +359,20 @@
       overflow-x: auto;
       display: none;
     }
-    
+
     .usage-code.active { display: block; }
-    
+
     .usage-code .comment { color: var(--text-muted); }
     .usage-code .flag { color: var(--accent); }
     .usage-code .path { color: var(--accent-orange); }
-    
+
     /* Comparison table */
     .comparison-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
     }
-    
+
     .comparison-table th {
       text-align: left;
       padding: 12px 16px;
@@ -357,30 +383,34 @@
       letter-spacing: 0.03em;
       color: var(--text-muted);
     }
-    
+
     .comparison-table td {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
     }
-    
+
     .comparison-table tr:last-child td { border-bottom: none; }
-    
+
     .comparison-table .tool-name {
       font-weight: 600;
       color: var(--accent-green);
     }
-    
+
     .comparison-table .check { color: var(--accent-green); }
     .comparison-table .cross { color: var(--text-muted); }
-    
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
     /* FAQ */
     .faq-item {
       border-bottom: 1px solid var(--border);
       padding: 20px 0;
     }
-    
+
     .faq-item:last-child { border-bottom: none; }
-    
+
     .faq-item h3 {
       font-size: 1rem;
       font-weight: 600;
@@ -390,35 +420,35 @@
       justify-content: space-between;
       align-items: center;
     }
-    
+
     .faq-item h3::after {
       content: '+';
       color: var(--text-muted);
       font-size: 1.25rem;
       font-weight: 300;
     }
-    
+
     .faq-item h3:hover { color: var(--accent); }
-    
+
     .faq-item p {
       color: var(--text-muted);
       font-size: 0.9rem;
       line-height: 1.6;
       padding-left: 4px;
     }
-    
+
     /* CTA */
     .cta {
       text-align: center;
       padding: 80px 0;
     }
-    
+
     .cta h2 {
       font-size: 2rem;
       font-weight: 700;
       margin-bottom: 16px;
     }
-    
+
     .cta p {
       color: var(--text-muted);
       font-size: 1.05rem;
@@ -427,14 +457,14 @@
       margin-left: auto;
       margin-right: auto;
     }
-    
+
     .cta-buttons {
       display: flex;
       gap: 12px;
       justify-content: center;
       flex-wrap: wrap;
     }
-    
+
     .btn-primary {
       background: var(--accent-green);
       color: #000;
@@ -448,9 +478,9 @@
       gap: 8px;
       transition: opacity 0.2s;
     }
-    
+
     .btn-primary:hover { opacity: 0.9; }
-    
+
     .btn-secondary {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -465,11 +495,11 @@
       gap: 8px;
       transition: all 0.2s;
     }
-    
+
     .btn-secondary:hover {
       border-color: var(--text-muted);
     }
-    
+
     /* Footer */
     footer {
       border-top: 1px solid var(--border);
@@ -478,14 +508,19 @@
       color: var(--text-muted);
       font-size: 0.85rem;
     }
-    
+
     footer a {
       color: var(--accent);
       text-decoration: none;
     }
-    
+
     footer a:hover { text-decoration: underline; }
-    
+
+    .footer-meta {
+      margin-top: 8px;
+      font-size: 0.8rem;
+    }
+
     /* Responsive */
     @media (max-width: 640px) {
       .hero h1 { font-size: 2rem; }
@@ -495,13 +530,13 @@
       .comparison-table { font-size: 0.8rem; }
       .comparison-table th, .comparison-table td { padding: 10px 8px; }
     }
-    
+
     /* Animations */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    
+
     .hero, .install-box, .feature-card {
       animation: fadeIn 0.5s ease-out;
     }
@@ -512,7 +547,7 @@
   <!-- Navigation -->
   <nav>
     <div class="container">
-      <a href="/" class="logo">🧹 <span>reclaimit</span></a>
+      <a href="./" class="logo">🧹 <span>reclaimit</span></a>
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#usage">Usage</a>
@@ -534,19 +569,17 @@
       <p class="subtitle">
         <strong>reclaimit</strong> is a Go CLI that finds reclaimable disk space on developer workstations — by understanding <strong>what is safe enough to delete</strong>.
       </p>
-      
+
       <div class="install-box">
         <div class="label">Install in one line</div>
         <code>
-          <button class="copy-btn" onclick="copyInstall(this)">Copy</button>
-          <span class="install-text">brew install svg153/reclaimit/reclaimit</span>
+          <button type="button" class="copy-btn" onclick="copyInstall(this)">Copy</button>
+          <span class="install-text">curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash</span>
         </code>
         <div class="install-methods">
-          <a href="#install">Homebrew</a>
-          <a href="#install">Install script</a>
-          <a href="#install">Go install</a>
-          <a href="#install">Docker</a>
-          <a href="#install">Build from source</a>
+          <a href="https://github.com/svg153/reclaimit/releases/latest">Release archives</a>
+          <a href="https://github.com/svg153/reclaimit#install">Go install</a>
+          <a href="https://github.com/svg153/reclaimit#build-and-contribute">Build from source</a>
         </div>
       </div>
     </div>
@@ -559,38 +592,38 @@
       <p class="section-subtitle">
         Most disk tools answer "what is big?". reclaimit answers "what can I safely clean up?"
       </p>
-      
+
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
           <h3>Developer-aware</h3>
-          <p>Recognizes 20+ patterns: <code>node_modules</code>, <code>.venv</code>, <code>__pycache__</code>, Docker layers, build caches, and more.</p>
+          <p>Recognizes 17 cleanup categories across JavaScript, Python, Rust, frontend builds, Bun, pip, pipx, and macOS metadata.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">🛡️</div>
           <h3>Safe by design</h3>
           <p>Preview before delete. <code>--yes</code> flag required. Context nodes that never imply deleting the repository root itself.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3>Three output modes</h3>
-          <p>Plain text, Markdown with tables and Mermaid diagrams, or an interactive TUI with a path tree.</p>
+          <h3>Reports and TUI</h3>
+          <p>Plain text, Markdown with diagrams, JSON for automation, and an interactive terminal tree.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">📁</div>
           <h3>Repository grouping</h3>
           <p>Groups cleanup candidates by project, not just by raw size — so you see "next.js project caches" not just "2.3GB".</p>
         </div>
-        
+
         <div class="feature-card">
-          <div class="feature-icon">🐳</div>
-          <h3>Docker-ready</h3>
-          <p>Non-root distroless image on GHCR. Run it in CI, containers, or any environment.</p>
+          <div class="feature-icon">🤖</div>
+          <h3>Automation-ready</h3>
+          <p>Export stable JSON scan and cleanup metrics for scripts, CI jobs, and reproducible comparisons.</p>
         </div>
-        
+
         <div class="feature-card">
           <div class="feature-icon">⚡</div>
           <h3>Single binary</h3>
@@ -605,23 +638,23 @@
     <div class="container">
       <h2 class="section-title">Usage</h2>
       <p class="section-subtitle">Three commands. Three ways to reclaim space.</p>
-      
+
       <div class="usage-tabs">
-        <button class="usage-tab active" onclick="showUsage('analyze')">analyze</button>
-        <button class="usage-tab" onclick="showUsage('tui')">tui</button>
-        <button class="usage-tab" onclick="showUsage('clean')">clean</button>
+        <button type="button" class="usage-tab active" onclick="showUsage('analyze')">analyze</button>
+        <button type="button" class="usage-tab" onclick="showUsage('tui')">tui</button>
+        <button type="button" class="usage-tab" onclick="showUsage('clean')">clean</button>
       </div>
-      
+
       <div id="code-analyze" class="usage-code active">
 <span class="comment"># Generate a Markdown report</span>
 <span class="flag">reclaimit</span> <span class="flag">analyze</span> --root <span class="path">"$HOME"</span> --format markdown --out cleanup-report.md
       </div>
-      
+
       <div id="code-tui" class="usage-code">
 <span class="comment"># Interactive cleanup with TUI</span>
 <span class="flag">reclaimit</span> <span class="flag">tui</span> --root <span class="path">"$HOME"</span>
       </div>
-      
+
       <div id="code-clean" class="usage-code">
 <span class="comment"># Clean reviewed targets (requires --yes)</span>
 <span class="flag">reclaimit</span> <span class="flag">clean</span> --root <span class="path">"$HOME"</span> --include-category python-venv --yes
@@ -634,8 +667,8 @@
     <div class="container">
       <h2 class="section-title">How it compares</h2>
       <p class="section-subtitle">reclaimit is purpose-built for developers, not general disk usage.</p>
-      
-      <div style="overflow-x: auto;">
+
+      <div class="table-scroll">
         <table class="comparison-table">
           <thead>
             <tr>
@@ -649,45 +682,38 @@
           <tbody>
             <tr>
               <td>Developer-aware patterns</td>
-              <td class="check">✅ 20+ patterns</td>
-              <td class="cross">❌ Raw sizes</td>
-              <td class="cross">❌ Raw sizes</td>
-              <td class="cross">❌ Raw sizes</td>
+              <td class="check">✅ 17 categories</td>
+              <td>Raw sizes</td>
+              <td>Raw sizes</td>
+              <td>Raw sizes</td>
             </tr>
             <tr>
               <td>Safe delete preview</td>
               <td class="check">✅ Review first</td>
-              <td class="cross">❌ Immediate</td>
-              <td class="cross">❌ Immediate</td>
-              <td class="cross">❌ Immediate</td>
+              <td>Tool-dependent</td>
+              <td>Tool-dependent</td>
+              <td>Tool-dependent</td>
             </tr>
             <tr>
               <td>Markdown reports</td>
               <td class="check">✅ Tables + Mermaid</td>
-              <td class="cross">❌</td>
-              <td class="cross">❌</td>
-              <td class="cross">❌</td>
+              <td>Not a report format</td>
+              <td>Tool-dependent</td>
+              <td>Tool-dependent</td>
             </tr>
             <tr>
               <td>Repository grouping</td>
               <td class="check">✅ Group by project</td>
-              <td class="cross">❌ Flat tree</td>
-              <td class="cross">❌ Flat tree</td>
-              <td class="cross">❌ Flat tree</td>
+              <td>Filesystem tree</td>
+              <td>Filesystem tree</td>
+              <td>Filesystem tree</td>
             </tr>
             <tr>
-              <td>Docker image</td>
-              <td class="check">✅ GHCR distroless</td>
-              <td class="cross">❌</td>
-              <td class="cross">❌</td>
-              <td class="cross">❌</td>
-            </tr>
-            <tr>
-              <td>Homebrew tap</td>
+              <td>JSON automation output</td>
               <td class="check">✅</td>
-              <td class="cross">❌</td>
-              <td class="cross">❌</td>
-              <td class="cross">❌</td>
+              <td>Tool-dependent</td>
+              <td>Tool-dependent</td>
+              <td>Tool-dependent</td>
             </tr>
           </tbody>
         </table>
@@ -700,32 +726,32 @@
     <div class="container">
       <h2 class="section-title">FAQ</h2>
       <p class="section-subtitle">Common questions about reclaimit.</p>
-      
+
       <div class="faq-item">
         <h3>Is reclaimit safe to use?</h3>
-        <p>Yes. The <code>clean</code> command requires <code>--yes</code> to delete anything. The <code>analyze</code> and <code>tui</code> commands only read — they never modify files.</p>
+        <p><code>analyze</code> and <code>tui</code> are read-only. Cleanup requires <code>--yes</code> and revalidates candidates, but filesystem deletion is irreversible. Review a <code>--dry-run</code> first and keep backups for valuable data.</p>
       </div>
-      
+
       <div class="faq-item">
         <h3>What directories does reclaimit recognize?</h3>
-        <p>Over 20 developer-specific patterns including <code>node_modules</code>, <code>.venv</code>, <code>__pycache__</code>, <code>.pytest_cache</code>, <code>dist/</code>, <code>build/</code>, <code>.next</code>, <code>.nuxt</code>, Docker layers, Go build caches, npm/yarn/pnpm caches, and more.</p>
+        <p>Seventeen categories including <code>node_modules</code>, Python virtual environments and caches, <code>dist</code>, <code>build</code>, Rust <code>target</code>, <code>.next</code>, <code>.nuxt</code>, pip and pipx data, Bun caches, and macOS metadata.</p>
       </div>
-      
+
       <div class="faq-item">
         <h3>Can I exclude specific paths?</h3>
         <p>Yes. Use <code>--exclude-path</code> for exact paths or <code>--exclude-group</code> for prefix-based exclusions.</p>
       </div>
-      
+
       <div class="faq-item">
         <h3>Does it work on Windows?</h3>
         <p>Yes. reclaimit is written in Go and supports Linux, macOS, and Windows.</p>
       </div>
-      
+
       <div class="faq-item">
         <h3>How fast is it?</h3>
-        <p>A single binary with no external dependencies. Scans 100K+ files in seconds. Benchmarks are available in the repository documentation.</p>
+        <p>The scanner uses configurable concurrent workers and reports scanned, skipped, and truncated entries. Performance depends on the filesystem, tree shape, and storage hardware.</p>
       </div>
-      
+
       <div class="faq-item">
         <h3>Can I export the report?</h3>
         <p>Yes. <code>analyze --format markdown --out report.md</code> produces a Markdown report with tables, Mermaid diagrams, and PlantUML blocks.</p>
@@ -742,7 +768,7 @@
         <a href="https://github.com/svg153/reclaimit" class="btn-primary" target="_blank" rel="noopener">
           ⭐ Star on GitHub
         </a>
-        <a href="#install" class="btn-secondary">
+        <a href="https://github.com/svg153/reclaimit/releases/latest" class="btn-secondary">
           📦 Install now
         </a>
       </div>
@@ -753,12 +779,12 @@
   <footer>
     <div class="container">
       <p>
-        <a href="https://github.com/svg153/reclaimit" target="_blank" rel="noopener">GitHub</a> · 
-        <a href="https://github.com/svg153/reclaimit/releases" target="_blank" rel="noopener">Releases</a> · 
-        <a href="https://github.com/svg153/reclaimit/issues" target="_blank" rel="noopener">Issues</a> · 
+        <a href="https://github.com/svg153/reclaimit" target="_blank" rel="noopener">GitHub</a> ·
+        <a href="https://github.com/svg153/reclaimit/releases" target="_blank" rel="noopener">Releases</a> ·
+        <a href="https://github.com/svg153/reclaimit/issues" target="_blank" rel="noopener">Issues</a> ·
         MIT License
       </p>
-      <p style="margin-top: 8px; font-size: 0.8rem;">
+      <p class="footer-meta">
         Built by <a href="https://github.com/svg153" target="_blank" rel="noopener">Sergio Valverde</a>
       </p>
     </div>
@@ -771,7 +797,7 @@
       document.getElementById('code-' + cmd).classList.add('active');
       event.target.classList.add('active');
     }
-    
+
     function copyInstall(btn) {
       const text = btn.parentElement.querySelector('.install-text').textContent;
       navigator.clipboard.writeText(text).then(() => {
@@ -779,7 +805,7 @@
         setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
       });
     }
-    
+
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
