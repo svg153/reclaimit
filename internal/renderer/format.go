@@ -32,6 +32,12 @@ func renderPlain(report scanner.Report) string {
 	}
 	if report.Command == "clean" {
 		fmt.Fprintf(&b, ", deleted %s", humanizeBytes(report.DeletedBytes))
+		fmt.Fprintf(&b, " (verified %s; expected %s; skipped %d; failed %d)",
+			humanizeBytes(report.VerifiedDeletedBytes),
+			humanizeBytes(report.ExpectedDeletedBytes),
+			report.SkippedCleanCandidates,
+			report.FailedCleanCandidates,
+		)
 	}
 	b.WriteString("\n\n")
 
@@ -158,6 +164,10 @@ type jsonReport struct {
 	CandidateBytes          int64            `json:"candidate_bytes"`
 	SelectedBytes           int64            `json:"selected_bytes"`
 	DeletedBytes            int64            `json:"deleted_bytes"`
+	ExpectedDeletedBytes    int64            `json:"expected_deleted_bytes"`
+	VerifiedDeletedBytes    int64            `json:"verified_deleted_bytes"`
+	SkippedCleanCandidates  int              `json:"skipped_clean_candidates"`
+	FailedCleanCandidates   int              `json:"failed_clean_candidates"`
 	EntriesScanned          int64            `json:"entries_scanned"`
 	EntriesSkipped          int64            `json:"entries_skipped"`
 	TruncatedDirectories    int64            `json:"truncated_directories"`
