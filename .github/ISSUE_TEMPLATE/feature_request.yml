@@ -1,0 +1,49 @@
+name: Feature or cleanup-category request
+description: Propose a product improvement or a new regenerable artifact category
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What developer workflow or disk-cleanup problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful behavior and its expected CLI or TUI result.
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: Exact paths or patterns
+      description: For a cleanup category, list exact cross-platform paths and avoid broad wildcards.
+      placeholder: |
+        Linux: ~/.cache/example
+        macOS: ~/Library/Caches/example
+        Windows: %LOCALAPPDATA%\example\Cache
+  - type: textarea
+    id: regeneration
+    attributes:
+      label: Safety and regeneration
+      description: Explain how the data is recreated, what deletion costs, and what must never be removed.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or alternatives
+      description: Link official tool documentation, benchmarks, or a minimal fixture when available.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Request checklist
+      options:
+        - label: I searched for an existing issue covering this request.
+          required: true
+        - label: I have not included private paths, credentials, or personal scan output.
+          required: true

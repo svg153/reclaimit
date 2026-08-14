@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"reflect"
 	"testing"
 	"time"
 )
@@ -246,13 +247,36 @@ func TestPushTop_BelowLimit(t *testing.T) {
 }
 
 func TestPushTop_AboveLimit(t *testing.T) {
-	items := []PathSize{{Bytes: 100}, {Bytes: 200}, {Bytes: 300}}
+	items := []PathSize{{Bytes: 300}, {Bytes: 200}, {Bytes: 100}}
 	result := PushTop(items, PathSize{Bytes: 400}, 2)
 	if len(result) != 2 {
 		t.Errorf("expected 2, got %d", len(result))
 	}
 	if result[0].Bytes != 400 {
 		t.Errorf("expected 400 first, got %d", result[0].Bytes)
+	}
+}
+
+func TestPushTop_KeepsStableByteAndPathOrder(t *testing.T) {
+	var result []PathSize
+	for _, item := range []PathSize{
+		{Path: "c", Bytes: 10},
+		{Path: "b", Bytes: 20},
+		{Path: "a", Bytes: 20},
+		{Path: "d", Bytes: 5},
+	} {
+		result = PushTop(result, item, 3)
+	}
+	want := []PathSize{{Path: "a", Bytes: 20}, {Path: "b", Bytes: 20}, {Path: "c", Bytes: 10}}
+	if !reflect.DeepEqual(result, want) {
+		t.Fatalf("PushTop order = %#v, want %#v", result, want)
+	}
+}
+
+func TestPushTop_ZeroLimit(t *testing.T) {
+	result := PushTop([]PathSize{{Path: "a", Bytes: 1}}, PathSize{Path: "b", Bytes: 2}, 0)
+	if len(result) != 0 {
+		t.Fatalf("expected no entries, got %#v", result)
 	}
 }
 

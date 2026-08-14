@@ -7,19 +7,27 @@ Thank you for your interest in contributing to `reclaimit`! This guide outlines 
 ## Getting Started
 
 ### Prerequisites
+
 - **Go**: Version 1.24+ is required (see `go.mod`).
-- **Task**: We use [Taskfile](https://taskfile.dev) to manage build, lint, and test scripts. Install it via `brew install go-task` or follow their installation guide.
+- **Task** (optional): [Task](https://taskfile.dev) provides shortcuts for
+  build, lint, and test commands. The underlying Go commands also work
+  directly.
 
 ### Setup
+
 1. Fork and clone the repository:
+
    ```bash
    git clone https://github.com/your-username/reclaimit.git
    cd reclaimit
    ```
+
 2. Build the binary to verify your setup:
+
    ```bash
    task build
    ```
+
    The compiled binary will be placed at `./bin/reclaimit`.
 
 ---
@@ -41,7 +49,11 @@ We use standard `task` targets to validate changes locally before committing:
 ## Testing
 
 Quality and testing are central to the repository:
-- **Coverage**: We enforce a minimum coverage threshold of **70%** (validated in CI and locally via `task coverage-check`).
+
+- **Coverage**: `scripts/check-coverage.sh` enforces **90% overall and per
+  production package**. The process-only entrypoint, test-support packages, and
+  declarations-only types package are explicitly not applicable. Do not add an
+  exclusion or lower the floor to make a change pass.
 - **Table-Driven Tests**: We prefer table-driven test structures with explicit sub-tests using `t.Run(tt.name, ...)`.
 - **Test Names**: Use the format `TestFunctionName/TestCaseDescription`.
 - **Isolation**: Always use `t.TempDir()` for file-system tests instead of operating on real user home directories. Mock external dependencies like filesystems or CLI executions.
@@ -54,11 +66,13 @@ Quality and testing are central to the repository:
 Our Go code style conforms to the following guidelines (configured in `AGENTS.md`):
 
 - **Variable Declarations**: Use `var` for package-level variables and short declarations (`:=`) for local variables.
-- **Error Handling**: 
+- **Error Handling**:
   - Prefer `errors.Is` and `errors.As` over raw string comparison for errors.
   - Wrap errors using `fmt.Errorf("context: %w", err)`.
-- **Generics**: Do not use the `any` type — use specific types or constraints.
-- **Complexity**: Functions longer than **50 lines** should be refactored and split into smaller helpers.
+- **Generics**: Prefer specific types; use `any` when it is the appropriate
+  generic constraint.
+- **Complexity**: Keep functions cohesive and split them when doing so improves
+  the API, error handling, or testability.
 - **Exported Names**: Keep exported names short, clear, and descriptive. Avoid abbreviations except standard abbreviations like `ID`, `URL`, or `API`.
 - **Explicit Setup**: Do not use Go `init()` functions. Use explicit setup/initialization functions instead.
 
@@ -68,9 +82,11 @@ Our Go code style conforms to the following guidelines (configured in `AGENTS.md
 
 1. Create a descriptive branch for your changes (e.g. `feat/bun-cache` or `fix/traversal-symlink`).
 2. Run validation tools locally before pushing:
+
    ```bash
    task ci
    ```
+
 3. If your changes affect the CLI flags, commands, or behavior, ensure you update:
    - The `--help` messages and topic usage text.
    - The `README.md` file.
@@ -83,14 +99,22 @@ Our Go code style conforms to the following guidelines (configured in `AGENTS.md
 
 To add a new category (e.g., matching a new build tool cache), follow these steps:
 
-1. **Add Category in `scanner_categories.go`**:
-   Define the new category inside the `categories` slice in `scanner_categories.go`. Use `newDirCategory` for folder matches or `newFileCategory` for file matches:
+1. **Add Category in `internal/scanner/categories.go`**:
+   Define the new category inside the `categories` slice. Use
+   `newDirCategory` for folder matches or `newFileCategory` for file
+   matches:
+
    ```go
    // Example for a directory category
    newDirCategory("my-cache", ".mycache", "My tool package cache that can be rebuilt.", ".mycache"),
    ```
+
 2. **Add Tests**:
-   Create a test case in `scanner_extra_test.go` or `scanner_test.go` verifying that paths matching this category are correctly detected and sized. Use `filepath.Base` or `filepath.Clean` to keep tests platform-independent:
+   Create a test case in `internal/scanner/scanner_extra_test.go` or
+   `internal/scanner/scanner_test.go` verifying that matching paths are
+   correctly detected and sized. Use `filepath.Base` or `filepath.Clean`
+   to keep tests platform-independent:
+
    ```go
    func TestAnalyzeFindsMyCache(t *testing.T) {
        root := t.TempDir()
@@ -99,6 +123,7 @@ To add a new category (e.g., matching a new build tool cache), follow these step
        // ... run Analyze and assert category key and size ...
    }
    ```
+
 3. **Update README.md**:
    Add the new category/folder name to the list of common development leftovers in `README.md`.
 4. **Validate**:
@@ -110,7 +135,9 @@ To add a new category (e.g., matching a new build tool cache), follow these step
 
 - **CI Releases**: Official releases are built and published by GitHub Actions (see `.github/workflows/release.yml`) when a semantic version tag (e.g., `v0.1.7`) is pushed to the repository.
 - **Snapshot Releases**: To build and test a release snapshot locally, run:
+
   ```bash
   task dist
   ```
+
   *(Note: This requires `goreleaser` to be installed locally).*

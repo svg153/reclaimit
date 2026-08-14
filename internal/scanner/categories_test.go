@@ -19,7 +19,7 @@ func TestMatchDirectory(t *testing.T) {
 	}
 
 	for name, want := range map[string]string{
-		".cache/pip": "pip-cache",
+		".cache/pip":  "pip-cache",
 		".local/pipx": "pipx-data",
 	} {
 		cat, ok := MatchDirectory(name)
@@ -79,8 +79,8 @@ func TestCategoriesList(t *testing.T) {
 		if cat.Description == "" {
 			t.Fatalf("category %q has empty description", cat.Key)
 		}
-		if len(cat.DirectoryNames) == 0 && len(cat.FileExtensions) == 0 {
-			t.Fatalf("category %q has no directory names or file extensions", cat.Key)
+		if len(cat.DirectoryNames) == 0 && len(cat.DirectoryPaths) == 0 && len(cat.FileExtensions) == 0 {
+			t.Fatalf("category %q has no directory names, directory paths, or file extensions", cat.Key)
 		}
 	}
 }

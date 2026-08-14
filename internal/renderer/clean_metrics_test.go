@@ -14,7 +14,7 @@ func TestRenderJSONIncludesCleanupVerification(t *testing.T) {
 		VerifiedDeletedBytes:   10,
 		DeletedBytes:           8,
 		SkippedCleanCandidates: 1,
-		FailedCleanCandidates: 1,
+		FailedCleanCandidates:  1,
 	}, "json")
 	if err != nil {
 		t.Fatalf("RenderReport: %v", err)

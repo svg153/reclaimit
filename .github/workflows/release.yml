@@ -3,54 +3,58 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
   packages: write
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-          - goos: linux
-            goarch: arm64
-          - goos: darwin
-            goarch: amd64
-          - goos: darwin
-            goarch: arm64
-          - goos: windows
-            goarch: amd64
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - name: Set up Go
-        uses: actions/setup-go@v7
         with:
-          go-version: '1.24'
-      - name: Build
-        run: |
-          set -e
-          mkdir -p dist
-          BIN_NAME=reclaimit
-          if [ "${{ matrix.goos }}" = "windows" ]; then BIN_NAME=${BIN_NAME}.exe; fi
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=0 go build -ldflags="-X main.version=${{ github.ref_name }}" -o dist/${BIN_NAME} .
-          ls -lh dist
-      - name: Archive
-        run: |
-          set -e
-          mkdir -p release
-          ARCHIVE_NAME=reclaimit_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}
-          if [ "${{ matrix.goos }}" = "windows" ]; then zip -j release/${ARCHIVE_NAME}.zip dist/*; else tar -C dist -czf release/${ARCHIVE_NAME}.tar.gz .; fi
-          ls -lh release
-      - name: Create GitHub Release and upload artifacts
-        uses: softprops/action-gh-release@v3
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          files: release/*
+          go-version: "1.24"
+      - name: Publish archives, packages, checksums, and release notes
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  container:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      - name: Build and publish image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ github.ref_name }}

@@ -8,11 +8,12 @@ This document explains how `reclaimit` is structured and how the main commands m
 
 - `cmd/reclaimit/main.go` is the executable entrypoint.
 - `main.go` in the root package `reclaimit` orchestrates commands and output.
-- scanner logic is split across `internal/scanner/types.go`, `categories.go`, `scanner_analyze.go`, `summaries.go`, and `scanner_clean.go`.
+- Scanner logic is split across `internal/scanner/types.go`, `categories.go`,
+  `scanner_analyze.go`, `grouping.go`, `summaries.go`, and
+  `scanner_clean.go`.
 - `internal/scanner/selection.go` filters candidates after CLI or TUI selection.
 - `internal/tui/tui.go` lets the user review and exclude targets interactively.
 - `internal/renderer/format.go` renders the final report.
-- `internal/tui/tui.go` contains the reusable internal TUI package.
 - `internal/filesystem/filesystem_unix.go` and `filesystem_windows.go` isolate per-platform filesystem usage data.
 
 ## C4: System Context
@@ -24,9 +25,9 @@ C4Context
     Person(developer, "Developer", "Runs cleanup analysis and decides what to delete")
     System(cli, "reclaimit CLI", "Analyzes reclaimable disk usage and optionally deletes reviewed targets")
     System_Ext(filesystem, "Local filesystem", "Developer home, repositories, caches, build artifacts")
-    System_Ext(terminal, "Terminal / shell", "CLI execution and plain-text or Markdown output")
+    System_Ext(terminal, "Terminal / shell", "CLI execution and plain-text, Markdown, or JSON output")
     System_Ext(tui, "Interactive TUI", "Tree-based review and exclusion UI")
-    System_Ext(report, "Generated report", "Plain text or Markdown written to stdout or file")
+    System_Ext(report, "Generated report", "Plain text, Markdown, or JSON written to stdout or file")
 
     Rel(developer, terminal, "Runs commands in")
     Rel(developer, tui, "Reviews candidates in")
@@ -48,7 +49,7 @@ C4Container
         Container(cli_router, "CLI router", "Go", "Parses flags, dispatches analyze / tui / clean")
         Container(scanner, "Scanner pipeline", "Go", "Walks directories, classifies candidates, aggregates summaries")
         Container(selection, "Selection pipeline", "Go", "Applies excluded groups and paths to the candidate set")
-        Container(renderer, "Report renderer", "Go", "Renders plain text or Markdown output")
+        Container(renderer, "Report renderer", "Go", "Renders plain text, Markdown, or JSON output")
         Container(tui_container, "TUI", "tview / tcell", "Interactive tree for reviewing and excluding targets")
         Container(fs_adapter, "Filesystem usage adapter", "Go + OS APIs", "Collects total/free/available bytes per platform")
     }
@@ -78,9 +79,9 @@ C4Component
         Component(main_entry, "Run / parseConfig", "main.go + options.go", "Routes commands and validates CLI configuration")
         Component(analyze_component, "Analyze", "scanner_analyze.go", "Builds Report from filesystem traversal")
         Component(scan_node, "AnalyzeWithOptions / scanContext.scan", "scanner_analyze.go", "Scanner core API and recursive traversal")
-        Component(grouping, "determineGroup / findRepoRoot / ancestorGroup", "scanner_analyze.go", "Assigns candidate groups")
+        Component(grouping, "DetermineGroup / findRepoRoot / ancestorGroup", "grouping.go", "Assigns candidate groups")
         Component(selection_component, "applySelection / filterCandidates", "selection.go", "Filters report by excluded groups and paths")
-        Component(render_component, "RenderReport", "format.go", "Formats report as plain text or Markdown")
+        Component(render_component, "RenderReport", "format.go", "Formats reports as plain text, Markdown, or JSON")
         Component(tui_component, "RunTUI / buildSelectionTree", "tui.go", "Interactive selection tree and selection snapshot")
         Component(fs_component, "filesystemUsage", "filesystem_*.go", "Returns filesystem capacity stats")
     }
@@ -207,7 +208,6 @@ stateDiagram-v2
 - Selection is a seam: exclusion logic is centralized in `selection.go` and reused by CLI flags and TUI output.
 - The Windows filesystem adapter calls `GetDiskFreeSpaceExW` and returns real metrics with overflow-safe clamping.
 
-
 ## Scanner limits, concurrency, and observability
 
 `AnalyzeWithOptions` uses a bounded worker pool per directory. `Workers` defaults to 8 and can be reduced to 1 for deterministic debugging or increased cautiously for fast local storage. Shared report state is protected while filesystem traversal remains parallel.
@@ -215,7 +215,6 @@ stateDiagram-v2
 `MaxDepth` is relative to the scan root. A value of 0 preserves unlimited traversal. When a positive limit is reached, directories are not descended into; they are counted as truncated so callers can distinguish a complete scan from a bounded one.
 
 The scanner records `entries_scanned`, `entries_skipped`, `truncated_directories`, and `max_depth_reached`. These values are emitted in the completion log and included in JSON reports for automation and performance comparisons. Filesystem errors below the root are logged as warnings and skipped, while an invalid or unreadable root remains a fatal error.
-
 
 ## Clean preflight and outcome contract
 

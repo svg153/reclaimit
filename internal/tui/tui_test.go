@@ -28,8 +28,8 @@ func TestApplySelectionFiltersGroupsAndPaths(t *testing.T) {
 
 func TestRenderReportFormats(t *testing.T) {
 	report := scanner.Report{
-		Root:         "/tmp",
-		TotalBytes:   1000,
+		Root:           "/tmp",
+		TotalBytes:     1000,
 		CandidateBytes: 500,
 		Candidates: []scanner.Candidate{
 			{Path: "/tmp/node_modules", Bytes: 300, CategoryKey: "node-modules", ModifiedAt: time.Now()},

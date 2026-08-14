@@ -1,8 +1,9 @@
 package scanner
 
 import (
+	"io"
+	"log/slog"
 	"os"
-
 	"path/filepath"
 	"strings"
 	"testing"
@@ -74,6 +75,27 @@ func TestExcludeGroupSkipsNestedCandidates(t *testing.T) {
 	}
 }
 
+func TestAnalyzeTotalBytesIncludesEntriesOutsideTopList(t *testing.T) {
+	root := t.TempDir()
+	mustWriteFile(t, filepath.Join(root, "largest.bin"), strings.Repeat("a", 30))
+	mustWriteFile(t, filepath.Join(root, "second.bin"), strings.Repeat("b", 20))
+	mustWriteFile(t, filepath.Join(root, "third.bin"), strings.Repeat("c", 10))
+
+	report, err := AnalyzeWithOptions("analyze", AnalyzeOptions{
+		Root: root, GroupMode: "depth", GroupDepth: 1,
+		TopFiles: 10, TopGroups: 10, TopEntries: 1, MinCandidateSize: 1,
+	}, nil)
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+	if report.TotalBytes != 60 {
+		t.Fatalf("expected all 60 bytes in total, got %d", report.TotalBytes)
+	}
+	if len(report.TopEntries) != 1 || report.TopEntries[0].Bytes != 30 {
+		t.Fatalf("unexpected top entries: %#v", report.TopEntries)
+	}
+}
+
 func TestMatchHelpersAndSummaries(t *testing.T) {
 	if _, ok := MatchDirectory("node_modules"); !ok {
 		t.Fatalf("expected node_modules to match directory category")
@@ -115,6 +137,38 @@ func TestPrefixAndSetHelpers(t *testing.T) {
 	}
 	if IncludeCategory("node-modules", nil, ListToSet([]string{"node-modules"})) != false {
 		t.Fatalf("expected excluded category to fail")
+	}
+}
+
+func TestAnalyzeRejectsInvalidRootAndDepth(t *testing.T) {
+	if _, err := AnalyzeWithOptions("analyze", AnalyzeOptions{Root: t.TempDir(), MaxDepth: -1}, nil); err == nil {
+		t.Fatal("negative max depth should fail")
+	}
+	file := filepath.Join(t.TempDir(), "file")
+	mustWriteFile(t, file, "x")
+	if _, err := AnalyzeWithOptions("analyze", AnalyzeOptions{Root: file}, nil); err == nil {
+		t.Fatal("file root should fail")
+	}
+}
+
+func TestScanContextSkipRecordsMetric(t *testing.T) {
+	ctx := &scanContext{logger: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	ctx.skip("/tmp/unreadable", os.ErrPermission)
+	if got := ctx.entriesSkipped.Load(); got != 1 {
+		t.Fatalf("entriesSkipped = %d", got)
+	}
+}
+
+func TestCleanupPathHelpersEdgeCases(t *testing.T) {
+	if isDescendant("/tmp/a", "/tmp/a") || isDescendant("/tmp/a", "/tmp/a/b") {
+		t.Fatal("equal and parent paths are not descendants")
+	}
+	if pathDepth(string(filepath.Separator)) != 0 || pathDepth(".") != 0 {
+		t.Fatal("root-like paths should have depth zero")
+	}
+	items := collapseNestedCandidates([]Candidate{{Path: ""}, {Path: "/tmp/a"}, {Path: "/tmp/a/b"}})
+	if len(items) != 2 {
+		t.Fatalf("unexpected collapsed candidates: %#v", items)
 	}
 }
 

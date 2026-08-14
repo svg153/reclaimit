@@ -162,31 +162,31 @@ func humanizeBytes(size int64) string {
 }
 
 type jsonReport struct {
-	Root                    string           `json:"root"`
-	TotalBytes              int64            `json:"total_bytes"`
-	FilesystemBytes         int64            `json:"filesystem_bytes"`
-	FreeBytes               int64            `json:"free_bytes"`
-	AvailableBytes          int64            `json:"available_bytes"`
-	CandidateBytes          int64            `json:"candidate_bytes"`
-	SelectedBytes           int64            `json:"selected_bytes"`
-	DeletedBytes            int64            `json:"deleted_bytes"`
-	ExpectedDeletedBytes    int64            `json:"expected_deleted_bytes"`
-	VerifiedDeletedBytes    int64            `json:"verified_deleted_bytes"`
-	SkippedCleanCandidates  int              `json:"skipped_clean_candidates"`
-	FailedCleanCandidates   int              `json:"failed_clean_candidates"`
-	EntriesScanned          int64            `json:"entries_scanned"`
-	EntriesSkipped          int64            `json:"entries_skipped"`
-	TruncatedDirectories    int64            `json:"truncated_directories"`
-	MaxDepthReached         int              `json:"max_depth_reached"`
-	Command                 string           `json:"command"`
-	TopEntries              []scanner.PathSize       `json:"top_entries"`
-	TopFiles                []scanner.PathSize       `json:"top_files"`
-	CategorySummaries       []scanner.CategorySummary `json:"category_summaries"`
-	GroupSummaries          []scanner.GroupSummary   `json:"group_summaries"`
+	Root                      string                    `json:"root"`
+	TotalBytes                int64                     `json:"total_bytes"`
+	FilesystemBytes           int64                     `json:"filesystem_bytes"`
+	FreeBytes                 int64                     `json:"free_bytes"`
+	AvailableBytes            int64                     `json:"available_bytes"`
+	CandidateBytes            int64                     `json:"candidate_bytes"`
+	SelectedBytes             int64                     `json:"selected_bytes"`
+	DeletedBytes              int64                     `json:"deleted_bytes"`
+	ExpectedDeletedBytes      int64                     `json:"expected_deleted_bytes"`
+	VerifiedDeletedBytes      int64                     `json:"verified_deleted_bytes"`
+	SkippedCleanCandidates    int                       `json:"skipped_clean_candidates"`
+	FailedCleanCandidates     int                       `json:"failed_clean_candidates"`
+	EntriesScanned            int64                     `json:"entries_scanned"`
+	EntriesSkipped            int64                     `json:"entries_skipped"`
+	TruncatedDirectories      int64                     `json:"truncated_directories"`
+	MaxDepthReached           int                       `json:"max_depth_reached"`
+	Command                   string                    `json:"command"`
+	TopEntries                []scanner.PathSize        `json:"top_entries"`
+	TopFiles                  []scanner.PathSize        `json:"top_files"`
+	CategorySummaries         []scanner.CategorySummary `json:"category_summaries"`
+	GroupSummaries            []scanner.GroupSummary    `json:"group_summaries"`
 	SelectedCategorySummaries []scanner.CategorySummary `json:"selected_category_summaries"`
-	SelectedGroupSummaries  []scanner.GroupSummary   `json:"selected_group_summaries"`
-	Candidates              []jsonCandidate  `json:"candidates"`
-	SelectedCandidates      []jsonCandidate  `json:"selected_candidates"`
+	SelectedGroupSummaries    []scanner.GroupSummary    `json:"selected_group_summaries"`
+	Candidates                []jsonCandidate           `json:"candidates"`
+	SelectedCandidates        []jsonCandidate           `json:"selected_candidates"`
 }
 
 type jsonCandidate struct {
@@ -214,31 +214,31 @@ func renderJSON(report scanner.Report) string {
 		}
 	}
 	jr := jsonReport{
-		Root:                    report.Root,
-		TotalBytes:              report.TotalBytes,
-		FilesystemBytes:         report.FilesystemBytes,
-		FreeBytes:               report.FreeBytes,
-		AvailableBytes:          report.AvailableBytes,
-		CandidateBytes:          report.CandidateBytes,
-		SelectedBytes:           report.SelectedBytes,
-		DeletedBytes:            report.DeletedBytes,
-		ExpectedDeletedBytes:    report.ExpectedDeletedBytes,
-		VerifiedDeletedBytes:    report.VerifiedDeletedBytes,
-		SkippedCleanCandidates:  report.SkippedCleanCandidates,
-		FailedCleanCandidates:   report.FailedCleanCandidates,
-		EntriesScanned:          report.EntriesScanned,
-		EntriesSkipped:          report.EntriesSkipped,
-		TruncatedDirectories:    report.TruncatedDirectories,
-		MaxDepthReached:         report.MaxDepthReached,
-		Command:                 report.Command,
-		TopEntries:              report.TopEntries,
-		TopFiles:                report.TopFiles,
-		CategorySummaries:       report.CategorySummaries,
-		GroupSummaries:          report.GroupSummaries,
+		Root:                      report.Root,
+		TotalBytes:                report.TotalBytes,
+		FilesystemBytes:           report.FilesystemBytes,
+		FreeBytes:                 report.FreeBytes,
+		AvailableBytes:            report.AvailableBytes,
+		CandidateBytes:            report.CandidateBytes,
+		SelectedBytes:             report.SelectedBytes,
+		DeletedBytes:              report.DeletedBytes,
+		ExpectedDeletedBytes:      report.ExpectedDeletedBytes,
+		VerifiedDeletedBytes:      report.VerifiedDeletedBytes,
+		SkippedCleanCandidates:    report.SkippedCleanCandidates,
+		FailedCleanCandidates:     report.FailedCleanCandidates,
+		EntriesScanned:            report.EntriesScanned,
+		EntriesSkipped:            report.EntriesSkipped,
+		TruncatedDirectories:      report.TruncatedDirectories,
+		MaxDepthReached:           report.MaxDepthReached,
+		Command:                   report.Command,
+		TopEntries:                report.TopEntries,
+		TopFiles:                  report.TopFiles,
+		CategorySummaries:         report.CategorySummaries,
+		GroupSummaries:            report.GroupSummaries,
 		SelectedCategorySummaries: report.SelectedCategorySummaries,
-		SelectedGroupSummaries:  report.SelectedGroupSummaries,
-		Candidates:              make([]jsonCandidate, len(report.Candidates)),
-		SelectedCandidates:      make([]jsonCandidate, len(report.SelectedCandidates)),
+		SelectedGroupSummaries:    report.SelectedGroupSummaries,
+		Candidates:                make([]jsonCandidate, len(report.Candidates)),
+		SelectedCandidates:        make([]jsonCandidate, len(report.SelectedCandidates)),
 	}
 	for i, c := range report.Candidates {
 		jr.Candidates[i] = jc(c)

@@ -2,11 +2,11 @@ package renderer
 
 import (
 	"fmt"
-
-	"github.com/svg153/reclaimit/internal/scanner"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/svg153/reclaimit/internal/scanner"
 )
 
 func renderMarkdownSummary(report scanner.Report, selectionMode bool) string {

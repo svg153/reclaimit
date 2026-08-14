@@ -7,14 +7,10 @@ import (
 )
 
 func TestDetermineGroup_RepoMode(t *testing.T) {
-	opts := AnalyzeOptions{GroupMode: "repo", GroupDepth: 1}
 	cache := make(map[string]string)
 	// Create a temp dir with a .git to simulate a repo root
-	tmp, err := os.MkdirTemp("", "group-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tmp := t.TempDir()
+	opts := AnalyzeOptions{GroupMode: "repo", GroupDepth: 1, Root: tmp}
 
 	gitPath := filepath.Join(tmp, ".git")
 	if err := os.MkdirAll(gitPath, 0o755); err != nil {
@@ -28,18 +24,15 @@ func TestDetermineGroup_RepoMode(t *testing.T) {
 }
 
 func TestDetermineGroup_RepoMode_NoGit(t *testing.T) {
-	opts := AnalyzeOptions{GroupMode: "repo", GroupDepth: 1}
 	cache := make(map[string]string)
 
-	tmp, err := os.MkdirTemp("", "group-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tmp := t.TempDir()
+	opts := AnalyzeOptions{GroupMode: "repo", GroupDepth: 1, Root: tmp}
 
 	result := DetermineGroup(filepath.Join(tmp, "src", "main.go"), opts, cache)
-	if result != "" {
-		t.Errorf("expected empty group for non-git path, got %s", result)
+	expected := filepath.Join(tmp, "src")
+	if result != expected {
+		t.Errorf("expected depth fallback %s for non-git path, got %s", expected, result)
 	}
 }
 
@@ -77,11 +70,7 @@ func TestFindRepoRoot_CacheHit(t *testing.T) {
 }
 
 func TestFindRepoRoot_CacheMiss_GitFound(t *testing.T) {
-	tmp, err := os.MkdirTemp("", "repo-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tmp := t.TempDir()
 
 	gitPath := filepath.Join(tmp, ".git")
 	if err := os.MkdirAll(gitPath, 0o755); err != nil {
@@ -100,11 +89,7 @@ func TestFindRepoRoot_CacheMiss_GitFound(t *testing.T) {
 }
 
 func TestFindRepoRoot_NoGit_ReturnsEmpty(t *testing.T) {
-	tmp, err := os.MkdirTemp("", "no-git-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tmp := t.TempDir()
 
 	cache := make(map[string]string)
 	result := findRepoRoot(filepath.Join(tmp, "file.txt"), tmp, cache)
@@ -114,11 +99,7 @@ func TestFindRepoRoot_NoGit_ReturnsEmpty(t *testing.T) {
 }
 
 func TestFindRepoRoot_AtRoot_ReturnsEmpty(t *testing.T) {
-	tmp, err := os.MkdirTemp("", "root-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmp)
+	tmp := t.TempDir()
 
 	cache := make(map[string]string)
 	result := findRepoRoot(tmp, tmp, cache)

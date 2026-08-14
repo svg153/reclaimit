@@ -33,7 +33,7 @@ func TestClampUint64ToInt64_Normal(t *testing.T) {
 
 func TestClampUint64ToInt64_Overflow(t *testing.T) {
 	result := clampUint64ToInt64(18446744073709551615) // math.MaxUint64
-	if result != 9223372036854775807 { // math.MaxInt64
+	if result != 9223372036854775807 {                 // math.MaxInt64
 		t.Errorf("expected math.MaxInt64, got %d", result)
 	}
 }

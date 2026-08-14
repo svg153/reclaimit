@@ -1,239 +1,138 @@
-# reclaimit — Reclaimable Disk Space Analyzer for Developer Workstations
+# reclaimit — Find developer files you can safely clean up
 
-**reclaimit** is a fast, safe Go CLI that finds reclaimable disk space on developer machines — with a bias toward **what is safe enough to delete**.
+[![Latest release](https://img.shields.io/github/v/release/svg153/reclaimit)](https://github.com/svg153/reclaimit/releases/latest)
+[![Go version](https://img.shields.io/github/go-mod/go-version/svg153/reclaimit)](go.mod)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Unlike classic disk analyzers that just answer "what is big?", reclaimit answers **"what can I safely clean up?"** — by understanding developer-specific leftovers like `node_modules`, `.venv`, build caches, Docker layers, and more.
+![reclaimit terminal disk cleanup analyzer](assets/reclaimit-hero.svg)
 
-## Quick Install
+`reclaimit` is a cross-platform Go CLI and terminal UI that finds regenerable developer artifacts, groups them by project, and lets you review them before deletion.
+
+Traditional disk analyzers answer **“what is large?”**. `reclaimit` adds the developer context needed to answer **“what can I recreate if I delete it?”**.
+
+## Install
 
 ```bash
-# macOS / Linux
-brew install svg153/reclaimit/reclaimit
-
-# Or the universal install script
+# macOS or Linux: download the latest matching release
 curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
 
-# Or go install
-go install github.com/svg153/reclaimit@latest
+# Or install from source with Go 1.24+
+go install github.com/svg153/reclaimit/cmd/reclaimit@latest
 ```
 
-## Why reclaimit?
+The installer places the binary in `$HOME/.local/bin`. Prebuilt archives for Linux, macOS, and Windows are available on the [releases page](https://github.com/svg153/reclaimit/releases/latest).
 
-Most disk space tools (`du`, `ncdu`, `gdu`) show you what's taking space. But deleting blindly is risky — you might nuke a project's `node_modules` or a Python virtual environment you still need.
+## What it does
 
-reclaimit is different. It **categorizes** cleanup targets by type and lets you review before deleting:
+- Detects 17 cleanup categories for JavaScript, Python, Rust, frontend builds, Bun, pip, pipx, and macOS metadata.
+- Groups candidates by Git repository or path depth instead of presenting one flat list.
+- Produces plain-text, Markdown, or JSON reports and includes an interactive TUI.
+- Requires explicit confirmation for cleanup and supports a non-destructive `--dry-run`.
+- Revalidates type, measured size, and modification snapshot before deletion; changed or missing candidates are skipped.
+- Ships as one Go binary for Linux, macOS, and Windows.
 
-- **Scan** any directory → get a structured report
-- **Review** in a terminal UI (TUI) with a path tree
-- **Delete** only what you've verified
-
-## Key Features
-
-- **Developer-aware**: Knows about `node_modules`, `.venv`, `__pycache__`, `.next`, `dist/`, Docker layers, and 20+ more patterns
-- **Three output modes**: plain text, Markdown (with tables, Mermaid diagrams), and interactive TUI
-- **Repository-aware grouping**: Groups candidates by project, not just by size
-- **Safe by design**: Preview before delete, `--yes` flag required, context nodes that never imply deleting the repo root
-- **Single binary**: No dependencies, no Python, no Node — just a ~10MB Go binary
-- **Docker-ready**: Non-root distroless image on GHCR
-- **Cross-platform**: Linux, macOS, Windows
-
-- `node_modules`
-- `.venv`, `venv`, `.tox`
-- `__pycache__`, `.pyc`, `.pyo`
-- `.pytest_cache`, `.mypy_cache`
-- `dist`, `build`, `target`
-- `.next`, `.nuxt`
-- `.cache` (generic caches), `.cache/pip` (pip downloads), `.npm`, `.yarn`, `.pnpm-store`, `.bun` (package manager caches)
-- `.local/pipx` (pipx-managed applications; removing them requires reinstalling the applications)
-- `.DS_Store`, `.Spotlight-V100`, `.Trashes` (macOS Finder metadata, index caches, and trash folders)
-
-## Usage
-
-### Generate a report
+## Quick start
 
 ```bash
-reclaimit analyze --root "$HOME" --format markdown --out cleanup-report.md
+# Inspect a workspace in the terminal
+reclaimit analyze --root "$HOME/code"
+
+# Export machine-readable scan metrics
+reclaimit analyze --root "$HOME/code" --format json --out reclaimit-report.json
+
+# Review candidates interactively
+reclaimit tui --root "$HOME/code"
+
+# Preview one category without deleting anything
+reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
+
+# Delete only after reviewing the same selection
+reclaimit clean --root "$HOME/code" --include-category python-venv --yes
 ```
 
-### Interactive cleanup
+## Supported cleanup categories
 
-```bash
-reclaimit tui --root "$HOME"
-```
+| Ecosystem | Detected paths |
+| --- | --- |
+| JavaScript and frontend | `node_modules`, `dist`, `build`, `.next`, `.nuxt` |
+| Python | `.venv`, `venv`, `__pycache__`, `*.pyc`, `*.pyo`, `.pytest_cache`, `.mypy_cache`, `.tox` |
+| Python package tools | `.cache/pip`, `.local/pipx` |
+| Rust | `target` |
+| Bun | `.bun` |
+| Generic caches | `.cache` |
+| macOS | `.DS_Store`, `.Spotlight-V100`, `.Trashes` |
 
-### Clean reviewed targets
+Generic caches and pipx-managed environments can contain useful or costly-to-recreate data. `reclaimit` describes these candidates but leaves the decision to you.
 
-```bash
-reclaimit clean --root "$HOME" --include-category python-venv --yes
-```
+## Why not just use `du` or `ncdu`?
 
-## Comparison
+Those are excellent general-purpose disk usage tools. `reclaimit` is narrower: it recognizes developer artifacts and adds a guarded cleanup workflow.
 
-| Feature | reclaimit | `du` / `ncdu` | `gdu` | `du-dust` |
-|---------|-----------|---------------|-------|-----------|
-| Developer-aware patterns | ✅ 20+ patterns | ❌ Raw sizes | ❌ Raw sizes | ❌ Raw sizes |
-| Safe delete preview | ✅ Review before delete | ❌ Delete immediately | ❌ Delete immediately | ❌ Delete immediately |
-| Markdown reports | ✅ Tables + Mermaid | ❌ | ❌ | ❌ |
-| Repository grouping | ✅ Group by project | ❌ Flat tree | ❌ Flat tree | ❌ Flat tree |
-| Docker image | ✅ GHCR distroless | ❌ | ❌ | ❌ |
-| Homebrew tap | ✅ | ❌ | ❌ | ❌ |
-| Cross-platform | ✅ Go + Windows | ✅ | ✅ | ✅ |
+| Capability | reclaimit | General disk analyzer |
+| --- | --- | --- |
+| Primary signal | Regenerable artifact category | File and directory size |
+| Project context | Git repository or path grouping | Filesystem hierarchy |
+| Automation output | JSON, Markdown, plain text | Tool-dependent |
+| Cleanup guard | Dry run plus pre-delete revalidation | Tool-dependent/manual selection |
 
-## Installation
+The tools complement each other: use a general analyzer to understand the whole disk and `reclaimit` to review known developer cleanup candidates.
 
-### Homebrew (macOS / Linux)
+## Commands and important flags
 
-```bash
-brew install svg153/reclaimit/reclaimit
-```
+| Command | Purpose |
+| --- | --- |
+| `analyze` | Scan and produce a report |
+| `tui` | Review results in an interactive terminal tree |
+| `clean` | Preview or delete selected candidates |
 
-### Universal install script
+- `--root PATH`: directory to scan; defaults to the current directory.
+- `--format plain|markdown|json`: report format.
+- `--group-mode repo|depth`: group by Git repository or path depth.
+- `--max-depth N`: traversal limit; `0` means unlimited.
+- `--workers N`: scanner workers per directory; defaults to `8`.
+- `--include-category VALUE`: include one category; repeatable.
+- `--exclude-category VALUE`: exclude one category; repeatable.
+- `--exclude-group PATH`: exclude a path prefix; repeatable.
+- `--exclude-path PATH`: exclude one exact candidate path; repeatable.
+- `--ignore-file FILE`: read excluded paths from a file, one per line.
+- `--out FILE`: write the report to a file.
+- `--dry-run`: run cleanup preflight without deleting.
+- `--yes`: confirm destructive cleanup.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
-```
+Run `reclaimit help analyze`, `reclaimit help tui`, or `reclaimit help clean` for the complete help text.
 
-Installs to `$HOME/.local/bin/reclaimit`.
+## Safety model
 
-### Go install
+`analyze` and `tui` are read-only. `clean` requires either `--dry-run` or `--yes`.
 
-```bash
-go install github.com/svg153/reclaimit@latest
-```
+Before deleting, `reclaimit` collapses nested selections and checks that each path still exists and matches the type, size, and modification snapshot observed by the scan. It records expected, verified, deleted, skipped, and failed outcomes separately.
 
-### Linux packages
+Deletion is still irreversible and cannot be transactional on a normal filesystem. Review the dry run, keep backups for valuable data, and avoid running cleanup against paths you do not understand.
 
-Release builds publish `.deb`, `.rpm`, and `.apk` packages. Download from the [latest release](https://github.com/svg153/reclaimit/releases/latest).
-
-### Docker
-
-```bash
-docker run --rm ghcr.io/svg153/reclaimit:latest analyze --root /scan --format markdown
-```
-
-### Build from source
+## Build and contribute
 
 ```bash
 git clone https://github.com/svg153/reclaimit.git
 cd reclaimit
-task build
-./bin/reclaimit --version
+
+go test ./...
+go test -race ./...
+go vet ./...
+go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6 run ./...
+go build -o ./bin/reclaimit ./cmd/reclaimit
 ```
 
-## Commands
+The optional [Task](https://taskfile.dev/) shortcuts are documented in `Taskfile.yml`. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [docs/architecture.md](docs/architecture.md) for the design, scanner limits, and cleanup contract.
 
-| Command | Description |
-|---------|-------------|
-| `analyze` | Generate plain-text or Markdown report |
-| `tui` | Interactive terminal UI with path tree |
-| `clean` | Delete reviewed cleanup targets |
+## Roadmap
 
-### `analyze` flags
+- Expand cleanup categories only with explicit safety descriptions and tests.
+- Keep behavioral coverage above 90% overall and in every production package.
+- Add age-based filters and export/import of reviewed selections.
+- Publish reproducible benchmarks and real-world, opt-in scan summaries.
 
-`--root PATH` — Directory to scan (default: current directory)
-`--format plain\|markdown` — Output format
-`--group-mode repo\|depth` — Grouping strategy
-`--group-depth N` — Depth for grouping (when using `--group-mode depth`)
-`--max-depth N` — Maximum traversal depth; `0` means unlimited
-`--workers N` — Concurrent scanner workers (default: `8`)
-`--exclude-group PATH` — Exclude by path prefix
-`--exclude-path PATH` — Exact path exclusion
-`--out FILE` — Write report to file
-`--log-level debug\|info\|warn\|error` — Log verbosity
-
-### `tui` flags
-
-`--root PATH` — Directory to scan
-`--format markdown` — Include Mermaid diagrams in TUI
-
-### `clean` flags
-
-`--root PATH` — Directory to clean
-`--include-category CATEGORY` — Only clean this category (e.g., `python-venv`)
-`--exclude-category CATEGORY` — Skip this category
-`--yes` — Confirm deletion (required for safety)
-`--dry-run` — Run the same preflight without deleting anything
-
-Before any deletion, reclaimit verifies that every selected path still exists, has the same file/directory type, and has the same measured bytes and modification snapshot as the scan. Changed or missing candidates are skipped; failures are logged per candidate and do not stop the remaining cleanup. The final report distinguishes expected, verified, deleted, skipped, and failed outcomes.
-
-## Architecture
-
-```
-reclaimit
-├── analyze     → Scan + categorize → report (text/markdown)
-├── tui         → Scan + categorize → interactive tree UI
-└── clean       → Review list → delete with safety checks
-```
-
-See [docs/architecture.md](docs/architecture.md) for C4 diagrams and detailed design.
-
-## Development
-
-```bash
-task fmt        # gofmt
-task vet        # go vet
-task lint       # golangci-lint
-task test       # tests + coverage
-task bench      # benchmarks
-task build      # build binary
-task docker-build  # build distroless image
-task check      # full quality gate
-```
-
-## FAQ
-
-**Is reclaimit safe to use?**
-Yes. The `clean` command requires `--yes` to delete anything. The `analyze` and `tui` commands only read — they never modify files.
-
-**What directories does reclaimit recognize?**
-Over 20 developer-specific patterns including `node_modules`, `.venv`, `__pycache__`, `.pytest_cache`, `dist/`, `build/`, `.next`, `.nuxt`, `.cache/pip`, `.local/pipx`, Docker layers, Go build caches, npm/yarn/pnpm caches, and more.
-
-**Can I exclude specific paths?**
-Yes. Use `--exclude-path` for exact paths or `--exclude-group` for prefix-based exclusions. You can also create a config file for persistent exclusions.
-
-**Does it work on Windows?**
-Yes. reclaimit is written in Go and supports Linux, macOS, and Windows.
-
-**How fast is it?**
-A single binary with no external dependencies. Uses bounded concurrency for large directory trees and can report traversal metrics in JSON. Scans 100K+ files in seconds. Benchmarks are in [docs/architecture.md](docs/architecture.md).
-
-**Is there a GUI?**
-No — reclaimit is terminal-first. The TUI uses `tview` for an interactive tree interface. A web UI is on the roadmap.
-
-**Can I export the report?**
-Yes. `analyze --format markdown --out report.md` produces a Markdown report with tables, Mermaid diagrams, and PlantUML blocks.
-
-## Security & automation
-
-The repository includes:
-
-- Dependabot for Go modules and GitHub Actions
-- CodeQL analysis on pushes, pull requests and schedule
-- `govulncheck` SCA scanning in CI
-- coverage artifacts in CI plus Codecov upload
-- GoReleaser-driven releases publishing binaries, Linux packages and checksums
-- a non-root distroless container image published to GHCR
-
-For webinstall.dev specifically, this repository now ships a portable `install.sh`, but final publication still requires submitting the installer metadata upstream to `webinstall/webi-installers`.
-
-## Roadmap ideas
-
-- richer filtering by age / last-modified thresholds
-- export/import of reviewed selections
-- release pipeline for prebuilt binaries
-- ignore rules file
-- optional JSON output for automation
-
-## Contributing
-
-Contributions are welcome. Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on code style, testing, and making pull requests.
-
-If you open a change, prefer:
-
-- focused PRs
-- tests for new behavior
-- updated help/README when CLI behavior changes
+Focused pull requests, bug reports, category proposals, and documentation improvements are welcome.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT — see [LICENSE](LICENSE).

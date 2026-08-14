@@ -19,7 +19,7 @@ func TestMatchDirectoryPathSpecificCategories(t *testing.T) {
 			t.Fatalf("MatchDirectory(%q) did not match", path)
 		}
 		if cat.Key != map[string]string{
-			filepath.Join(root, ".cache", "pip"): "pip-cache",
+			filepath.Join(root, ".cache", "pip"):  "pip-cache",
 			filepath.Join(root, ".local", "pipx"): "pipx-data",
 		}[path] {
 			t.Fatalf("MatchDirectory(%q) returned %q", path, cat.Key)

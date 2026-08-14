@@ -120,7 +120,7 @@ func CleanWithOptions(candidates []Candidate, options CleanOptions) (CleanResult
 			result.addIssue(item.candidate, CleanIssue{
 				Status: "failed",
 				Reason: err.Error(),
-				Bytes: item.actualBytes,
+				Bytes:  item.actualBytes,
 			})
 			logger.Warn("clean candidate failed",
 				"path", item.candidate.Path,
@@ -133,7 +133,7 @@ func CleanWithOptions(candidates []Candidate, options CleanOptions) (CleanResult
 			result.addIssue(item.candidate, CleanIssue{
 				Status: "failed",
 				Reason: "path still exists after deletion",
-				Bytes: item.actualBytes,
+				Bytes:  item.actualBytes,
 			})
 			logger.Warn("clean candidate failed",
 				"path", item.candidate.Path,
@@ -145,7 +145,7 @@ func CleanWithOptions(candidates []Candidate, options CleanOptions) (CleanResult
 			result.addIssue(item.candidate, CleanIssue{
 				Status: "failed",
 				Reason: fmt.Sprintf("post-delete verification: %v", err),
-				Bytes: item.actualBytes,
+				Bytes:  item.actualBytes,
 			})
 			logger.Warn("clean candidate failed",
 				"path", item.candidate.Path,
@@ -201,7 +201,7 @@ func verifyCandidate(candidate Candidate) (int64, *CleanIssue) {
 		return 0, &CleanIssue{
 			Status: "skipped",
 			Reason: "path type changed since scan",
-			Bytes: candidate.Bytes,
+			Bytes:  candidate.Bytes,
 		}
 	}
 
@@ -210,21 +210,21 @@ func verifyCandidate(candidate Candidate) (int64, *CleanIssue) {
 		return 0, &CleanIssue{
 			Status: "failed",
 			Reason: fmt.Sprintf("measure: %v", err),
-			Bytes: candidate.Bytes,
+			Bytes:  candidate.Bytes,
 		}
 	}
 	if actualBytes != candidate.Bytes {
 		return 0, &CleanIssue{
 			Status: "skipped",
 			Reason: fmt.Sprintf("size changed since scan: expected %d, found %d", candidate.Bytes, actualBytes),
-			Bytes: candidate.Bytes,
+			Bytes:  candidate.Bytes,
 		}
 	}
 	if !candidate.ModifiedAt.IsZero() && !latestModified.Equal(candidate.ModifiedAt) {
 		return 0, &CleanIssue{
 			Status: "skipped",
 			Reason: "modified since scan",
-			Bytes: candidate.Bytes,
+			Bytes:  candidate.Bytes,
 		}
 	}
 	return actualBytes, nil
@@ -310,14 +310,6 @@ func pathDepth(path string) int {
 		return 0
 	}
 	return strings.Count(cleaned, string(filepath.Separator))
-}
-
-func sumCandidateBytes(candidates []Candidate) int64 {
-	var total int64
-	for _, candidate := range candidates {
-		total += candidate.Bytes
-	}
-	return total
 }
 
 // filesystemUsage is implemented per-OS in filesystem_*.go

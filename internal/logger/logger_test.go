@@ -2,7 +2,6 @@ package logger
 
 import (
 	"bytes"
-	"log/slog"
 	"strings"
 	"testing"
 )
@@ -95,6 +94,7 @@ func TestNewLogger_ErrorLevel(t *testing.T) {
 
 func TestNewLogger_ReturnsSlogLogger(t *testing.T) {
 	logger := NewLogger("info", nil)
-	// Should be a valid slog.Logger - if it panics, type is wrong
-	var _ *slog.Logger = logger
+	if logger == nil {
+		t.Fatal("NewLogger returned nil")
+	}
 }

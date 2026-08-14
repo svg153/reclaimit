@@ -91,6 +91,7 @@ func AnalyzeWithOptions(command string, opts AnalyzeOptions, logger *slog.Logger
 	logger.Debug("scan started", "root", opts.Root, "entries", len(entries), "workers", opts.Workers, "max_depth", opts.MaxDepth)
 	rootResults := sc.scanEntries(opts.Root, entries, false, 1)
 	for _, result := range rootResults {
+		report.TotalBytes += result.summary.bytes
 		if result.summary.bytes > 0 {
 			sc.mu.Lock()
 			report.TopEntries = PushTop(report.TopEntries, PathSize{Path: result.path, Bytes: result.summary.bytes}, opts.TopEntries)
@@ -98,7 +99,6 @@ func AnalyzeWithOptions(command string, opts AnalyzeOptions, logger *slog.Logger
 		}
 	}
 
-	report.TotalBytes = SumBytes(report.TopEntries)
 	SortPathSizes(report.TopEntries)
 	if len(report.TopEntries) > opts.TopEntries {
 		report.TopEntries = report.TopEntries[:opts.TopEntries]

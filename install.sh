@@ -16,6 +16,7 @@ OWNER="svg153"
 REPO="reclaimit"
 TAG=${1:-latest}
 API_URL="https://api.github.com/repos/${OWNER}/${REPO}/releases"
+INSTALL_DIR=${RECLAIMIT_INSTALL_DIR:-"${HOME}/.local/bin"}
 
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
 arch="$(uname -m)"
@@ -56,7 +57,7 @@ trap 'rm -rf "$tmp_dir"' EXIT
 archive_path="$tmp_dir/reclaimit.archive"
 
 curl -fsSL "$asset_url" -o "$archive_path"
-mkdir -p "$HOME/.local/bin"
+mkdir -p "$INSTALL_DIR"
 
 case "$asset_url" in
   *.zip)
@@ -64,7 +65,7 @@ case "$asset_url" in
     unzip -q "$archive_path" -d "$tmp_dir"
     ;;
   *.tar.gz)
-    tar -xzf "$archive_path" -C "$tmp_dir"
+    tar --no-same-owner -xzf "$archive_path" -C "$tmp_dir"
     ;;
   *)
     echo "Unsupported archive format: $asset_url" >&2
@@ -78,6 +79,9 @@ if [ -z "$bin_path" ]; then
   exit 1
 fi
 
-mv "$bin_path" "$HOME/.local/bin/reclaimit"
-chmod +x "$HOME/.local/bin/reclaimit"
-echo "reclaimit installed to $HOME/.local/bin/reclaimit"
+target_name="reclaimit"
+if [ "$os" = "windows" ]; then
+  target_name="reclaimit.exe"
+fi
+install -m 0755 "$bin_path" "$INSTALL_DIR/$target_name"
+echo "reclaimit installed to $INSTALL_DIR/$target_name"

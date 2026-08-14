@@ -7,19 +7,43 @@ import (
 )
 
 func PushTop(list []PathSize, item PathSize, limit int) []PathSize {
-	list = append(list, item)
-	SortPathSizes(list)
-	if len(list) > limit {
-		list = list[:limit]
+	if limit <= 0 {
+		return list[:0]
 	}
+
+	oldLen := len(list)
+	if oldLen >= limit {
+		list = list[:limit]
+		oldLen = limit
+		if !pathSizeBefore(item, list[oldLen-1]) {
+			return list
+		}
+	} else {
+		list = append(list, PathSize{})
+	}
+
+	searchLen := oldLen
+	if oldLen == limit {
+		searchLen--
+	}
+	insertAt := sort.Search(searchLen, func(i int) bool {
+		return pathSizeBefore(item, list[i])
+	})
+	copy(list[insertAt+1:], list[insertAt:oldLen])
+	list[insertAt] = item
 	return list
 }
 
+func pathSizeBefore(left, right PathSize) bool {
+	if left.Bytes == right.Bytes {
+		return left.Path < right.Path
+	}
+	return left.Bytes > right.Bytes
+}
+
 func SortPathSizes(items []PathSize) {
-	sortByBytesAndPath(items, func(item PathSize) int64 {
-		return item.Bytes
-	}, func(item PathSize) string {
-		return item.Path
+	sort.Slice(items, func(i, j int) bool {
+		return pathSizeBefore(items[i], items[j])
 	})
 }
 

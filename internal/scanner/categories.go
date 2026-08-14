@@ -46,7 +46,7 @@ func newDirPathCategory(key, display, description string, pathParts ...string) C
 		Display:        display,
 		Description:    description,
 		DirectoryNames: map[string]struct{}{},
-		DirectoryPaths: map[string]struct{}{filepath.Join(pathParts...): struct{}{}},
+		DirectoryPaths: map[string]struct{}{filepath.Join(pathParts...): {}},
 		FileExtensions: map[string]struct{}{},
 	}
 }

@@ -72,7 +72,7 @@ func TestDryRunEmptyCandidates(t *testing.T) {
 func TestDryRunPartialMissing(t *testing.T) {
 	root := t.TempDir()
 	existing := filepath.Join(root, "exists")
-	os.MkdirAll(existing, 0o755)
+	mustMkdir(t, existing)
 
 	candidates := []Candidate{
 		{Path: existing, Bytes: 0, IsDir: true},
@@ -91,8 +91,8 @@ func TestDryRunPartialMissing(t *testing.T) {
 func TestDryRunDoesNotAffectClean(t *testing.T) {
 	root := t.TempDir()
 	target := filepath.Join(root, "node_modules")
-	os.MkdirAll(target, 0o755)
-	os.WriteFile(filepath.Join(target, "dep.js"), []byte("x"), 0o644)
+	mustMkdir(t, target)
+	mustWriteFile(t, filepath.Join(target, "dep.js"), "x")
 
 	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 
@@ -126,8 +126,8 @@ func TestDryRunDoesNotAffectClean(t *testing.T) {
 func TestDryRunPermissionError(t *testing.T) {
 	root := t.TempDir()
 	target := filepath.Join(root, "protected")
-	os.MkdirAll(target, 0o755)
-	os.WriteFile(filepath.Join(target, "f.txt"), []byte("x"), 0o644)
+	mustMkdir(t, target)
+	mustWriteFile(t, filepath.Join(target, "f.txt"), "x")
 
 	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 	total, err := DryRun(candidates)
@@ -143,9 +143,9 @@ func TestDryRunPermissionError(t *testing.T) {
 func TestDryRunWithRealScan(t *testing.T) {
 	root := t.TempDir()
 	repo := filepath.Join(root, "project")
-	os.MkdirAll(filepath.Join(repo, ".git"), 0o755)
-	os.MkdirAll(filepath.Join(repo, "node_modules", "pkg"), 0o755)
-	os.WriteFile(filepath.Join(repo, "node_modules", "pkg", "bundle.js"), []byte("a"), 0o644)
+	mustMkdir(t, filepath.Join(repo, ".git"))
+	mustMkdir(t, filepath.Join(repo, "node_modules", "pkg"))
+	mustWriteFile(t, filepath.Join(repo, "node_modules", "pkg", "bundle.js"), "a")
 
 	report, err := AnalyzeWithOptions("analyze", AnalyzeOptions{
 		Root:             repo,
@@ -182,8 +182,8 @@ func TestDryRunWithRealScan(t *testing.T) {
 func TestDryRunReportShowsDeletedBytes(t *testing.T) {
 	root := t.TempDir()
 	target := filepath.Join(root, "node_modules")
-	os.MkdirAll(target, 0o755)
-	os.WriteFile(filepath.Join(target, "dep.js"), []byte("x"), 0o644)
+	mustMkdir(t, target)
+	mustWriteFile(t, filepath.Join(target, "dep.js"), "x")
 
 	candidates := []Candidate{{Path: target, Bytes: 1, IsDir: true}}
 	deleted, err := DryRun(candidates)

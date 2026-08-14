@@ -19,7 +19,6 @@ const (
 	nodeCandidate selectionNodeKind = "candidate"
 )
 
-
 // Aliases to keep the TUI interface clean.
 type Candidate = scanner.Candidate
 type Report = scanner.Report
@@ -38,16 +37,19 @@ type selectionNode struct {
 }
 
 type Selection struct {
-	SelectedBytes int64
+	SelectedBytes  int64
 	ExcludedGroups []string
 	ExcludedPaths  []string
 	Saved          bool
 }
 
 func Run(report Report) (Selection, error) {
+	return runWithApplication(report, tview.NewApplication())
+}
+
+func runWithApplication(report Report, app *tview.Application) (Selection, error) {
 	roots := buildSelectionTree(report)
 
-	app := tview.NewApplication()
 	tree := tview.NewTreeView().SetGraphics(true)
 	tree.SetGraphicsColor(tcell.ColorCadetBlue)
 	tree.SetBorder(true)
