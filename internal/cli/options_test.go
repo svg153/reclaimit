@@ -131,6 +131,28 @@ func TestParseConfigVersionFlag(t *testing.T) {
 	}
 }
 
+func TestParseConfigRejectsUnknownCommandAndUnexpectedArguments(t *testing.T) {
+	tests := [][]string{
+		{"typo", "--root", t.TempDir()},
+		{"analyze", "unexpected"},
+		{"version", "unexpected"},
+		{"--help", "unexpected"},
+		{"help", "analyze", "unexpected"},
+	}
+	for _, args := range tests {
+		if _, err := ParseConfig(args); err == nil {
+			t.Fatalf("ParseConfig(%q) should reject unused input", args)
+		}
+	}
+}
+
+func TestParseConfigRejectsUnknownHelpTopic(t *testing.T) {
+	_, err := ParseConfig([]string{"help", "nonsense"})
+	if err == nil || !strings.Contains(err.Error(), "unknown help topic") {
+		t.Fatalf("ParseConfig unknown help topic error = %v", err)
+	}
+}
+
 // TestParseConfigInvalidFormat validates format validation.
 func TestParseConfigInvalidFormat(t *testing.T) {
 	_, err := ParseConfig([]string{"--format", "xml"})
@@ -276,6 +298,13 @@ func TestParseConfigMinCandidateSize(t *testing.T) {
 	}
 	if cfg.MinCandidateSize != 1024 {
 		t.Fatalf("expected minCandidateSize 1024, got %d", cfg.MinCandidateSize)
+	}
+}
+
+func TestParseConfigRejectsNegativeMinCandidateSize(t *testing.T) {
+	_, err := ParseConfig([]string{"--min-candidate-size", "-1"})
+	if err == nil || !strings.Contains(err.Error(), "min-candidate-size must be >= 0") {
+		t.Fatalf("ParseConfig negative min-candidate-size error = %v", err)
 	}
 }
 
