@@ -398,7 +398,7 @@ func TestRun_AnalyzeWithIncludeCategory(t *testing.T) {
 	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
-	code := Run([]string{"analyze", "--root", root, "--include-category", "cache", "--min-candidate-size", "0"}, &stdout, &stderr)
+	code := Run([]string{"analyze", "--root", root, "--include-category", "node-modules", "--min-candidate-size", "0"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
 	}
@@ -486,7 +486,7 @@ func TestRun_AnalyzeWithExcludeCategory(t *testing.T) {
 	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
-	code := Run([]string{"analyze", "--root", root, "--exclude-category", "cache", "--min-candidate-size", "0"}, &stdout, &stderr)
+	code := Run([]string{"analyze", "--root", root, "--exclude-category", "generic-cache", "--min-candidate-size", "0"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
 	}
@@ -497,7 +497,7 @@ func TestRun_AnalyzeWithMultipleCategories(t *testing.T) {
 	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
 
 	var stdout, stderr bytes.Buffer
-	code := Run([]string{"analyze", "--root", root, "--include-category", "cache", "--include-category", "build", "--min-candidate-size", "0"}, &stdout, &stderr)
+	code := Run([]string{"analyze", "--root", root, "--include-category", "node-modules", "--include-category", "js-build", "--min-candidate-size", "0"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
 	}

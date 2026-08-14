@@ -92,6 +92,12 @@ func AnalyzeWithContext(ctx context.Context, command string, opts AnalyzeOptions
 	if err := ctx.Err(); err != nil {
 		return Report{}, err
 	}
+	if err := validateCategoryFilters(opts.IncludeCategories, opts.ExcludeCategories); err != nil {
+		return Report{}, err
+	}
+	if opts.MinCandidateSize < 0 {
+		return Report{}, fmt.Errorf("minimum candidate size must be >= 0")
+	}
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}

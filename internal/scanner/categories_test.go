@@ -1,6 +1,8 @@
 package scanner
 
 import (
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -91,6 +93,20 @@ func TestCategoryDescriptions(t *testing.T) {
 		if len(cat.Description) < 5 {
 			t.Fatalf("category %q description too short: %q", cat.Key, cat.Description)
 		}
+	}
+}
+
+func TestCategoryKeysAreSortedAndFiltersRejectTypos(t *testing.T) {
+	keys := CategoryKeys()
+	if len(keys) != len(categories) || !slices.IsSorted(keys) {
+		t.Fatalf("CategoryKeys() = %#v", keys)
+	}
+	if err := validateCategoryFilters([]string{"node-modules"}, []string{"python-cache"}); err != nil {
+		t.Fatalf("known category filters failed: %v", err)
+	}
+	err := validateCategoryFilters([]string{"node-module"}, nil)
+	if err == nil || !strings.Contains(err.Error(), "node-modules") {
+		t.Fatalf("unknown category error = %v", err)
 	}
 }
 

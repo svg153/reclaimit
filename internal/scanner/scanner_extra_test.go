@@ -20,6 +20,39 @@ func analyzeConfig(root string) AnalyzeOptions {
 	}
 }
 
+func TestAnalyzeRejectsInvalidFiltersBeforeFilesystemAccess(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*AnalyzeOptions)
+		want   string
+	}{
+		{
+			name: "unknown category",
+			mutate: func(opts *AnalyzeOptions) {
+				opts.IncludeCategories = []string{"node-module"}
+			},
+			want: "unknown category",
+		},
+		{
+			name: "negative candidate size",
+			mutate: func(opts *AnalyzeOptions) {
+				opts.MinCandidateSize = -1
+			},
+			want: ">= 0",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opts := analyzeConfig(filepath.Join(t.TempDir(), "missing"))
+			tt.mutate(&opts)
+			_, err := AnalyzeWithOptions("analyze", opts, nil)
+			if err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("AnalyzeWithOptions error = %v, want %q", err, tt.want)
+			}
+		})
+	}
+}
+
 func TestAnalyzeSkipsPermissionDeniedDir(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("unix permission semantics")
