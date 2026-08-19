@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2](https://github.com/svg153/reclaimit/compare/v0.2.1...v0.2.2) (2026-08-19)
+
+
+### Bug Fixes
+
+* **pages:** remove root symlink from static site source ([4399165](https://github.com/svg153/reclaimit/commit/439916519d3e9cff9436dada9a133da8ef5376f7))
+
 ## [0.2.1](https://github.com/svg153/reclaimit/compare/v0.2.0...v0.2.1) (2026-08-19)
 
 
