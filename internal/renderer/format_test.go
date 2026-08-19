@@ -151,11 +151,11 @@ func TestEscapePlant(t *testing.T) {
 func TestHumanFacingReportsEscapeControlCharacters(t *testing.T) {
 	hostile := "bad\nname\r\x1b[31m"
 	report := scanner.Report{
-		Root: hostile,
-		Candidates: []scanner.Candidate{{Path: hostile, Bytes: 1, IsDir: true}},
+		Root:               hostile,
+		Candidates:         []scanner.Candidate{{Path: hostile, Bytes: 1, IsDir: true}},
 		SelectedCandidates: []scanner.Candidate{{Path: hostile, Bytes: 1, IsDir: true}},
-		TopEntries: []scanner.PathSize{{Path: hostile, Bytes: 1}},
-		TopFiles: []scanner.PathSize{{Path: hostile, Bytes: 1}},
+		TopEntries:         []scanner.PathSize{{Path: hostile, Bytes: 1}},
+		TopFiles:           []scanner.PathSize{{Path: hostile, Bytes: 1}},
 	}
 
 	plain, err := RenderReport(report, "plain")
