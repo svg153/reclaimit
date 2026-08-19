@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1](https://github.com/svg153/reclaimit/compare/v0.2.0...v0.2.1) (2026-08-19)
+
+
+### Bug Fixes
+
+* **release:** fetch tags created during release workflow ([7b9683f](https://github.com/svg153/reclaimit/commit/7b9683f52a4804cf2c585fbaf9fb4b1793347f82))
+* **release:** publish artifacts only from version tags ([7dd56e7](https://github.com/svg153/reclaimit/commit/7dd56e7e5c2273c93d5a50d43a661d92853775f3))
+
 ## [0.2.0](https://github.com/svg153/reclaimit/compare/v0.1.6...v0.2.0) (2026-08-14)
 
 
