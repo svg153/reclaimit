@@ -65,6 +65,7 @@ type Report struct {
 	SkippedCleanCandidates    int
 	FailedCleanCandidates     int
 	CleanIssues               []CleanIssue
+	SelectionMismatches       []SelectionMismatch
 	EntriesScanned            int64
 	EntriesSkipped            int64
 	TruncatedDirectories      int64
