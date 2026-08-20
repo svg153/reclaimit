@@ -41,3 +41,15 @@ func TestSelectionManifestFailsClosed(t *testing.T) {
 		t.Fatalf("expected changed audit entry: selected=%+v mismatches=%+v err=%v", selected, mismatches, err)
 	}
 }
+
+func TestSelectionManifestRejectsUnsupportedSchema(t *testing.T) {
+	root := t.TempDir()
+	manifest, err := NewSelectionManifest(root, nil, SelectionExclusions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	manifest.SchemaVersion++
+	if _, _, err := ValidateSelectionManifest(manifest, root, nil); err == nil {
+		t.Fatal("expected unsupported schema error")
+	}
+}
