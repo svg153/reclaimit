@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/svg153/reclaimit/compare/v0.2.2...v0.3.0) (2026-08-20)
+
+
+### Features
+
+* **scanner:** filter candidates by age ([1f45282](https://github.com/svg153/reclaimit/commit/1f4528235260ba093695a538e66e67eea2451a8e))
+
 ## [0.2.2](https://github.com/svg153/reclaimit/compare/v0.2.1...v0.2.2) (2026-08-19)
 
 
