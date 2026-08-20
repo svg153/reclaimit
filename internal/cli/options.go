@@ -37,6 +37,7 @@ type Options struct {
 	MinCandidateSize  int64
 	MaxDepth          int
 	Workers           int
+	OlderThan         time.Duration
 	OutFile           string
 	IgnoreFile        string
 	IncludeCategories []string
@@ -124,6 +125,8 @@ func ParseConfig(args []string) (Options, error) {
 	fs.IntVar(&cfg.TopEntries, "top-entries", cfg.TopEntries, "number of largest direct children under root to show")
 	fs.Int64Var(&cfg.MinCandidateSize, "min-candidate-size", cfg.MinCandidateSize, "minimum candidate size in bytes")
 	fs.IntVar(&cfg.MaxDepth, "max-depth", cfg.MaxDepth, "maximum traversal depth; 0 means unlimited")
+	var olderThan string
+	fs.StringVar(&olderThan, "older-than", "", "include only candidates older than a duration such as 30d or 720h")
 	fs.IntVar(&cfg.Workers, "workers", cfg.Workers, "maximum concurrent workers across the complete traversal")
 	fs.StringVar(&cfg.OutFile, "out", "", "write the report to a file")
 	fs.StringVar(&cfg.IgnoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
@@ -169,6 +172,12 @@ func ParseConfig(args []string) (Options, error) {
 	}
 	if cfg.TopFiles < 1 || cfg.TopGroups < 1 || cfg.TopEntries < 1 {
 		return cfg, errors.New("top limits must be >= 1")
+	}
+	if olderThan != "" {
+		cfg.OlderThan, err = parseAgeDuration(olderThan)
+		if err != nil {
+			return cfg, err
+		}
 	}
 	if cfg.MinCandidateSize < 0 {
 		return cfg, errors.New("min-candidate-size must be >= 0")
@@ -252,4 +261,26 @@ func loadIgnoreFile(path string) ([]string, error) {
 		patterns = append(patterns, line)
 	}
 	return patterns, nil
+}
+
+func parseAgeDuration(value string) (time.Duration, error) {
+	value = strings.TrimSpace(strings.ToLower(value))
+	if value == "" {
+		return 0, errors.New("older-than must not be empty")
+	}
+	if strings.HasSuffix(value, "d") {
+		days, err := strconv.ParseInt(strings.TrimSuffix(value, "d"), 10, 64)
+		if err != nil || days <= 0 {
+			return 0, fmt.Errorf("older-than must be a positive duration such as 30d or 720h")
+		}
+		if days > int64((time.Duration(1<<63-1))/ (24*time.Hour)) {
+			return 0, errors.New("older-than is too large")
+		}
+		return time.Duration(days) * 24 * time.Hour, nil
+	}
+	duration, err := time.ParseDuration(value)
+	if err != nil || duration <= 0 {
+		return 0, fmt.Errorf("older-than must be a positive duration such as 30d or 720h")
+	}
+	return duration, nil
 }
