@@ -165,6 +165,9 @@ func AnalyzeWithContext(ctx context.Context, command string, opts AnalyzeOptions
 		report.TopFiles = report.TopFiles[:opts.TopFiles]
 	}
 
+	if opts.OlderThan > 0 {
+		FilterCandidatesByAge(&report, opts.OlderThan, time.Now().UTC())
+	}
 	SortCandidates(report.Candidates)
 	report.CandidateBytes = SumCandidateBytes(report.Candidates)
 	report.CategorySummaries = SummarizeCategories(report.Candidates)
