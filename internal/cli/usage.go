@@ -51,6 +51,10 @@ Flags:
       write the report to a file
   -ignore-file FILE
       path to a file containing paths to exclude (one per line)
+  -export-selection FILE
+      write the reviewed selection to a versioned JSON manifest
+  -import-selection FILE
+      load and validate a versioned JSON selection manifest
   -include-category VALUE
       limit to a category (repeatable)
   -exclude-category VALUE
