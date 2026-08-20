@@ -85,6 +85,12 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 			return exitf(stderr, "error: %v\n", err)
 		}
 		scanner.ApplySelection(&report, selection.ExcludedGroups, selection.ExcludedPaths)
+		if cfg.SelectionExport != "" {
+			exclusions := scanner.SelectionExclusions{Categories: cfg.ExcludeCategories, Groups: selection.ExcludedGroups, Paths: selection.ExcludedPaths}
+			if err := scanner.WriteSelectionManifest(cfg.SelectionExport, report.Root, report.SelectedCandidates, exclusions); err != nil {
+				return exitf(stderr, "error: %v\n", err)
+			}
+		}
 		output, err := renderer.RenderReport(report, cfg.Format)
 		if err != nil {
 			return exitf(stderr, "error: %v\n", err)
