@@ -178,10 +178,11 @@ func ParseConfig(args []string) (Options, error) {
 		return cfg, errors.New("top limits must be >= 1")
 	}
 	if olderThan != "" {
-		cfg.OlderThan, err = parseAgeDuration(olderThan)
+		parsedAge, err := parseAgeDuration(olderThan)
 		if err != nil {
 			return cfg, err
 		}
+		cfg.OlderThan = parsedAge
 	}
 	if cfg.MinCandidateSize < 0 {
 		return cfg, errors.New("min-candidate-size must be >= 0")
