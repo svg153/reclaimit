@@ -49,8 +49,7 @@ func WriteSelectionManifest(path string, root string, candidates []Candidate, ex
 	if err != nil {
 		return fmt.Errorf("encode selection manifest: %w", err)
 	}
-	if err := os.WriteFile(path, append(data, '
-'), 0o600); err != nil {
+	if err := os.WriteFile(path, append(data, 10), 0o600); err != nil {
 		return fmt.Errorf("write selection manifest: %w", err)
 	}
 	return nil
