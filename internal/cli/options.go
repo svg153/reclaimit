@@ -40,6 +40,8 @@ type Options struct {
 	MaxDepth          int
 	Workers           int
 	OlderThan         time.Duration
+	SelectionExport   string
+	SelectionImport   string
 	OutFile           string
 	IgnoreFile        string
 	IncludeCategories []string

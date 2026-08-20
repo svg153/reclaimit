@@ -73,6 +73,12 @@ func renderPlain(report scanner.Report) string {
 	for _, item := range limitCandidates(report.SelectedCandidates, 25) {
 		fmt.Fprintf(&b, "  %8s  %-18s  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, escapePlain(item.Path))
 	}
+	if len(report.SelectionMismatches) > 0 {
+		b.WriteString("\nSelection mismatches\n")
+		for _, mismatch := range report.SelectionMismatches {
+			fmt.Fprintf(&b, "  %-7s  %s  %s\n", mismatch.Status, escapePlain(mismatch.Path), escapePlain(mismatch.Reason))
+		}
+	}
 	if len(report.CleanIssues) > 0 {
 		b.WriteString("\nCleanup issues\n")
 		for _, issue := range report.CleanIssues {
@@ -142,6 +148,12 @@ func renderMarkdown(report scanner.Report) string {
 	}
 	b.WriteString("\n")
 	b.WriteString(renderMarkdownDetails("Top cleanup candidates", "| Size | Category | Kind | Latest modified | Group | Path |\n| --- | --- | --- | --- | --- | --- |\n", candidateRows(report.SelectedCandidates, 200)))
+	if len(report.SelectionMismatches) > 0 {
+		b.WriteString("\n## Selection mismatches\n\n| Status | Path | Reason |\n| --- | --- | --- |\n")
+		for _, mismatch := range report.SelectionMismatches {
+			fmt.Fprintf(&b, "| %s | `%s` | %s |\n", escapeMarkdownCell(mismatch.Status), escapeMarkdownCell(mismatch.Path), escapeMarkdownCell(mismatch.Reason))
+		}
+	}
 	if len(report.CleanIssues) > 0 {
 		b.WriteString("\n## Cleanup issues\n\n| Status | Path | Reason | Recovery path |\n| --- | --- | --- | --- |\n")
 		for _, issue := range report.CleanIssues {
@@ -208,6 +220,7 @@ type jsonReport struct {
 	SkippedCleanCandidates    int                       `json:"skipped_clean_candidates"`
 	FailedCleanCandidates     int                       `json:"failed_clean_candidates"`
 	CleanIssues               []scanner.CleanIssue      `json:"clean_issues"`
+	SelectionMismatches       []scanner.SelectionMismatch  `json:"selection_mismatches"`
 	EntriesScanned            int64                     `json:"entries_scanned"`
 	EntriesSkipped            int64                     `json:"entries_skipped"`
 	TruncatedDirectories      int64                     `json:"truncated_directories"`
@@ -261,6 +274,7 @@ func renderJSON(report scanner.Report) string {
 		SkippedCleanCandidates:    report.SkippedCleanCandidates,
 		FailedCleanCandidates:     report.FailedCleanCandidates,
 		CleanIssues:               report.CleanIssues,
+		SelectionMismatches:       report.SelectionMismatches,
 		EntriesScanned:            report.EntriesScanned,
 		EntriesSkipped:            report.EntriesSkipped,
 		TruncatedDirectories:      report.TruncatedDirectories,
