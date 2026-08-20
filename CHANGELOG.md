@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/svg153/reclaimit/compare/v0.3.0...v0.4.0) (2026-08-20)
+
+
+### Features
+
+* **cli:** add reviewed selection manifests ([a087cfc](https://github.com/svg153/reclaimit/commit/a087cfc825bd3169643c137b06110320cb474109))
+
+
+### Bug Fixes
+
+* **cli:** import duration parsing dependencies ([0767d4a](https://github.com/svg153/reclaimit/commit/0767d4aa5433fcc762e2db5b4bfa15569789ab05))
+* repair selection manifest CI compilation ([5589ef0](https://github.com/svg153/reclaimit/commit/5589ef02a591ed701837cf55cb41cab80a9fa9af))
+
 ## [0.3.0](https://github.com/svg153/reclaimit/compare/v0.2.2...v0.3.0) (2026-08-20)
 
 
