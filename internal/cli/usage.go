@@ -43,6 +43,8 @@ Flags:
       minimum candidate size in bytes
   -max-depth N
       maximum traversal depth (0 means unlimited)
+  -older-than DURATION
+      include only candidates older than DURATION (for example 30d or 720h)
   -workers N
       maximum concurrent workers across the complete traversal
   -out FILE
