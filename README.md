@@ -19,18 +19,13 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 
 ## Install
 
-The corrected release is awaiting publication in
-[issue #48](https://github.com/svg153/reclaimit/issues/48). Until it is
-published, install the audited current source with Go 1.25.12 or newer:
+Install the latest published release from the [GitHub Releases page](https://github.com/svg153/reclaimit/releases/latest), or use Homebrew when available. For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@main
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.4.0
 ```
 
-Do not use the one-line release installer yet: it intentionally refuses the
-older release because that release has no SHA-256 manifest. Once #48 is closed,
-the installer and prebuilt Linux, macOS, and Windows archives will be the
-recommended paths.
+Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
 
 ## What it does
 
@@ -40,6 +35,8 @@ recommended paths.
 - Requires explicit confirmation for cleanup and supports a non-destructive `--dry-run`.
 - Revalidates identity, type, size, and modification snapshot, then uses a
   same-filesystem quarantine so changed data is preserved.
+- Exports and imports versioned JSON selection manifests for repeatable,
+  auditable dry runs; changed or missing candidates fail closed and are reported.
 - Ships as one Go binary for Linux, macOS, and Windows.
 
 ## Quick start
@@ -56,6 +53,10 @@ reclaimit tui --root "$HOME/code"
 
 # Preview one category without deleting anything
 reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
+
+# Save a reviewed selection, then validate it later
+reclaimit analyze --root "$HOME/code" --older-than 30d --export-selection selection.json
+reclaimit clean --root "$HOME/code" --import-selection selection.json --dry-run
 
 # Delete only after reviewing the same selection
 reclaimit clean --root "$HOME/code" --include-category python-venv --yes
@@ -112,6 +113,9 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--exclude-group PATH`: exclude a path prefix; repeatable.
 - `--exclude-path PATH`: exclude one exact candidate path; repeatable.
 - `--ignore-file FILE`: read excluded paths from a file, one per line.
+- `--older-than DURATION`: keep only candidates older than a duration such as `30d`.
+- `--export-selection FILE`: write a versioned JSON manifest of the reviewed selection.
+- `--import-selection FILE`: validate a manifest; it never bypasses `--dry-run` or `--yes`.
 - `--out FILE`: write the report to a file.
 - `--dry-run`: run cleanup preflight without deleting.
 - `--yes`: confirm destructive cleanup.
@@ -155,7 +159,7 @@ tracked without product telemetry in [docs/growth.md](docs/growth.md).
 - Expand cleanup categories only with explicit safety descriptions and tests.
 - Keep behavioral coverage above 90% overall and in every production package
   and source file.
-- Add age-based filters and export/import of reviewed selections.
+- Expand the documented selection-manifest workflow and add new safe categories with tests.
 - Review release acquisition after 30 days and select new cleanup categories
   from opt-in, privacy-preserving evidence.
 
