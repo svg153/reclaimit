@@ -134,6 +134,8 @@ func ParseConfig(args []string) (Options, error) {
 	fs.IntVar(&cfg.Workers, "workers", cfg.Workers, "maximum concurrent workers across the complete traversal")
 	fs.StringVar(&cfg.OutFile, "out", "", "write the report to a file")
 	fs.StringVar(&cfg.IgnoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
+	fs.StringVar(&cfg.SelectionExport, "export-selection", "", "write the reviewed selection to a versioned JSON manifest")
+	fs.StringVar(&cfg.SelectionImport, "import-selection", "", "load and validate a versioned JSON selection manifest")
 	fs.BoolVar(&cfg.Yes, "yes", false, "confirm destructive cleanup when using clean")
 	fs.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "log verbosity sent to stderr: debug, info, warn or error")
 	fs.BoolVar(&cfg.DryRun, "dry-run", false, "preview cleanup without deleting files")
