@@ -1,6 +1,6 @@
 # Archived draft release post: reclaimit v0.1.7
 
- > Archived draft: this post refers to the superseded v0.1.7 plan and must not be published as current release copy. The current published release is v0.4.2.
+> Archived draft: this post refers to the superseded v0.1.7 plan and must not be published as current release copy. The current published release is v0.4.2.
 >
 > Publication guard: this is a draft. Publish it only after the `v0.1.7` tag,
 > archives, packages, checksum manifest, and container image are public and
