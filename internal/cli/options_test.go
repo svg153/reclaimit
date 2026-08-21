@@ -408,3 +408,13 @@ func TestParseConfigRejectsRemainingInvalidNumbers(t *testing.T) {
 		}
 	}
 }
+
+func TestParseConfigSelectionManifestFlags(t *testing.T) {
+	cfg, err := ParseConfig([]string{"--export-selection", "selection.json", "--import-selection", "reviewed.json"})
+	if err != nil {
+		t.Fatalf("ParseConfig selection flags: %v", err)
+	}
+	if cfg.SelectionExport != "selection.json" || cfg.SelectionImport != "reviewed.json" {
+		t.Fatalf("unexpected selection paths: export=%q import=%q", cfg.SelectionExport, cfg.SelectionImport)
+	}
+}
