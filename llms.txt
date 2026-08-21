@@ -20,18 +20,19 @@ or path, and lets users review candidates before deletion.
 - Prebuilt release archives for Linux, macOS, and Windows.
 - Installer verification against the release SHA-256 manifest before any
   destination write.
+- Versioned JSON selection manifests with fail-closed root and candidate
+  identity validation.
 
 ## Install
 
-The corrected release is awaiting publication in issue #48. Until then, use
-the audited current source with Go 1.25.12 or newer:
+Install the latest release from https://github.com/svg153/reclaimit/releases/latest.
+For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@main
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.4.0
 ```
 
-The release installer intentionally rejects the older release because it has
-no SHA-256 manifest.
+Release archives include SHA-256 checksums and the installer verifies them before writing a destination file.
 
 ## Example
 
