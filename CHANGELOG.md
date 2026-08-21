@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1](https://github.com/svg153/reclaimit/compare/v0.4.0...v0.4.1) (2026-08-21)
+
+
+### Bug Fixes
+
+* **scanner:** keep older-than in AnalyzeOptions ([98fec13](https://github.com/svg153/reclaimit/commit/98fec137f912eb67a0994ed81b99b5415751077a))
+
 ## [0.4.0](https://github.com/svg153/reclaimit/compare/v0.3.0...v0.4.0) (2026-08-20)
 
 
