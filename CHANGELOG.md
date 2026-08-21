@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2](https://github.com/svg153/reclaimit/compare/v0.4.1...v0.4.2) (2026-08-21)
+
+
+### Bug Fixes
+
+* **cli:** register selection manifest flags ([9817515](https://github.com/svg153/reclaimit/commit/98175154ce9f2f964c5c96a413279a3c291bef5c))
+
 ## [0.4.1](https://github.com/svg153/reclaimit/compare/v0.4.0...v0.4.1) (2026-08-21)
 
 
