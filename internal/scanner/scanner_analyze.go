@@ -29,6 +29,7 @@ type AnalyzeOptions struct {
 	MinCandidateSize  int64
 	MaxDepth          int
 	Workers           int
+	OlderThan         time.Duration
 	IncludeCategories []string
 	ExcludeCategories []string
 	ExcludeGroups     []string
