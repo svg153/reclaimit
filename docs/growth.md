@@ -18,8 +18,8 @@ not supported by the current code, distribution channels, or measured data.
 
 ## Baseline
 
-The initial audit snapshot was taken on 2026-08-14 before the corrected patch
-release was published.
+The initial audit snapshot was taken on 2026-08-14. It is a historical baseline and
+must not be read as the current release state.
 
 | Signal | Baseline | Source or status |
 | --- | ---: | --- |
@@ -41,7 +41,7 @@ days:
 
 | Release | Published UTC | Stars at publish | Stars +30d | Downloads +30d | Views +30d | Unique clones +30d | Search impressions +30d |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `v0.1.7` | Pending | 3 | Pending | Pending | Pending | Pending | Pending |
+| `v0.4.2` | 2026-08-21 | 3 | Pending | Pending | Pending | Pending | Pending |
 
 Use differences, not absolute totals, when attributing a release cohort. Treat
 correlation as directional evidence rather than proof that one post caused a
