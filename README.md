@@ -22,7 +22,7 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 Install the latest published release from the [GitHub Releases page](https://github.com/svg153/reclaimit/releases/latest), or use Homebrew when available. For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.4.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.4.2
 ```
 
 Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
