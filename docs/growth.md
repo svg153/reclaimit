@@ -34,6 +34,29 @@ must not be read as the current release state.
 GitHub Insights → Traffic and the configured search-console property on the day
 the next release is published. Store only aggregate counts.
 
+## How to collect the 30-day snapshot
+
+On the review date, record the UTC date and use the same sources for every
+release cohort. Do not infer traffic from stars or downloads.
+
+1. **Repository reach:** open the repository's *Insights → Traffic* page and
+   record views, unique visitors, clones, and unique cloners for the selected
+   period. These values are owner-only and may expire from GitHub's interface.
+2. **Release adoption:** open the [releases page](https://github.com/svg153/reclaimit/releases)
+   and record each asset's download count. Record the asset names and the
+   observation date; do not sum unrelated assets without saying so.
+3. **Stars and forks:** record the public repository counters on the same date.
+   They are context, not proof that a release caused growth.
+4. **Pages reach:** if Search Console is configured, export clicks, impressions,
+   click-through rate, and average position for
+   `svg153.github.io/reclaimit`. Otherwise write `Not captured`, not zero.
+5. **Content attribution:** record links and publication dates for release notes,
+   blog posts, and social posts. Use UTM parameters only on links you control;
+   never add tracking to the CLI or its filesystem scan.
+
+Keep the raw notes outside the repository if they contain owner-only analytics.
+Commit only aggregate, non-identifying values to this table.
+
 ## Release cohort
 
 For each release, record these values on publication day and again after 30
