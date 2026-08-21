@@ -28,14 +28,19 @@ func TestRunAnalyzeOlderThanFiltersCandidates(t *testing.T) {
 		}
 	}
 	var stdout, stderr bytes.Buffer
-	code := Run([]string{"analyze", "--root", root, "--older-than", "24h", "--min-candidate-size", "0"}, &stdout, &stderr)
+	code := Run([]string{"analyze", "--root", root, "--older-than", "24h", "--min-candidate-size", "0", "--format", "json"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("Run returned %d: %s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), filepath.Join(root, "stale", "node_modules")) {
-		t.Fatalf("stale candidate missing from report: %s", stdout.String())
+	selectionStart := strings.Index(stdout.String(), "\"selected_candidates\"")
+	if selectionStart < 0 {
+		t.Fatalf("selected_candidates missing from report: %s", stdout.String())
 	}
-	if strings.Contains(stdout.String(), filepath.Join(root, "active", "node_modules")) {
+	selection := stdout.String()[selectionStart:]
+	if !strings.Contains(selection, filepath.Join(root, "stale", "node_modules")) {
+		t.Fatalf("stale candidate missing from selected candidates: %s", stdout.String())
+	}
+	if strings.Contains(selection, filepath.Join(root, "active", "node_modules")) {
 		t.Fatalf("active candidate unexpectedly selected: %s", stdout.String())
 	}
 }
