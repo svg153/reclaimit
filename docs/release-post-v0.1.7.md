@@ -1,5 +1,7 @@
-# Draft release post: reclaimit v0.1.7
+# Archived draft release post: reclaimit v0.1.7
 
+ > Archived draft: this post refers to the superseded v0.1.7 plan and must not be published as current release copy. The current published release is v0.4.2.
+>
 > Publication guard: this is a draft. Publish it only after the `v0.1.7` tag,
 > archives, packages, checksum manifest, and container image are public and
 > independently verified. Remove any channel that was not actually published.
@@ -26,7 +28,7 @@ and its [reproduction steps](https://github.com/svg153/reclaimit/blob/main/docs/
 The 20 MiB shown there belongs to generated test files; it is not a typical
 savings claim.
 
-Install after publication:
+For the current installation instructions, use the README and the latest GitHub release. Historical draft command:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/svg153/reclaimit/main/install.sh | bash
