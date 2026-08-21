@@ -1,0 +1,88 @@
+name: New cleanup category
+description: Propose a narrowly scoped, regenerable developer artifact category
+title: "category: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest only artifacts that are safe to regenerate. Do not include full scan reports, private absolute paths, repository names, usernames, credentials, or file contents. Use $HOME, <workspace>, and <project> placeholders.
+
+  - type: input
+    id: tool
+    attributes:
+      label: Tool and version
+      description: Which tool creates this artifact, and which version(s) are known?
+      placeholder: "Example: Cargo 1.82"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: Operating system
+      description: Where is this path known to exist?
+      multiple: true
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: path
+    attributes:
+      label: Exact path or narrow pattern
+      description: Use logical paths and placeholders; avoid broad wildcards.
+      placeholder: |
+        Linux: $HOME/.cache/example
+        macOS: $HOME/Library/Caches/example
+        Windows: %LOCALAPPDATA%\\example\\Cache
+    validations:
+      required: true
+
+  - type: textarea
+    id: regeneration
+    attributes:
+      label: Regeneration procedure
+      description: Explain the command or documented workflow that recreates the data.
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety boundaries
+      description: What must never be deleted, and what could be lost or expensive to recreate?
+    validations:
+      required: true
+
+  - type: input
+    id: approximate_size
+    attributes:
+      label: Approximate aggregate size
+      description: Optional rounded total only; never include a personal path or full report.
+      placeholder: "Example: about 2 GiB"
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Official documentation or minimal fixture
+      description: Link the tool documentation or describe a small reproducible fixture.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched for an existing category request.
+          required: true
+        - label: I used placeholders instead of private absolute paths.
+          required: true
+        - label: This data is regenerable and the proposal is narrowly scoped.
+          required: true
