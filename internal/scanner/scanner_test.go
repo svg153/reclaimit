@@ -78,6 +78,35 @@ func TestExcludeGroupSkipsNestedCandidates(t *testing.T) {
 	}
 }
 
+func TestAnalyzeRiskProfileConservativeSkipsReviewCategories(t *testing.T) {
+	root := t.TempDir()
+	mustMkdir(t, filepath.Join(root, "node_modules"))
+	mustMkdir(t, filepath.Join(root, ".cache"))
+	mustWriteFile(t, filepath.Join(root, "node_modules", "dep.js"), strings.Repeat("x", 1024))
+	mustWriteFile(t, filepath.Join(root, ".cache", "artifact"), strings.Repeat("x", 1024))
+
+	report, err := AnalyzeWithOptions("analyze", AnalyzeOptions{
+		Root:             root,
+		GroupMode:        "depth",
+		GroupDepth:       1,
+		TopFiles:         10,
+		TopGroups:        10,
+		TopEntries:       10,
+		MinCandidateSize: 1,
+		RiskProfile:      "conservative",
+	}, nil)
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+
+	if len(report.Candidates) != 1 {
+		t.Fatalf("expected only low-risk candidate, got %+v", report.Candidates)
+	}
+	if report.Candidates[0].CategoryKey != "node-modules" || report.Candidates[0].RiskLevel != RiskLow {
+		t.Fatalf("unexpected candidate for conservative profile: %+v", report.Candidates[0])
+	}
+}
+
 func TestAnalyzeTotalBytesIncludesEntriesOutsideTopList(t *testing.T) {
 	root := t.TempDir()
 	mustWriteFile(t, filepath.Join(root, "largest.bin"), strings.Repeat("a", 30))

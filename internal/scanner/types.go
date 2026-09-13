@@ -2,11 +2,17 @@ package scanner
 
 import "time"
 
+const (
+	RiskLow    = "low"
+	RiskReview = "review"
+)
+
 type Category struct {
 	Key            string
 	Display        string
 	Description    string
 	SafetyNote     string
+	RiskLevel      string
 	DirectoryNames map[string]struct{}
 	DirectoryPaths map[string]struct{}
 	FileExtensions map[string]struct{}
@@ -25,6 +31,7 @@ type Candidate struct {
 	Bytes       int64
 	Description string
 	SafetyNote  string
+	RiskLevel   string
 	ModifiedAt  time.Time
 	IsDir       bool
 }

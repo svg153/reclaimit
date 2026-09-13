@@ -37,6 +37,9 @@ func TestParseConfigDefaults(t *testing.T) {
 	if cfg.MinCandidateSize != 1<<20 {
 		t.Fatalf("expected minCandidateSize 1MB, got %d", cfg.MinCandidateSize)
 	}
+	if cfg.RiskProfile != "balanced" {
+		t.Fatalf("expected riskProfile 'balanced', got %q", cfg.RiskProfile)
+	}
 	if cfg.LogLevel != "warn" {
 		t.Fatalf("expected logLevel 'warn', got %q", cfg.LogLevel)
 	}
@@ -73,6 +76,21 @@ func TestParseConfigDryRunFlag(t *testing.T) {
 	}
 	if !cfg.DryRun {
 		t.Fatalf("expected dryRun=true")
+	}
+}
+
+func TestParseConfigRiskProfile(t *testing.T) {
+	cfg, err := ParseConfig([]string{"analyze", "--risk-profile", "conservative"})
+	if err != nil {
+		t.Fatalf("ParseConfig risk-profile: %v", err)
+	}
+	if cfg.RiskProfile != "conservative" {
+		t.Fatalf("expected conservative risk profile, got %q", cfg.RiskProfile)
+	}
+
+	if _, err := ParseConfig([]string{"analyze", "--risk-profile", "reckless"}); err == nil ||
+		!strings.Contains(err.Error(), "unsupported risk profile") {
+		t.Fatalf("expected unsupported risk profile error, got %v", err)
 	}
 }
 

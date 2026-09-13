@@ -88,9 +88,32 @@ func TestCategoriesList(t *testing.T) {
 		if cat.SafetyNote == "" {
 			t.Fatalf("category %q has empty safety note", cat.Key)
 		}
+		if cat.RiskLevel != RiskLow && cat.RiskLevel != RiskReview {
+			t.Fatalf("category %q has unsupported risk level %q", cat.Key, cat.RiskLevel)
+		}
 		if len(cat.DirectoryNames) == 0 && len(cat.DirectoryPaths) == 0 && len(cat.FileExtensions) == 0 {
 			t.Fatalf("category %q has no directory names, directory paths, or file extensions", cat.Key)
 		}
+	}
+}
+
+func TestIncludeRiskProfile(t *testing.T) {
+	low := Category{RiskLevel: RiskLow}
+	review := Category{RiskLevel: RiskReview}
+
+	if !IncludeRiskProfile(low, "conservative") {
+		t.Fatal("conservative profile should include low-risk categories")
+	}
+	if IncludeRiskProfile(review, "conservative") {
+		t.Fatal("conservative profile should exclude review categories")
+	}
+	for _, profile := range []string{"", "balanced", "expanded"} {
+		if !IncludeRiskProfile(review, profile) {
+			t.Fatalf("profile %q should include review categories", profile)
+		}
+	}
+	if err := validateRiskProfile("reckless"); err == nil {
+		t.Fatal("expected invalid risk profile error")
 	}
 }
 

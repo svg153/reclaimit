@@ -130,6 +130,7 @@ func TestToScannerOpts(t *testing.T) {
 		TopGroups:         5,
 		TopEntries:        20,
 		MinCandidateSize:  100,
+		RiskProfile:       "conservative",
 		IncludeCategories: []string{"node-modules"},
 		ExcludeCategories: []string{"python-venv"},
 		ExcludeGroups:     []string{"test"},
@@ -147,6 +148,9 @@ func TestToScannerOpts(t *testing.T) {
 	}
 	if len(opts.IncludeCategories) != 1 || opts.IncludeCategories[0] != "node-modules" {
 		t.Errorf("IncludeCategories = %v, want [node-modules]", opts.IncludeCategories)
+	}
+	if opts.RiskProfile != "conservative" {
+		t.Errorf("RiskProfile = %q, want conservative", opts.RiskProfile)
 	}
 	if len(opts.ExcludeCategories) != 1 || opts.ExcludeCategories[0] != "python-venv" {
 		t.Errorf("ExcludeCategories = %v, want [python-venv]", opts.ExcludeCategories)

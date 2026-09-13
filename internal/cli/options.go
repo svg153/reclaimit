@@ -40,6 +40,7 @@ type Options struct {
 	MaxDepth          int
 	Workers           int
 	OlderThan         time.Duration
+	RiskProfile       string
 	SelectionExport   string
 	SelectionImport   string
 	OutFile           string
@@ -68,6 +69,7 @@ func ParseConfig(args []string) (Options, error) {
 		MinCandidateSize: 1 << 20,
 		MaxDepth:         0,
 		Workers:          8,
+		RiskProfile:      "balanced",
 		LogLevel:         "warn",
 	}
 
@@ -131,6 +133,7 @@ func ParseConfig(args []string) (Options, error) {
 	fs.IntVar(&cfg.MaxDepth, "max-depth", cfg.MaxDepth, "maximum traversal depth; 0 means unlimited")
 	var olderThan string
 	fs.StringVar(&olderThan, "older-than", "", "include only candidates older than a duration such as 30d or 720h")
+	fs.StringVar(&cfg.RiskProfile, "risk-profile", cfg.RiskProfile, "risk profile: conservative, balanced or expanded")
 	fs.IntVar(&cfg.Workers, "workers", cfg.Workers, "maximum concurrent workers across the complete traversal")
 	fs.StringVar(&cfg.OutFile, "out", "", "write the report to a file")
 	fs.StringVar(&cfg.IgnoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
@@ -194,6 +197,9 @@ func ParseConfig(args []string) (Options, error) {
 	}
 	if cfg.Workers < 1 {
 		return cfg, errors.New("workers must be >= 1")
+	}
+	if cfg.RiskProfile != "conservative" && cfg.RiskProfile != "balanced" && cfg.RiskProfile != "expanded" {
+		return cfg, fmt.Errorf("unsupported risk profile %q", cfg.RiskProfile)
 	}
 	// Load ignore file if provided
 	if cfg.IgnoreFile != "" {
