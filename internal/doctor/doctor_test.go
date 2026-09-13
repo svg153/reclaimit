@@ -78,3 +78,27 @@ func TestRunDoctorWarnsWhenBinaryIsMissingFromPath(t *testing.T) {
 		}
 	}
 }
+
+func TestBinaryNameFallsBackForBlankInputs(t *testing.T) {
+	for _, input := range []string{"", "   ", "/", `\`} {
+		if got := binaryName(input); got != "reclaimit" {
+			t.Fatalf("binaryName(%q) = %q, want reclaimit", input, got)
+		}
+	}
+}
+
+func TestBinaryNameStripsUnixAndWindowsDirectories(t *testing.T) {
+	tests := map[string]string{
+		"/opt/bin/reclaimit":      "reclaimit",
+		`C:\Tools\reclaimit.exe`:  "reclaimit.exe",
+		"relative/path/reclaimit": "reclaimit",
+		`relative\path\reclaimit`: "reclaimit",
+		"already-on-path":         "already-on-path",
+	}
+
+	for input, want := range tests {
+		if got := binaryName(input); got != want {
+			t.Fatalf("binaryName(%q) = %q, want %q", input, got, want)
+		}
+	}
+}
