@@ -26,6 +26,7 @@ go install github.com/svg153/reclaimit/cmd/reclaimit@v0.4.2
 ```
 
 Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
+Run `reclaimit doctor` after installing to check the local binary, runtime, and shell environment without scanning or modifying files.
 
 ## What it does
 
@@ -44,6 +45,9 @@ Release archives include SHA-256 checksums; the installer verifies the checksum 
 ```bash
 # Inspect a workspace in the terminal
 reclaimit analyze --root "$HOME/code"
+
+# Check the local installation before scanning
+reclaimit doctor
 
 # Export machine-readable scan metrics
 reclaimit analyze --root "$HOME/code" --format json --out reclaimit-report.json
@@ -102,6 +106,7 @@ The tools complement each other: use a general analyzer to understand the whole 
 | `analyze` | Scan and produce a report |
 | `tui` | Review results in an interactive terminal tree |
 | `clean` | Preview or delete selected candidates |
+| `doctor` | Check the local installation and runtime environment |
 
 - `--root PATH`: directory to scan; defaults to the current directory.
 - `--format plain|markdown|json`: report format.
@@ -120,7 +125,7 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--dry-run`: run cleanup preflight without deleting.
 - `--yes`: confirm destructive cleanup.
 
-Run `reclaimit help analyze`, `reclaimit help tui`, or `reclaimit help clean` for the complete help text.
+Run `reclaimit help analyze`, `reclaimit help tui`, `reclaimit help clean`, or `reclaimit help doctor` for the complete help text.
 
 ## Safety model
 

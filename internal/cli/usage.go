@@ -13,6 +13,7 @@ Usage:
 Commands:
   analyze    Scan and print a report
   clean      Delete the selected candidates after review
+  doctor     Check the local reclaimit installation
   tui        Open the interactive review interface
   help       Show command help
   version    Print the version
