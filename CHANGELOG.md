@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/svg153/reclaimit/compare/v0.5.0...v0.6.0) (2026-09-13)
+
+
+### Features
+
+* explain cleanup candidate safety ([#122](https://github.com/svg153/reclaimit/issues/122)) ([9427a82](https://github.com/svg153/reclaimit/commit/9427a82ae46175cbafb8172eac91932b8ed6e30a))
+
 ## [0.5.0](https://github.com/svg153/reclaimit/compare/v0.4.2...v0.5.0) (2026-09-13)
 
 
