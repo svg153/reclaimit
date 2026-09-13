@@ -354,6 +354,41 @@ func TestRun_AnalyzeWithSelectionFile(t *testing.T) {
 	}
 }
 
+func TestRun_AnalyzeImportsSelectionManifest(t *testing.T) {
+	root := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
+	manifest := filepath.Join(root, "selection.json")
+
+	var exportStdout, exportStderr bytes.Buffer
+	exportCode := Run([]string{
+		"analyze",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--export-selection", manifest,
+	}, &exportStdout, &exportStderr)
+	if exportCode != 0 {
+		t.Fatalf("export code=%d stderr=%q", exportCode, exportStderr.String())
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--import-selection", manifest,
+		"--format", "json",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("import code=%d stderr=%q", code, stderr.String())
+	}
+	if !json.Valid(stdout.Bytes()) {
+		t.Fatalf("expected JSON output, got %q", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"selected_candidates"`) {
+		t.Fatalf("expected imported selected candidates, got %s", stdout.String())
+	}
+}
+
 func TestRun_AnalyzeWithInvalidLogLevel(t *testing.T) {
 	var stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", t.TempDir(), "--log-level", "invalid"}, &bytes.Buffer{}, &stderr)

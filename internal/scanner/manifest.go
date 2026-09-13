@@ -81,8 +81,12 @@ func NewSelectionManifest(root string, candidates []Candidate, exclusions Select
 	entries := make([]ManifestCandidate, 0, len(candidates))
 	for _, candidate := range candidates {
 		entries = append(entries, ManifestCandidate{
-			Path: candidate.Path, Group: candidate.Group, CategoryKey: candidate.CategoryKey,
-			Bytes: candidate.Bytes, ModifiedAt: candidate.ModifiedAt, IsDir: candidate.IsDir,
+			Path:        candidate.Path,
+			Group:       candidate.Group,
+			CategoryKey: candidate.CategoryKey,
+			Bytes:       candidate.Bytes,
+			ModifiedAt:  candidate.ModifiedAt,
+			IsDir:       candidate.IsDir,
 		})
 	}
 	return SelectionManifest{

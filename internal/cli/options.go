@@ -280,7 +280,7 @@ func parseAgeDuration(value string) (time.Duration, error) {
 		if err != nil || days <= 0 {
 			return 0, fmt.Errorf("older-than must be a positive duration such as 30d or 720h")
 		}
-		if days > int64((time.Duration(1<<63-1))/ (24*time.Hour)) {
+		if days > int64((time.Duration(1<<63-1))/(24*time.Hour)) {
 			return 0, errors.New("older-than is too large")
 		}
 		return time.Duration(days) * 24 * time.Hour, nil
