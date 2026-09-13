@@ -58,7 +58,7 @@ func TestSelectionManifestRejectsUnsupportedSchema(t *testing.T) {
 
 func TestReadSelectionManifestRejectsInvalidFiles(t *testing.T) {
 	root := t.TempDir()
-	for name, content, want := range map[string]struct {
+	for name, tt := range map[string]struct {
 		content string
 		want    string
 	}{
@@ -68,11 +68,11 @@ func TestReadSelectionManifestRejectsInvalidFiles(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			path := filepath.Join(root, name+".json")
-			if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			if err := os.WriteFile(path, []byte(tt.content), 0o600); err != nil {
 				t.Fatal(err)
 			}
-			if _, err := ReadSelectionManifest(path); err == nil || !strings.Contains(err.Error(), want) {
-				t.Fatalf("ReadSelectionManifest error = %v, want %q", err, want)
+			if _, err := ReadSelectionManifest(path); err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("ReadSelectionManifest error = %v, want %q", err, tt.want)
 			}
 		})
 	}
