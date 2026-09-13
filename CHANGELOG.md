@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0](https://github.com/svg153/reclaimit/compare/v0.6.0...v0.7.0) (2026-09-13)
+
+
+### Features
+
+* add cleanup risk profiles ([#124](https://github.com/svg153/reclaimit/issues/124)) ([0894153](https://github.com/svg153/reclaimit/commit/089415306a3487a4eb0b6a229f1b986a249336f7))
+
 ## [0.6.0](https://github.com/svg153/reclaimit/compare/v0.5.0...v0.6.0) (2026-09-13)
 
 
