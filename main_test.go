@@ -56,6 +56,44 @@ func TestRun_HelpTopic(t *testing.T) {
 	}
 }
 
+func TestRun_Doctor(t *testing.T) {
+	old := Version
+	Version = "1.2.3"
+	defer func() { Version = old }()
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"doctor"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d; stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	for _, want := range []string{
+		"reclaimit doctor",
+		"version: 1.2.3",
+		"working-directory",
+		"home-directory",
+		"path",
+	} {
+		if !strings.Contains(stdout.String(), want) {
+			t.Fatalf("doctor output missing %q: %q", want, stdout.String())
+		}
+	}
+	if stderr.String() != "" {
+		t.Fatalf("doctor wrote stderr: %q", stderr.String())
+	}
+}
+
+func TestRun_DoctorReportsWriteError(t *testing.T) {
+	var stderr bytes.Buffer
+	code := Run([]string{"doctor"}, failingWriter{}, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "writing doctor report") {
+		t.Fatalf("expected doctor write error, got %q", stderr.String())
+	}
+}
+
 func TestRun_InvalidCommand(t *testing.T) {
 	var buf bytes.Buffer
 	code := Run([]string{"analyze", "--format", "xml"}, &buf, &buf)
@@ -313,6 +351,107 @@ func TestRun_AnalyzeWithSelectionFile(t *testing.T) {
 	code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+}
+
+func TestRun_AnalyzeImportsSelectionManifest(t *testing.T) {
+	root := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
+	manifest := filepath.Join(root, "selection.json")
+
+	var exportStdout, exportStderr bytes.Buffer
+	exportCode := Run([]string{
+		"analyze",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--export-selection", manifest,
+	}, &exportStdout, &exportStderr)
+	if exportCode != 0 {
+		t.Fatalf("export code=%d stderr=%q", exportCode, exportStderr.String())
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--import-selection", manifest,
+		"--format", "json",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("import code=%d stderr=%q", code, stderr.String())
+	}
+	if !json.Valid(stdout.Bytes()) {
+		t.Fatalf("expected JSON output, got %q", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), `"selected_candidates"`) {
+		t.Fatalf("expected imported selected candidates, got %s", stdout.String())
+	}
+}
+
+func TestRun_AnalyzeReportsSelectionImportError(t *testing.T) {
+	root := t.TempDir()
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--import-selection", filepath.Join(root, "missing.json"),
+	}, io.Discard, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "read selection manifest") {
+		t.Fatalf("expected read selection manifest error, got %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeReportsSelectionExportError(t *testing.T) {
+	root := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
+
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--export-selection", filepath.Join(root, "missing", "selection.json"),
+	}, io.Discard, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "write selection manifest") {
+		t.Fatalf("expected write selection manifest error, got %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeReportsSelectionRootMismatch(t *testing.T) {
+	root := t.TempDir()
+	otherRoot := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(otherRoot, "node_modules"))
+	manifest := filepath.Join(root, "selection.json")
+
+	var exportStdout, exportStderr bytes.Buffer
+	exportCode := Run([]string{
+		"analyze",
+		"--root", otherRoot,
+		"--min-candidate-size", "0",
+		"--export-selection", manifest,
+	}, &exportStdout, &exportStderr)
+	if exportCode != 0 {
+		t.Fatalf("export code=%d stderr=%q", exportCode, exportStderr.String())
+	}
+
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--import-selection", manifest,
+	}, io.Discard, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "does not match scan root") {
+		t.Fatalf("expected root mismatch error, got %q", stderr.String())
 	}
 }
 

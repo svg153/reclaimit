@@ -12,6 +12,7 @@ or path, and lets users review candidates before deletion.
 - Plain-text, Markdown, and JSON reports.
 - Interactive terminal UI.
 - Read-only analysis and non-destructive cleanup dry runs.
+- Read-only `doctor` diagnostics for local installation and runtime checks.
 - One configurable worker ceiling across the complete scan, with interrupt-safe
   cancellation of queued traversal work.
 - Pre-delete checks for path identity, type, measured size, and modification
@@ -38,6 +39,7 @@ Release archives include SHA-256 checksums and the installer verifies them befor
 
 ```bash
 reclaimit analyze --root "$HOME/code" --format json --out report.json
+reclaimit doctor
 reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
 ```
 

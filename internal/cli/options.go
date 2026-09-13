@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 )
 
 type stringList []string
@@ -97,7 +97,7 @@ func ParseConfig(args []string) (Options, error) {
 			}
 			cfg.Command = "version"
 			return cfg, nil
-		case "analyze", "clean", "tui":
+		case "analyze", "clean", "doctor", "tui":
 			cfg.Command = args[0]
 			args = args[1:]
 		default:
@@ -246,7 +246,7 @@ func ParseConfig(args []string) (Options, error) {
 
 func validHelpTopic(topic string) bool {
 	switch topic {
-	case "analyze", "clean", "tui":
+	case "analyze", "clean", "doctor", "tui":
 		return true
 	default:
 		return false
@@ -280,7 +280,7 @@ func parseAgeDuration(value string) (time.Duration, error) {
 		if err != nil || days <= 0 {
 			return 0, fmt.Errorf("older-than must be a positive duration such as 30d or 720h")
 		}
-		if days > int64((time.Duration(1<<63-1))/ (24*time.Hour)) {
+		if days > int64((time.Duration(1<<63-1))/(24*time.Hour)) {
 			return 0, errors.New("older-than is too large")
 		}
 		return time.Duration(days) * 24 * time.Hour, nil
