@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/svg153/reclaimit/internal/cli"
+	"github.com/svg153/reclaimit/internal/doctor"
 	"github.com/svg153/reclaimit/internal/logger"
 	"github.com/svg153/reclaimit/internal/renderer"
 	"github.com/svg153/reclaimit/internal/scanner"
@@ -39,6 +40,16 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 			return exitf(stderr, "error: writing version: %v\n", err)
 		}
 		return 0
+	}
+	if cfg.Command == "doctor" {
+		report := doctor.Run(doctor.Options{
+			Version: Version,
+			Args0:   os.Args[0],
+		})
+		if err := writeString(stdout, doctor.Render(report)); err != nil {
+			return exitf(stderr, "error: writing doctor report: %v\n", err)
+		}
+		return doctor.ExitCode(report)
 	}
 
 	if cfg.Quiet {
