@@ -15,16 +15,16 @@ var categories = []Category{
 	newDirCategory("pytest-cache", ".pytest_cache", "Pytest execution cache that is safe to remove.", ".pytest_cache"),
 	newDirCategory("mypy-cache", ".mypy_cache", "Mypy cache that is safe to remove.", ".mypy_cache"),
 	newDirCategory("tox", ".tox", "Tox virtualenvs that can be recreated.", ".tox"),
-	newDirCategory("js-build", "dist / build", "Build artifacts that can be regenerated from source.", "dist", "build"),
+	reviewCategory(newDirCategory("js-build", "dist / build", "Build artifacts that can be regenerated from source.", "dist", "build")),
 	newDirCategory("rust-target", "target", "Rust build output that cargo rebuilds.", "target"),
 	newDirCategory("next-cache", ".next / .nuxt", "Frontend framework build caches.", ".next", ".nuxt"),
-	newDirCategory("generic-cache", ".cache", "Generic caches. Review first because some tools keep useful offline assets here.", ".cache"),
+	reviewCategory(newDirCategory("generic-cache", ".cache", "Generic caches. Review first because some tools keep useful offline assets here.", ".cache")),
 	newDirPathCategory("bun-cache", "~/.bun/install/cache", "Bun download cache. Packages are downloaded again when needed.", ".bun", "install", "cache"),
 	newDirPathCategory("pip-cache", "~/.cache/pip", "pip download and wheel cache. Packages are downloaded again when needed.", ".cache", "pip"),
-	newDirPathCategory("pipx-data", "~/.local/pipx", "pipx-managed applications and environments. Removing this requires reinstalling those applications.", ".local", "pipx"),
+	reviewCategory(newDirPathCategory("pipx-data", "~/.local/pipx", "pipx-managed applications and environments. Removing this requires reinstalling those applications.", ".local", "pipx")),
 	newFileCategory("ds-store", ".DS_Store", "macOS desktop storage file that is regenerated automatically.", ".DS_Store"),
 	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight indexing database.", ".Spotlight-V100"),
-	newDirCategory("macos-trash", ".Trashes", "macOS trash folder.", ".Trashes"),
+	reviewCategory(newDirCategory("macos-trash", ".Trashes", "macOS trash folder.", ".Trashes")),
 }
 
 func newDirCategory(key, display, description string, names ...string) Category {
@@ -37,6 +37,7 @@ func newDirCategory(key, display, description string, names ...string) Category 
 		Display:        display,
 		Description:    description,
 		SafetyNote:     description,
+		RiskLevel:      RiskLow,
 		DirectoryNames: dirNames,
 		DirectoryPaths: map[string]struct{}{},
 		FileExtensions: map[string]struct{}{},
@@ -49,6 +50,7 @@ func newDirPathCategory(key, display, description string, pathParts ...string) C
 		Display:        display,
 		Description:    description,
 		SafetyNote:     description,
+		RiskLevel:      RiskLow,
 		DirectoryNames: map[string]struct{}{},
 		DirectoryPaths: map[string]struct{}{filepath.Join(pathParts...): {}},
 		FileExtensions: map[string]struct{}{},
@@ -65,9 +67,31 @@ func newFileCategory(key, display, description string, exts ...string) Category 
 		Display:        display,
 		Description:    description,
 		SafetyNote:     description,
+		RiskLevel:      RiskLow,
 		DirectoryNames: map[string]struct{}{},
 		DirectoryPaths: map[string]struct{}{},
 		FileExtensions: fileExts,
+	}
+}
+
+func reviewCategory(category Category) Category {
+	category.RiskLevel = RiskReview
+	return category
+}
+
+func IncludeRiskProfile(category Category, profile string) bool {
+	if profile == "" || profile == "balanced" || profile == "expanded" {
+		return true
+	}
+	return profile != "conservative" || category.RiskLevel == RiskLow
+}
+
+func validateRiskProfile(profile string) error {
+	switch profile {
+	case "", "conservative", "balanced", "expanded":
+		return nil
+	default:
+		return fmt.Errorf("unknown risk profile %q (supported: conservative, balanced, expanded)", profile)
 	}
 }
 

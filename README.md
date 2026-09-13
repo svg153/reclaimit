@@ -22,7 +22,7 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 Install the latest published release from the [GitHub Releases page](https://github.com/svg153/reclaimit/releases/latest), or use Homebrew when available. For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.5.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.6.0
 ```
 
 Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
@@ -121,6 +121,9 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--exclude-path PATH`: exclude one exact candidate path; repeatable.
 - `--ignore-file FILE`: read excluded paths from a file, one per line.
 - `--older-than DURATION`: keep only candidates older than a duration such as `30d`.
+- `--risk-profile conservative|balanced|expanded`: choose how broad candidate
+  detection should be. `balanced` is the default and preserves the standard
+  category set; `conservative` keeps only low-risk regenerable artifacts.
 - `--export-selection FILE`: write a versioned JSON manifest of the reviewed selection.
 - `--import-selection FILE`: validate a manifest; it never bypasses `--dry-run` or `--yes`.
 - `--out FILE`: write the report to a file.
@@ -135,7 +138,9 @@ Run `reclaimit help analyze`, `reclaimit help tui`, `reclaimit help clean`, or `
 
 Each reported cleanup candidate includes a safety note that explains why the
 matched artifact is reviewable, for example because it is a cache, build output,
-or dependency directory that can be regenerated.
+or dependency directory that can be regenerated. Candidates also carry a
+`risk_level`; use `--risk-profile conservative` to exclude categories that need
+broader manual review.
 
 Before deleting, `reclaimit` collapses nested selections and checks that each
 path still exists and matches the type, identity, size, and modification

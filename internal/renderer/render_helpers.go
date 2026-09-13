@@ -121,9 +121,16 @@ func candidateRows(items []scanner.Candidate, max int) []string {
 	limited := limitCandidates(items, max)
 	rows := make([]string, 0, len(limited))
 	for _, item := range limited {
-		rows = append(rows, fmt.Sprintf("| %s | `%s` | %s | %s | `%s` | `%s` | %s |\n", humanizeBytes(item.Bytes), item.CategoryKey, candidateKind(item), humanizeTimestamp(item.ModifiedAt), escapeMarkdownCell(item.Group), escapeMarkdownCell(item.Path), escapeMarkdownCell(candidateSafetyNote(item))))
+		rows = append(rows, fmt.Sprintf("| %s | `%s` | %s | %s | %s | `%s` | `%s` | %s |\n", humanizeBytes(item.Bytes), item.CategoryKey, candidateRiskLevel(item), candidateKind(item), humanizeTimestamp(item.ModifiedAt), escapeMarkdownCell(item.Group), escapeMarkdownCell(item.Path), escapeMarkdownCell(candidateSafetyNote(item))))
 	}
 	return rows
+}
+
+func candidateRiskLevel(item scanner.Candidate) string {
+	if item.RiskLevel != "" {
+		return item.RiskLevel
+	}
+	return scanner.RiskLow
 }
 
 func candidateSafetyNote(item scanner.Candidate) string {

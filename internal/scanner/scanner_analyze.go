@@ -30,6 +30,7 @@ type AnalyzeOptions struct {
 	MaxDepth          int
 	Workers           int
 	OlderThan         time.Duration
+	RiskProfile       string
 	IncludeCategories []string
 	ExcludeCategories []string
 	ExcludeGroups     []string
@@ -94,6 +95,9 @@ func AnalyzeWithContext(ctx context.Context, command string, opts AnalyzeOptions
 		return Report{}, err
 	}
 	if err := validateCategoryFilters(opts.IncludeCategories, opts.ExcludeCategories); err != nil {
+		return Report{}, err
+	}
+	if err := validateRiskProfile(opts.RiskProfile); err != nil {
 		return Report{}, err
 	}
 	if opts.MinCandidateSize < 0 {
@@ -265,7 +269,7 @@ func (sc *scanContext) scanTree(ctx context.Context, parent string, entries []os
 
 	finalizeDirectory := func(state *directoryState) {
 		if state.dirIsCandidate && (!state.task.inCandidateDir || len(state.dirCategory.DirectoryPaths) > 0) &&
-			IncludeCategory(state.dirCategory.Key, sc.includeSet, sc.excludeSet) && state.summary.bytes >= sc.opts.MinCandidateSize {
+			IncludeCategory(state.dirCategory.Key, sc.includeSet, sc.excludeSet) && IncludeRiskProfile(state.dirCategory, sc.opts.RiskProfile) && state.summary.bytes >= sc.opts.MinCandidateSize {
 			sc.addCandidate(Candidate{
 				Category:    state.dirCategory.Display,
 				CategoryKey: state.dirCategory.Key,
@@ -274,6 +278,7 @@ func (sc *scanContext) scanTree(ctx context.Context, parent string, entries []os
 				Bytes:       state.summary.bytes,
 				Description: state.dirCategory.Description,
 				SafetyNote:  state.dirCategory.SafetyNote,
+				RiskLevel:   state.dirCategory.RiskLevel,
 				ModifiedAt:  state.summary.modifiedAt,
 				IsDir:       true,
 			})
@@ -400,7 +405,7 @@ func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bo
 	sc.mu.Unlock()
 
 	fileCategory, fileIsCandidate := MatchFile(path)
-	if fileIsCandidate && !inCandidateDir && IncludeCategory(fileCategory.Key, sc.includeSet, sc.excludeSet) && size >= sc.opts.MinCandidateSize {
+	if fileIsCandidate && !inCandidateDir && IncludeCategory(fileCategory.Key, sc.includeSet, sc.excludeSet) && IncludeRiskProfile(fileCategory, sc.opts.RiskProfile) && size >= sc.opts.MinCandidateSize {
 		sc.addCandidate(Candidate{
 			Category:    fileCategory.Display,
 			CategoryKey: fileCategory.Key,
@@ -409,6 +414,7 @@ func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bo
 			Bytes:       size,
 			Description: fileCategory.Description,
 			SafetyNote:  fileCategory.SafetyNote,
+			RiskLevel:   fileCategory.RiskLevel,
 			ModifiedAt:  info.ModTime(),
 			IsDir:       false,
 		})

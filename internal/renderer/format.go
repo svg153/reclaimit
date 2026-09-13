@@ -71,7 +71,7 @@ func renderPlain(report scanner.Report) string {
 	}
 	b.WriteString("\nTop cleanup candidates\n")
 	for _, item := range limitCandidates(report.SelectedCandidates, 25) {
-		fmt.Fprintf(&b, "  %8s  %-18s  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, escapePlain(item.Path))
+		fmt.Fprintf(&b, "  %8s  %-18s  %-6s  %s\n", humanizeBytes(item.Bytes), item.CategoryKey, candidateRiskLevel(item), escapePlain(item.Path))
 		if note := candidateSafetyNote(item); note != "" {
 			fmt.Fprintf(&b, "            why: %s\n", escapePlain(note))
 		}
@@ -150,7 +150,7 @@ func renderMarkdown(report scanner.Report) string {
 		b.WriteString(row)
 	}
 	b.WriteString("\n")
-	b.WriteString(renderMarkdownDetails("Top cleanup candidates", "| Size | Category | Kind | Latest modified | Group | Path | Why reviewable |\n| --- | --- | --- | --- | --- | --- | --- |\n", candidateRows(report.SelectedCandidates, 200)))
+	b.WriteString(renderMarkdownDetails("Top cleanup candidates", "| Size | Category | Risk | Kind | Latest modified | Group | Path | Why reviewable |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n", candidateRows(report.SelectedCandidates, 200)))
 	if len(report.SelectionMismatches) > 0 {
 		b.WriteString("\n## Selection mismatches\n\n| Status | Path | Reason |\n| --- | --- | --- |\n")
 		for _, mismatch := range report.SelectionMismatches {
@@ -247,6 +247,7 @@ type jsonCandidate struct {
 	Bytes       int64  `json:"bytes"`
 	Description string `json:"description"`
 	SafetyNote  string `json:"safety_note"`
+	RiskLevel   string `json:"risk_level"`
 	ModifiedAt  string `json:"modified_at"`
 	IsDir       bool   `json:"is_dir"`
 }
@@ -261,6 +262,7 @@ func renderJSON(report scanner.Report) string {
 			Bytes:       c.Bytes,
 			Description: c.Description,
 			SafetyNote:  candidateSafetyNote(c),
+			RiskLevel:   candidateRiskLevel(c),
 			ModifiedAt:  c.ModifiedAt.Format(time.RFC3339),
 			IsDir:       c.IsDir,
 		}
