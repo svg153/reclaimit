@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -87,6 +88,21 @@ func TestWriteSelectionManifestReportsRootAndWriteErrors(t *testing.T) {
 	if err := WriteSelectionManifest(filepath.Join(root, "missing", "selection.json"), root, nil, SelectionExclusions{}); err == nil ||
 		!strings.Contains(err.Error(), "write selection manifest") {
 		t.Fatalf("expected write selection manifest error, got %v", err)
+	}
+}
+
+func TestWriteSelectionManifestReportsEncodeErrors(t *testing.T) {
+	oldMarshal := marshalSelectionManifest
+	marshalSelectionManifest = func(any, string, string) ([]byte, error) {
+		return nil, errors.New("boom")
+	}
+	t.Cleanup(func() {
+		marshalSelectionManifest = oldMarshal
+	})
+
+	err := WriteSelectionManifest(filepath.Join(t.TempDir(), "selection.json"), t.TempDir(), nil, SelectionExclusions{})
+	if err == nil || !strings.Contains(err.Error(), "encode selection manifest") {
+		t.Fatalf("expected encode selection manifest error, got %v", err)
 	}
 }
 

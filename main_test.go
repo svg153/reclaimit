@@ -389,6 +389,72 @@ func TestRun_AnalyzeImportsSelectionManifest(t *testing.T) {
 	}
 }
 
+func TestRun_AnalyzeReportsSelectionImportError(t *testing.T) {
+	root := t.TempDir()
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--import-selection", filepath.Join(root, "missing.json"),
+	}, io.Discard, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "read selection manifest") {
+		t.Fatalf("expected read selection manifest error, got %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeReportsSelectionExportError(t *testing.T) {
+	root := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
+
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--export-selection", filepath.Join(root, "missing", "selection.json"),
+	}, io.Discard, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "write selection manifest") {
+		t.Fatalf("expected write selection manifest error, got %q", stderr.String())
+	}
+}
+
+func TestRun_AnalyzeReportsSelectionRootMismatch(t *testing.T) {
+	root := t.TempDir()
+	otherRoot := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(otherRoot, "node_modules"))
+	manifest := filepath.Join(root, "selection.json")
+
+	var exportStdout, exportStderr bytes.Buffer
+	exportCode := Run([]string{
+		"analyze",
+		"--root", otherRoot,
+		"--min-candidate-size", "0",
+		"--export-selection", manifest,
+	}, &exportStdout, &exportStderr)
+	if exportCode != 0 {
+		t.Fatalf("export code=%d stderr=%q", exportCode, exportStderr.String())
+	}
+
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--import-selection", manifest,
+	}, io.Discard, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "does not match scan root") {
+		t.Fatalf("expected root mismatch error, got %q", stderr.String())
+	}
+}
+
 func TestRun_AnalyzeWithInvalidLogLevel(t *testing.T) {
 	var stderr bytes.Buffer
 	code := Run([]string{"analyze", "--root", t.TempDir(), "--log-level", "invalid"}, &bytes.Buffer{}, &stderr)

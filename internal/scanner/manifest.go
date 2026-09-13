@@ -11,6 +11,8 @@ import (
 
 const SelectionManifestSchemaVersion = 1
 
+var marshalSelectionManifest = json.MarshalIndent
+
 type SelectionManifest struct {
 	SchemaVersion int                 `json:"schema_version"`
 	Root          string              `json:"root"`
@@ -45,7 +47,7 @@ func WriteSelectionManifest(path string, root string, candidates []Candidate, ex
 	if err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(manifest, "", "  ")
+	data, err := marshalSelectionManifest(manifest, "", "  ")
 	if err != nil {
 		return fmt.Errorf("encode selection manifest: %w", err)
 	}
@@ -91,10 +93,10 @@ func NewSelectionManifest(root string, candidates []Candidate, exclusions Select
 	}
 	return SelectionManifest{
 		SchemaVersion: SelectionManifestSchemaVersion,
-		Root: canonicalRoot,
-		CreatedAt: time.Now().UTC(),
-		Exclusions: exclusions,
-		Candidates: entries,
+		Root:          canonicalRoot,
+		CreatedAt:     time.Now().UTC(),
+		Exclusions:    exclusions,
+		Candidates:    entries,
 	}, nil
 }
 
