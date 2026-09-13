@@ -79,6 +79,26 @@ func TestRunDoctorWarnsWhenBinaryIsMissingFromPath(t *testing.T) {
 	}
 }
 
+func TestRunDoctorUsesDefaultProbes(t *testing.T) {
+	report := Run(Options{
+		Version: "dev",
+		Args0:   "",
+	})
+
+	if report.Version != "dev" {
+		t.Fatalf("Version = %q, want dev", report.Version)
+	}
+	if report.GOOS == "" || report.GOARCH == "" {
+		t.Fatalf("runtime fields should be populated: %#v", report)
+	}
+	if len(report.Checks) != 4 {
+		t.Fatalf("Checks length = %d, want 4: %#v", len(report.Checks), report.Checks)
+	}
+	if report.Checks[0].Name != "runtime" || report.Checks[0].Status != StatusOK {
+		t.Fatalf("unexpected runtime check: %#v", report.Checks[0])
+	}
+}
+
 func TestBinaryNameFallsBackForBlankInputs(t *testing.T) {
 	for _, input := range []string{"", "   ", "/", `\`} {
 		if got := binaryName(input); got != "reclaimit" {
