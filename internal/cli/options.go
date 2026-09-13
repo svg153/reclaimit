@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 )
 
 type stringList []string
@@ -97,7 +97,7 @@ func ParseConfig(args []string) (Options, error) {
 			}
 			cfg.Command = "version"
 			return cfg, nil
-		case "analyze", "clean", "tui":
+		case "analyze", "clean", "doctor", "tui":
 			cfg.Command = args[0]
 			args = args[1:]
 		default:
@@ -246,7 +246,7 @@ func ParseConfig(args []string) (Options, error) {
 
 func validHelpTopic(topic string) bool {
 	switch topic {
-	case "analyze", "clean", "tui":
+	case "analyze", "clean", "doctor", "tui":
 		return true
 	default:
 		return false
