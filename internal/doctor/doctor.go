@@ -108,7 +108,7 @@ func Run(opts Options) Report {
 
 func Render(report Report) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "reclaimit doctor\n")
+	b.WriteString("reclaimit doctor\n")
 	fmt.Fprintf(&b, "version: %s\n", valueOrUnknown(report.Version))
 	fmt.Fprintf(&b, "runtime: %s/%s\n\n", report.GOOS, report.GOARCH)
 	for _, check := range report.Checks {
