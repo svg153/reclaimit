@@ -44,7 +44,7 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 	if cfg.Command == "doctor" {
 		report := doctor.Run(doctor.Options{
 			Version: Version,
-			Args0:   os.Args[0],
+			Args0:   "reclaimit",
 		})
 		if err := writeString(stdout, doctor.Render(report)); err != nil {
 			return exitf(stderr, "error: writing doctor report: %v\n", err)
