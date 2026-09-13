@@ -56,6 +56,33 @@ func TestRun_HelpTopic(t *testing.T) {
 	}
 }
 
+func TestRun_Doctor(t *testing.T) {
+	old := Version
+	Version = "1.2.3"
+	defer func() { Version = old }()
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Run([]string{"doctor"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit 0, got %d; stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	for _, want := range []string{
+		"reclaimit doctor",
+		"version: 1.2.3",
+		"working-directory",
+		"home-directory",
+		"path",
+	} {
+		if !strings.Contains(stdout.String(), want) {
+			t.Fatalf("doctor output missing %q: %q", want, stdout.String())
+		}
+	}
+	if stderr.String() != "" {
+		t.Fatalf("doctor wrote stderr: %q", stderr.String())
+	}
+}
+
 func TestRun_InvalidCommand(t *testing.T) {
 	var buf bytes.Buffer
 	code := Run([]string{"analyze", "--format", "xml"}, &buf, &buf)
