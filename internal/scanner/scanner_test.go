@@ -42,6 +42,9 @@ func TestAnalyzeFindsCandidatesAndGroupsByRepo(t *testing.T) {
 		if candidate.Group != repo {
 			t.Fatalf("expected candidate group %s, got %s", repo, candidate.Group)
 		}
+		if candidate.SafetyNote == "" {
+			t.Fatalf("candidate has empty safety note: %+v", candidate)
+		}
 	}
 }
 

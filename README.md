@@ -22,7 +22,7 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 Install the latest published release from the [GitHub Releases page](https://github.com/svg153/reclaimit/releases/latest), or use Homebrew when available. For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.4.2
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.5.0
 ```
 
 Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
@@ -32,7 +32,8 @@ Run `reclaimit doctor` after installing to check the local binary, runtime, and 
 
 - Detects 17 cleanup categories for JavaScript, Python, Rust, frontend builds, Bun, pip, pipx, and macOS metadata.
 - Groups candidates by Git repository or path depth instead of presenting one flat list.
-- Produces plain-text, Markdown, or JSON reports and includes an interactive TUI.
+- Produces plain-text, Markdown, or JSON reports with per-candidate safety notes,
+  plus an interactive TUI.
 - Requires explicit confirmation for cleanup and supports a non-destructive `--dry-run`.
 - Revalidates identity, type, size, and modification snapshot, then uses a
   same-filesystem quarantine so changed data is preserved.
@@ -109,7 +110,8 @@ The tools complement each other: use a general analyzer to understand the whole 
 | `doctor` | Check the local installation and runtime environment |
 
 - `--root PATH`: directory to scan; defaults to the current directory.
-- `--format plain|markdown|json`: report format.
+- `--format plain|markdown|json`: report format. JSON candidates include
+  `description` and `safety_note` fields for automation.
 - `--group-mode repo|depth`: group by Git repository or path depth.
 - `--max-depth N`: traversal limit; `0` means unlimited.
 - `--workers N`: global scanner concurrency ceiling; defaults to `8`.
@@ -130,6 +132,10 @@ Run `reclaimit help analyze`, `reclaimit help tui`, `reclaimit help clean`, or `
 ## Safety model
 
 `analyze` and `tui` are read-only. `clean` requires either `--dry-run` or `--yes`.
+
+Each reported cleanup candidate includes a safety note that explains why the
+matched artifact is reviewable, for example because it is a cache, build output,
+or dependency directory that can be regenerated.
 
 Before deleting, `reclaimit` collapses nested selections and checks that each
 path still exists and matches the type, identity, size, and modification

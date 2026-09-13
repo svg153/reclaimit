@@ -14,6 +14,7 @@ func TestCandidateRowsIncludeMetadata(t *testing.T) {
 			Path:        "/tmp/node_modules",
 			Bytes:       1024,
 			CategoryKey: "node-modules",
+			SafetyNote:  "Restored by npm install.",
 			ModifiedAt:  time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
 			IsDir:       true,
 		},
@@ -30,6 +31,9 @@ func TestCandidateRowsIncludeMetadata(t *testing.T) {
 	}
 	if !strings.Contains(rows[0], "1.0 KiB") {
 		t.Errorf("row missing bytes: %s", rows[0])
+	}
+	if !strings.Contains(rows[0], "Restored by npm install.") {
+		t.Errorf("row missing safety note: %s", rows[0])
 	}
 }
 

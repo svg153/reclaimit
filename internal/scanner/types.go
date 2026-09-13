@@ -6,6 +6,7 @@ type Category struct {
 	Key            string
 	Display        string
 	Description    string
+	SafetyNote     string
 	DirectoryNames map[string]struct{}
 	DirectoryPaths map[string]struct{}
 	FileExtensions map[string]struct{}
@@ -23,6 +24,7 @@ type Candidate struct {
 	Group       string
 	Bytes       int64
 	Description string
+	SafetyNote  string
 	ModifiedAt  time.Time
 	IsDir       bool
 }
