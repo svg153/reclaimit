@@ -16,6 +16,9 @@ func TestUsageText_EmptyTopic(t *testing.T) {
 	if !strings.Contains(text, "clean") {
 		t.Error("expected 'clean' in general help")
 	}
+	if !strings.Contains(text, "doctor") {
+		t.Error("expected 'doctor' in general help")
+	}
 	if !strings.Contains(text, "tui") {
 		t.Error("expected 'tui' in general help")
 	}
