@@ -9,7 +9,7 @@ or path, and lets users review candidates before deletion.
 
 - 17 cleanup categories covering JavaScript, Python, Rust, frontend builds,
   Bun, pip, pipx, generic caches, and macOS metadata.
-- Plain-text, Markdown, and JSON reports.
+- Plain-text, Markdown, and JSON reports with per-candidate safety notes.
 - Interactive terminal UI.
 - Read-only analysis and non-destructive cleanup dry runs.
 - Read-only `doctor` diagnostics for local installation and runtime checks.
@@ -30,7 +30,7 @@ Install the latest release from https://github.com/svg153/reclaimit/releases/lat
 For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.4.2
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.5.0
 ```
 
 Release archives include SHA-256 checksums and the installer verifies them before writing a destination file.
@@ -47,7 +47,9 @@ reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
 
 Deletion is irreversible and cannot be transactional on a normal filesystem.
 Symbolic links and special files are skipped. Users should review dry-run output
-and keep backups for valuable data.
+and keep backups for valuable data. Each cleanup candidate includes a
+`safety_note` in JSON reports and a human-readable rationale in plain-text and
+Markdown reports.
 
 ## Canonical links
 

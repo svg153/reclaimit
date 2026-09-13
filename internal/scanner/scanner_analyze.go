@@ -273,6 +273,7 @@ func (sc *scanContext) scanTree(ctx context.Context, parent string, entries []os
 				Group:       sc.groupFor(state.task.path),
 				Bytes:       state.summary.bytes,
 				Description: state.dirCategory.Description,
+				SafetyNote:  state.dirCategory.SafetyNote,
 				ModifiedAt:  state.summary.modifiedAt,
 				IsDir:       true,
 			})
@@ -407,6 +408,7 @@ func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bo
 			Group:       sc.groupFor(path),
 			Bytes:       size,
 			Description: fileCategory.Description,
+			SafetyNote:  fileCategory.SafetyNote,
 			ModifiedAt:  info.ModTime(),
 			IsDir:       false,
 		})

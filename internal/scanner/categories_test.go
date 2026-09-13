@@ -85,6 +85,9 @@ func TestCategoriesList(t *testing.T) {
 		if cat.Description == "" {
 			t.Fatalf("category %q has empty description", cat.Key)
 		}
+		if cat.SafetyNote == "" {
+			t.Fatalf("category %q has empty safety note", cat.Key)
+		}
 		if len(cat.DirectoryNames) == 0 && len(cat.DirectoryPaths) == 0 && len(cat.FileExtensions) == 0 {
 			t.Fatalf("category %q has no directory names, directory paths, or file extensions", cat.Key)
 		}
