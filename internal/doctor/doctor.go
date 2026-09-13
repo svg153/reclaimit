@@ -93,13 +93,13 @@ func Run(opts Options) Report {
 		report.Checks = append(report.Checks, Check{
 			Name:    "path",
 			Status:  StatusWarn,
-			Message: fmt.Sprintf("%s is not reachable from PATH", binary),
+			Message: binary + " is not reachable from PATH",
 		})
 	} else {
 		report.Checks = append(report.Checks, Check{
 			Name:    "path",
 			Status:  StatusOK,
-			Message: fmt.Sprintf("%s is reachable from PATH", binary),
+			Message: binary + " is reachable from PATH",
 		})
 	}
 

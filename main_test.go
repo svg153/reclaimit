@@ -83,6 +83,17 @@ func TestRun_Doctor(t *testing.T) {
 	}
 }
 
+func TestRun_DoctorReportsWriteError(t *testing.T) {
+	var stderr bytes.Buffer
+	code := Run([]string{"doctor"}, failingWriter{}, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit 1, got %d; stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "writing doctor report") {
+		t.Fatalf("expected doctor write error, got %q", stderr.String())
+	}
+}
+
 func TestRun_InvalidCommand(t *testing.T) {
 	var buf bytes.Buffer
 	code := Run([]string{"analyze", "--format", "xml"}, &buf, &buf)
