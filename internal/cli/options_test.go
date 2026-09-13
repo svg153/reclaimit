@@ -101,6 +101,16 @@ func TestParseConfigTUICommand(t *testing.T) {
 	}
 }
 
+func TestParseConfigDoctorCommand(t *testing.T) {
+	cfg, err := ParseConfig([]string{"doctor"})
+	if err != nil {
+		t.Fatalf("ParseConfig doctor: %v", err)
+	}
+	if cfg.Command != "doctor" {
+		t.Fatalf("expected command 'doctor', got %q", cfg.Command)
+	}
+}
+
 // TestParseConfigHelpFlags validates help flag parsing.
 func TestParseConfigHelpFlags(t *testing.T) {
 	cfg, err := ParseConfig([]string{"--help"})
@@ -310,12 +320,12 @@ func TestParseConfigRejectsNegativeMinCandidateSize(t *testing.T) {
 
 // TestParseConfigHelpTopic validates help topic extraction.
 func TestParseConfigHelpTopic(t *testing.T) {
-	cfg, err := ParseConfig([]string{"help", "clean"})
+	cfg, err := ParseConfig([]string{"help", "doctor"})
 	if err != nil {
-		t.Fatalf("ParseConfig help clean: %v", err)
+		t.Fatalf("ParseConfig help doctor: %v", err)
 	}
-	if cfg.HelpTopic != "clean" {
-		t.Fatalf("expected helpTopic 'clean', got %q", cfg.HelpTopic)
+	if cfg.HelpTopic != "doctor" {
+		t.Fatalf("expected helpTopic 'doctor', got %q", cfg.HelpTopic)
 	}
 }
 
