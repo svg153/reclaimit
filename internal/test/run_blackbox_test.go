@@ -37,6 +37,13 @@ func TestRunBlackBoxControlPaths(t *testing.T) {
 			forbidStderr: []string{"error:"},
 		},
 		{
+			name:         "doctor",
+			args:         []string{"doctor"},
+			wantCode:     0,
+			wantStdout:   []string{"reclaimit doctor", "working-directory", "home-directory"},
+			forbidStderr: []string{"error:"},
+		},
+		{
 			name:         "invalid format value",
 			args:         []string{"analyze", "--format", "xml"},
 			wantCode:     1,
