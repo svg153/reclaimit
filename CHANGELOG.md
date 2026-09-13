@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/svg153/reclaimit/compare/v0.4.2...v0.5.0) (2026-09-13)
+
+
+### Features
+
+* add doctor command ([#120](https://github.com/svg153/reclaimit/issues/120)) ([86e1b64](https://github.com/svg153/reclaimit/commit/86e1b64e4f2bca47f2aa9e1292187076f1ad857d))
+
 ## [0.4.2](https://github.com/svg153/reclaimit/compare/v0.4.1...v0.4.2) (2026-08-21)
 
 
