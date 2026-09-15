@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/svg153/reclaimit/compare/v0.7.0...v0.8.0) (2026-09-15)
+
+
+### Features
+
+* add anonymous local reports ([#126](https://github.com/svg153/reclaimit/issues/126)) ([9222a69](https://github.com/svg153/reclaimit/commit/9222a694d3df6705be011c9c8f28fb794498ece8))
+
 ## [0.7.0](https://github.com/svg153/reclaimit/compare/v0.6.0...v0.7.0) (2026-09-13)
 
 
