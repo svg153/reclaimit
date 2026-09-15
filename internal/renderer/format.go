@@ -256,6 +256,7 @@ func humanizeBytes(size int64) string {
 }
 
 type jsonReport struct {
+	SchemaVersion             int                         `json:"schema_version"`
 	Root                      string                      `json:"root"`
 	TotalBytes                int64                       `json:"total_bytes"`
 	FilesystemBytes           int64                       `json:"filesystem_bytes"`
@@ -314,6 +315,7 @@ func renderJSON(report scanner.Report) string {
 		}
 	}
 	jr := jsonReport{
+		SchemaVersion:             1,
 		Root:                      report.Root,
 		TotalBytes:                report.TotalBytes,
 		FilesystemBytes:           report.FilesystemBytes,

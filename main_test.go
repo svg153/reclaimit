@@ -482,6 +482,25 @@ func TestRun_AnalyzeWithJSONOutput(t *testing.T) {
 	}
 }
 
+func TestRun_DiffReports(t *testing.T) {
+	dir := t.TempDir()
+	before := filepath.Join(dir, "before.json")
+	after := filepath.Join(dir, "after.json")
+	if err := os.WriteFile(before, []byte(`{"schema_version":1,"selected_bytes":10,"selected_candidates":[{"category_key":"node-modules","path":"/project/node_modules","bytes":10,"modified_at":"2026-01-01T00:00:00Z","is_dir":true}]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(after, []byte(`{"schema_version":1,"selected_bytes":20,"selected_candidates":[{"category_key":"node-modules","path":"/project/node_modules","bytes":20,"modified_at":"2026-01-02T00:00:00Z","is_dir":true}]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"diff", before, after}, &stdout, &stderr); code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "+10") || !strings.Contains(stdout.String(), "1 changed") {
+		t.Fatalf("unexpected diff output: %s", stdout.String())
+	}
+}
+
 func TestRun_AnalyzeAnonymousJSONRedactsPaths(t *testing.T) {
 	root := t.TempDir()
 	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))

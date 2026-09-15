@@ -13,12 +13,22 @@ Usage:
 Commands:
   analyze    Scan and print a report
   clean      Delete the selected candidates after review
+  diff       Compare two versioned JSON reports without rescanning
   doctor     Check the local reclaimit installation
   tui        Open the interactive review interface
   help       Show command help
   version    Print the version
 
 Use "reclaimit <command> --help" for more information about a command.
+`
+	}
+	if topic == "diff" {
+		return `Usage:
+  reclaimit diff BEFORE.json AFTER.json
+
+Compares two versioned JSON reports without reading or modifying the scanned
+filesystem. Anonymous reports retain aggregate comparisons but omit path-level
+candidate changes.
 `
 	}
 

@@ -22,7 +22,7 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 Install the latest published release from the [GitHub Releases page](https://github.com/svg153/reclaimit/releases/latest), or use Homebrew when available. For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.7.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.8.0
 ```
 
 Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
@@ -55,6 +55,9 @@ reclaimit analyze --root "$HOME/code" --format json --out reclaimit-report.json
 
 # Share aggregate results without exposing local paths
 reclaimit analyze --root "$HOME/code" --format json --anonymous
+
+# Compare two versioned reports without rescanning the filesystem
+reclaimit diff before.json after.json
 
 # Review candidates interactively
 reclaimit tui --root "$HOME/code"
@@ -134,6 +137,12 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--yes`: confirm destructive cleanup.
 - `--anonymous`: redact root, path, group, mismatch, and cleanup recovery paths
   in generated reports.
+
+`reclaimit diff BEFORE.json AFTER.json` compares selected bytes, category totals,
+and candidate drift between two versioned JSON reports. Anonymous reports keep
+aggregate comparisons, while path-level candidate changes are intentionally
+omitted. JSON reports include `schema_version`; `diff` rejects missing or newer
+schemas instead of guessing how to interpret them.
 
 Run `reclaimit help analyze`, `reclaimit help tui`, `reclaimit help clean`, or `reclaimit help doctor` for the complete help text.
 

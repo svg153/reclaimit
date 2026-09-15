@@ -40,6 +40,13 @@ func TestUsageText_ValidTopic(t *testing.T) {
 	}
 }
 
+func TestUsageText_DiffTopic(t *testing.T) {
+	text := UsageText("diff")
+	if !strings.Contains(text, "BEFORE.json AFTER.json") || !strings.Contains(text, "without reading or modifying") {
+		t.Fatalf("unexpected diff help: %s", text)
+	}
+}
+
 func TestUsageText_TrimsWhitespace(t *testing.T) {
 	text := UsageText("  analyze  ")
 	if !strings.Contains(text, "reclaimit analyze") {

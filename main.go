@@ -11,6 +11,7 @@ import (
 	"github.com/svg153/reclaimit/internal/doctor"
 	"github.com/svg153/reclaimit/internal/logger"
 	"github.com/svg153/reclaimit/internal/renderer"
+	"github.com/svg153/reclaimit/internal/reportdiff"
 	"github.com/svg153/reclaimit/internal/scanner"
 	"github.com/svg153/reclaimit/internal/tui"
 )
@@ -50,6 +51,16 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 			return exitf(stderr, "error: writing doctor report: %v\n", err)
 		}
 		return doctor.ExitCode(report)
+	}
+	if cfg.Command == "diff" {
+		diff, err := reportdiff.CompareFiles(cfg.DiffBefore, cfg.DiffAfter)
+		if err != nil {
+			return exitf(stderr, "error: %v\n", err)
+		}
+		if err := writeString(stdout, reportdiff.Render(diff)); err != nil {
+			return exitf(stderr, "error: writing diff report: %v\n", err)
+		}
+		return 0
 	}
 
 	if cfg.Quiet {

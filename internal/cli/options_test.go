@@ -107,6 +107,23 @@ func TestParseConfigAnonymousFlag(t *testing.T) {
 	}
 }
 
+func TestParseConfigDiffCommand(t *testing.T) {
+	cfg, err := ParseConfig([]string{"diff", "before.json", "after.json"})
+	if err != nil {
+		t.Fatalf("ParseConfig diff: %v", err)
+	}
+	if cfg.Command != "diff" || cfg.DiffBefore != "before.json" || cfg.DiffAfter != "after.json" {
+		t.Fatalf("unexpected diff config: %+v", cfg)
+	}
+	if _, err := ParseConfig([]string{"diff", "only-one.json"}); err == nil {
+		t.Fatal("expected diff arity error")
+	}
+	help, err := ParseConfig([]string{"diff", "--help"})
+	if err != nil || help.Command != "help" || help.HelpTopic != "diff" {
+		t.Fatalf("unexpected diff help config: %+v, %v", help, err)
+	}
+}
+
 // TestParseConfigDryRunAndYes validates both flags together.
 func TestParseConfigDryRunAndYes(t *testing.T) {
 	cfg, err := ParseConfig([]string{"clean", "--dry-run", "--yes"})
@@ -357,6 +374,16 @@ func TestParseConfigHelpTopic(t *testing.T) {
 	}
 	if cfg.HelpTopic != "doctor" {
 		t.Fatalf("expected helpTopic 'doctor', got %q", cfg.HelpTopic)
+	}
+}
+
+func TestParseConfigDiffHelpTopic(t *testing.T) {
+	cfg, err := ParseConfig([]string{"help", "diff"})
+	if err != nil {
+		t.Fatalf("ParseConfig help diff: %v", err)
+	}
+	if cfg.Command != "help" || cfg.HelpTopic != "diff" {
+		t.Fatalf("unexpected help config: %+v", cfg)
 	}
 }
 
