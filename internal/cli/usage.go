@@ -70,6 +70,8 @@ Flags:
       confirm destructive cleanup when using clean
   -dry-run
       preview cleanup without deleting files
+  -anonymous
+      redact root, path, and group values in generated reports
   -quiet
       suppress non-essential output
   -log-level debug|info|warn|error

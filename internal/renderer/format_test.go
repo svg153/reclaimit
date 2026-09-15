@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -66,6 +67,52 @@ func TestRenderPlain_NoCandidates(t *testing.T) {
 
 	if !strings.Contains(output, "0 candidates") {
 		t.Error("expected 0 candidates message")
+	}
+}
+
+func TestRenderReportAnonymousRedactsPathsWithoutMutatingInput(t *testing.T) {
+	report := scanner.Report{
+		Anonymous: true,
+		Root:      "/home/alice/code",
+		TopEntries: []scanner.PathSize{
+			{Path: "/home/alice/code/node_modules", Bytes: 1024},
+		},
+		TopFiles: []scanner.PathSize{
+			{Path: "/home/alice/code/node_modules/pkg/file.js", Bytes: 512},
+		},
+		Candidates: []scanner.Candidate{
+			{Path: "/home/alice/code/node_modules", Group: "/home/alice/code", Bytes: 1024, CategoryKey: "node-modules"},
+		},
+		SelectedCandidates: []scanner.Candidate{
+			{Path: "/home/alice/code/node_modules", Group: "/home/alice/code", Bytes: 1024, CategoryKey: "node-modules"},
+		},
+		GroupSummaries: []scanner.GroupSummary{
+			{Group: "/home/alice/code", Bytes: 1024, Count: 1},
+		},
+		CleanIssues: []scanner.CleanIssue{
+			{Path: "/home/alice/code/node_modules", QuarantinePath: "/home/alice/code/.reclaimit-quarantine/candidate"},
+		},
+		SelectionMismatches: []scanner.SelectionMismatch{
+			{Path: "/home/alice/code/node_modules", Status: "missing"},
+		},
+	}
+
+	output, err := RenderReport(report, "json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(output, "alice") || strings.Contains(output, "node_modules") {
+		t.Fatalf("anonymous output leaked path data: %s", output)
+	}
+	var decoded scanner.Report
+	if err := json.Unmarshal([]byte(output), &decoded); err != nil {
+		t.Fatalf("decode anonymous report: %v", err)
+	}
+	if decoded.Root != "<redacted>" || decoded.Candidates[0].Path != "<redacted>" {
+		t.Fatalf("anonymous output missing redaction marker: %+v", decoded)
+	}
+	if report.Root != "/home/alice/code" || report.Candidates[0].Path != "/home/alice/code/node_modules" || report.CleanIssues[0].Path == "<redacted>" {
+		t.Fatalf("RenderReport mutated the input report: %+v", report)
 	}
 }
 

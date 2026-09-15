@@ -22,7 +22,7 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 Install the latest published release from the [GitHub Releases page](https://github.com/svg153/reclaimit/releases/latest), or use Homebrew when available. For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.6.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.7.0
 ```
 
 Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
@@ -52,6 +52,9 @@ reclaimit doctor
 
 # Export machine-readable scan metrics
 reclaimit analyze --root "$HOME/code" --format json --out reclaimit-report.json
+
+# Share aggregate results without exposing local paths
+reclaimit analyze --root "$HOME/code" --format json --anonymous
 
 # Review candidates interactively
 reclaimit tui --root "$HOME/code"
@@ -129,6 +132,8 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--out FILE`: write the report to a file.
 - `--dry-run`: run cleanup preflight without deleting.
 - `--yes`: confirm destructive cleanup.
+- `--anonymous`: redact root, path, group, mismatch, and cleanup recovery paths
+  in generated reports.
 
 Run `reclaimit help analyze`, `reclaimit help tui`, `reclaimit help clean`, or `reclaimit help doctor` for the complete help text.
 
@@ -141,6 +146,13 @@ matched artifact is reviewable, for example because it is a cache, build output,
 or dependency directory that can be regenerated. Candidates also carry a
 `risk_level`; use `--risk-profile conservative` to exclude categories that need
 broader manual review.
+
+Use `--anonymous` when sharing a report publicly. It preserves aggregate sizes,
+category counts, risk levels, and safety notes, while replacing local roots,
+groups, candidate paths, mismatch paths, and cleanup recovery paths with
+`<redacted>`. Cleanup previews and TUI reproduction commands are also redacted.
+Selection manifests remain operational and contain real paths, so do not share
+them publicly.
 
 Before deleting, `reclaimit` collapses nested selections and checks that each
 path still exists and matches the type, identity, size, and modification
