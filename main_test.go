@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/svg153/reclaimit/internal/cli"
+	"github.com/svg153/reclaimit/internal/scanner"
 	"github.com/svg153/reclaimit/internal/tui"
 )
 
@@ -502,8 +503,12 @@ func TestRun_AnalyzeAnonymousJSONRedactsPaths(t *testing.T) {
 	if strings.Contains(stdout.String(), root) {
 		t.Fatalf("anonymous JSON leaked path data: %s", stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "<redacted>") {
-		t.Fatalf("anonymous JSON missing redaction marker: %s", stdout.String())
+	var report scanner.Report
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil {
+		t.Fatalf("decode anonymous JSON: %v", err)
+	}
+	if report.Root != "<redacted>" || report.Candidates[0].Path != "<redacted>" {
+		t.Fatalf("anonymous JSON missing redaction marker: %+v", report)
 	}
 }
 

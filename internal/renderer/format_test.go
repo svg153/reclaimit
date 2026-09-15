@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -103,8 +104,12 @@ func TestRenderReportAnonymousRedactsPathsWithoutMutatingInput(t *testing.T) {
 	if strings.Contains(output, "alice") || strings.Contains(output, "node_modules") {
 		t.Fatalf("anonymous output leaked path data: %s", output)
 	}
-	if !strings.Contains(output, "<redacted>") {
-		t.Fatalf("anonymous output missing redaction marker: %s", output)
+	var decoded scanner.Report
+	if err := json.Unmarshal([]byte(output), &decoded); err != nil {
+		t.Fatalf("decode anonymous report: %v", err)
+	}
+	if decoded.Root != "<redacted>" || decoded.Candidates[0].Path != "<redacted>" {
+		t.Fatalf("anonymous output missing redaction marker: %+v", decoded)
 	}
 	if report.Root != "/home/alice/code" || report.Candidates[0].Path != "/home/alice/code/node_modules" || report.CleanIssues[0].Path == "<redacted>" {
 		t.Fatalf("RenderReport mutated the input report: %+v", report)
