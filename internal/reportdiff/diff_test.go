@@ -80,7 +80,7 @@ func TestCompareFilesRejectsMissingAndOversizedReports(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := file.Truncate(maxReportBytes + 1); err != nil {
-		file.Close()
+		_ = file.Close()
 		t.Fatal(err)
 	}
 	if err := file.Close(); err != nil {
@@ -88,6 +88,16 @@ func TestCompareFilesRejectsMissingAndOversizedReports(t *testing.T) {
 	}
 	if _, err := CompareFiles(oversized, oversized); err == nil || !strings.Contains(err.Error(), "exceeds") {
 		t.Fatalf("expected size error, got %v", err)
+	}
+}
+
+func TestCompareFilesRejectsInvalidJSON(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "invalid.json")
+	if err := os.WriteFile(path, []byte(`{"schema_version":`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CompareFiles(path, path); err == nil || !strings.Contains(err.Error(), "decode report") {
+		t.Fatalf("expected decode error, got %v", err)
 	}
 }
 

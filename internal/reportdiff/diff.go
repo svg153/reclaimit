@@ -54,7 +54,9 @@ func read(path string) (report, error) {
 	if err != nil {
 		return report{}, fmt.Errorf("open report %q: %w", path, err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	info, err := f.Stat()
 	if err != nil {
 		return report{}, fmt.Errorf("stat report %q: %w", path, err)
@@ -130,7 +132,9 @@ func compare(before, after report) Result {
 	if result.PathsRedacted {
 		return result
 	}
-	identity := func(item candidate) string { return fmt.Sprintf("%s\x00%s\x00%t", item.CategoryKey, item.Path, item.IsDir) }
+	identity := func(item candidate) string {
+		return fmt.Sprintf("%s\x00%s\x00%t", item.CategoryKey, item.Path, item.IsDir)
+	}
 	old := map[string]candidate{}
 	for _, item := range before.SelectedCandidates {
 		old[identity(item)] = item

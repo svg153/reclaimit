@@ -10,8 +10,8 @@ import (
 	"github.com/svg153/reclaimit/internal/cli"
 	"github.com/svg153/reclaimit/internal/doctor"
 	"github.com/svg153/reclaimit/internal/logger"
-	"github.com/svg153/reclaimit/internal/reportdiff"
 	"github.com/svg153/reclaimit/internal/renderer"
+	"github.com/svg153/reclaimit/internal/reportdiff"
 	"github.com/svg153/reclaimit/internal/scanner"
 	"github.com/svg153/reclaimit/internal/tui"
 )
