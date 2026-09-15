@@ -170,6 +170,9 @@ func TestRenderJSON(t *testing.T) {
 	if !strings.Contains(output, `"root"`) {
 		t.Error("expected root field in JSON")
 	}
+	if !strings.Contains(output, `"schema_version": 1`) {
+		t.Error("expected versioned JSON schema")
+	}
 	if !strings.Contains(output, "node_modules") {
 		t.Error("expected node_modules in JSON")
 	}

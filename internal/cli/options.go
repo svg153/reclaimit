@@ -29,6 +29,8 @@ func (s *stringList) Set(value string) error {
 type Options struct {
 	Command           string
 	HelpTopic         string
+	DiffBefore        string
+	DiffAfter         string
 	Root              string
 	Format            string
 	GroupMode         string
@@ -99,6 +101,19 @@ func ParseConfig(args []string) (Options, error) {
 				return cfg, fmt.Errorf("unexpected arguments after %s: %q", args[0], strings.Join(args[1:], " "))
 			}
 			cfg.Command = "version"
+			return cfg, nil
+		case "diff":
+			if len(args) == 2 && (args[1] == "-h" || args[1] == "--help") {
+				cfg.Command = "help"
+				cfg.HelpTopic = "diff"
+				return cfg, nil
+			}
+			if len(args) != 3 {
+				return cfg, errors.New("diff requires exactly two JSON report files")
+			}
+			cfg.Command = "diff"
+			cfg.DiffBefore = args[1]
+			cfg.DiffAfter = args[2]
 			return cfg, nil
 		case "analyze", "clean", "doctor", "tui":
 			cfg.Command = args[0]
@@ -254,7 +269,7 @@ func ParseConfig(args []string) (Options, error) {
 
 func validHelpTopic(topic string) bool {
 	switch topic {
-	case "analyze", "clean", "doctor", "tui":
+	case "analyze", "clean", "doctor", "tui", "diff":
 		return true
 	default:
 		return false

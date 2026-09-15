@@ -25,6 +25,8 @@ or path, and lets users review candidates before deletion.
   destination write.
 - Versioned JSON selection manifests with fail-closed root and candidate
   identity validation.
+- Offline comparison of two versioned JSON reports with category and candidate
+  drift summaries.
 
 ## Install
 
@@ -32,7 +34,7 @@ Install the latest release from https://github.com/svg153/reclaimit/releases/lat
 For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.7.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.8.0
 ```
 
 Release archives include SHA-256 checksums and the installer verifies them before writing a destination file.
@@ -42,6 +44,7 @@ Release archives include SHA-256 checksums and the installer verifies them befor
 ```bash
 reclaimit analyze --root "$HOME/code" --format json --out report.json
 reclaimit analyze --root "$HOME/code" --format json --anonymous
+reclaimit diff before.json after.json
 reclaimit doctor
 reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
 ```
