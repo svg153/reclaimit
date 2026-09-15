@@ -52,6 +52,7 @@ type Options struct {
 	Yes               bool
 	DryRun            bool
 	Quiet             bool
+	Anonymous         bool
 	LogLevel          string
 	Logger            *slog.Logger
 }
@@ -143,6 +144,7 @@ func ParseConfig(args []string) (Options, error) {
 	fs.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "log verbosity sent to stderr: debug, info, warn or error")
 	fs.BoolVar(&cfg.DryRun, "dry-run", false, "preview cleanup without deleting files")
 	fs.BoolVar(&cfg.Quiet, "quiet", false, "suppress non-essential output (sets log level to error)")
+	fs.BoolVar(&cfg.Anonymous, "anonymous", false, "redact root, path, and group values in generated reports")
 
 	includeCategories := stringList{}
 	excludeCategories := stringList{}

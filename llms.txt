@@ -32,7 +32,7 @@ Install the latest release from https://github.com/svg153/reclaimit/releases/lat
 For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.6.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.7.0
 ```
 
 Release archives include SHA-256 checksums and the installer verifies them before writing a destination file.
@@ -41,6 +41,7 @@ Release archives include SHA-256 checksums and the installer verifies them befor
 
 ```bash
 reclaimit analyze --root "$HOME/code" --format json --out report.json
+reclaimit analyze --root "$HOME/code" --format json --anonymous
 reclaimit doctor
 reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
 ```
@@ -54,6 +55,10 @@ and keep backups for valuable data. Each cleanup candidate includes a
 Markdown reports.
 Use `--risk-profile conservative` to exclude review-level categories such as
 generic caches and application environments.
+Use `--anonymous` for shareable reports with local roots, paths, groups,
+mismatches, recovery paths, cleanup previews, and TUI reproduction commands
+redacted. Selection manifests still contain operational paths and must not be
+shared publicly.
 
 ## Canonical links
 

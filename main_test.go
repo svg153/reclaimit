@@ -481,6 +481,72 @@ func TestRun_AnalyzeWithJSONOutput(t *testing.T) {
 	}
 }
 
+func TestRun_AnalyzeAnonymousJSONRedactsPaths(t *testing.T) {
+	root := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--format", "json",
+		"--min-candidate-size", "0",
+		"--anonymous",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if !json.Valid(stdout.Bytes()) {
+		t.Fatalf("expected valid JSON, got %q", stdout.String())
+	}
+	if strings.Contains(stdout.String(), root) {
+		t.Fatalf("anonymous JSON leaked path data: %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "<redacted>") {
+		t.Fatalf("anonymous JSON missing redaction marker: %s", stdout.String())
+	}
+}
+
+func TestRun_CleanAnonymousDryRunRedactsPreview(t *testing.T) {
+	root := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
+
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{
+		"clean",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--dry-run",
+		"--anonymous",
+	}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("expected exit code 0, got %d: %s", code, stderr.String())
+	}
+	if strings.Contains(stdout.String(), root) {
+		t.Fatalf("anonymous cleanup output leaked path data: %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "Deletion preview redacted") {
+		t.Fatalf("anonymous cleanup output missing redacted preview notice: %s", stdout.String())
+	}
+}
+
+func TestWriteSelectionAnonymousOmitsPaths(t *testing.T) {
+	selection := tui.Selection{
+		ExcludedGroups: []string{"/home/alice/project"},
+		ExcludedPaths:  []string{"/home/alice/project/node_modules"},
+	}
+	var output bytes.Buffer
+	if err := writeSelection(&output, cli.Options{Root: "/home/alice", Anonymous: true}, selection); err != nil {
+		t.Fatalf("writeSelection returned error: %v", err)
+	}
+	if strings.Contains(output.String(), "alice") || strings.Contains(output.String(), "node_modules") {
+		t.Fatalf("anonymous selection leaked path data: %s", output.String())
+	}
+	if !strings.Contains(output.String(), "omitted") {
+		t.Fatalf("anonymous selection missing omission notice: %s", output.String())
+	}
+}
+
 func TestRun_AnalyzeWithMarkdownOutput(t *testing.T) {
 	root := t.TempDir()
 	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))

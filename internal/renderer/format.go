@@ -10,6 +10,9 @@ import (
 )
 
 func RenderReport(report scanner.Report, format string) (string, error) {
+	if report.Anonymous {
+		report = anonymizeReport(report)
+	}
 	switch format {
 	case "plain":
 		return renderPlain(report), nil
@@ -20,6 +23,49 @@ func RenderReport(report scanner.Report, format string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported format %q", format)
 	}
+}
+
+func anonymizeReport(report scanner.Report) scanner.Report {
+	report.Root = "<redacted>"
+	redactPaths := func(items []scanner.PathSize) []scanner.PathSize {
+		items = append([]scanner.PathSize(nil), items...)
+		for i := range items {
+			items[i].Path = "<redacted>"
+		}
+		return items
+	}
+	redactCandidates := func(items []scanner.Candidate) []scanner.Candidate {
+		items = append([]scanner.Candidate(nil), items...)
+		for i := range items {
+			items[i].Path = "<redacted>"
+			items[i].Group = "<redacted>"
+		}
+		return items
+	}
+	redactGroups := func(items []scanner.GroupSummary) []scanner.GroupSummary {
+		items = append([]scanner.GroupSummary(nil), items...)
+		for i := range items {
+			items[i].Group = "<redacted>"
+		}
+		return items
+	}
+
+	report.TopEntries = redactPaths(report.TopEntries)
+	report.TopFiles = redactPaths(report.TopFiles)
+	report.Candidates = redactCandidates(report.Candidates)
+	report.SelectedCandidates = redactCandidates(report.SelectedCandidates)
+	report.GroupSummaries = redactGroups(report.GroupSummaries)
+	report.SelectedGroupSummaries = redactGroups(report.SelectedGroupSummaries)
+	report.CleanIssues = append([]scanner.CleanIssue(nil), report.CleanIssues...)
+	for i := range report.CleanIssues {
+		report.CleanIssues[i].Path = "<redacted>"
+		report.CleanIssues[i].QuarantinePath = "<redacted>"
+	}
+	report.SelectionMismatches = append([]scanner.SelectionMismatch(nil), report.SelectionMismatches...)
+	for i := range report.SelectionMismatches {
+		report.SelectionMismatches[i].Path = "<redacted>"
+	}
+	return report
 }
 
 func renderPlain(report scanner.Report) string {

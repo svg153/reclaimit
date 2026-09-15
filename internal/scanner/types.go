@@ -52,6 +52,7 @@ type GroupSummary struct {
 }
 
 type Report struct {
+	Anonymous                 bool
 	Command                   string
 	Root                      string
 	TotalBytes                int64

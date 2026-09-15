@@ -46,6 +46,9 @@ func TestParseConfigDefaults(t *testing.T) {
 	if cfg.DryRun {
 		t.Fatalf("expected dryRun false by default")
 	}
+	if cfg.Anonymous {
+		t.Fatalf("expected anonymous false by default")
+	}
 	if cfg.Yes {
 		t.Fatalf("expected yes false by default")
 	}
@@ -91,6 +94,16 @@ func TestParseConfigRiskProfile(t *testing.T) {
 	if _, err := ParseConfig([]string{"analyze", "--risk-profile", "reckless"}); err == nil ||
 		!strings.Contains(err.Error(), "unsupported risk profile") {
 		t.Fatalf("expected unsupported risk profile error, got %v", err)
+	}
+}
+
+func TestParseConfigAnonymousFlag(t *testing.T) {
+	cfg, err := ParseConfig([]string{"analyze", "--anonymous"})
+	if err != nil {
+		t.Fatalf("ParseConfig anonymous: %v", err)
+	}
+	if !cfg.Anonymous {
+		t.Fatal("expected anonymous flag")
 	}
 }
 

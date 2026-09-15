@@ -66,6 +66,7 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 	if err != nil {
 		return exitf(stderr, "error: %v\n", err)
 	}
+	report.Anonymous = cfg.Anonymous
 
 	if cfg.SelectionImport != "" {
 		manifest, err := scanner.ReadSelectionManifest(cfg.SelectionImport)
@@ -118,6 +119,9 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 		}
 
 		if preview := scanner.RenderDeletionPreview(report.SelectedCandidates); preview != "" {
+			if cfg.Anonymous {
+				preview = fmt.Sprintf("\n[ANONYMOUS] Deletion preview redacted for %d selected candidates.\n", len(report.SelectedCandidates))
+			}
 			if err := writeString(stdout, preview); err != nil {
 				return exitf(stderr, "error: %v\n", err)
 			}
@@ -152,6 +156,7 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 				return exitf(stderr, "error: refreshing report after clean: %v\n", err)
 			}
 			report = postCleanReport
+			report.Anonymous = cfg.Anonymous
 			report.DeletedBytes = cleanResult.DeletedBytes
 			if err := writef(stdout,
 				"\n[CLEAN] Deleted %s across %d candidates (expected %s, skipped %d, failed %d)\n",
@@ -215,6 +220,9 @@ func toScannerOpts(cfg cli.Options) scanner.AnalyzeOptions {
 func writeSelection(stdout io.Writer, cfg cli.Options, selection tui.Selection) error {
 	if err := writeString(stdout, "\n# Selection\n"); err != nil {
 		return err
+	}
+	if cfg.Anonymous {
+		return writeString(stdout, "# Reproduction command omitted because --anonymous hides local paths.\n")
 	}
 	if len(selection.ExcludedGroups) > 0 || len(selection.ExcludedPaths) > 0 {
 		if err := writeString(stdout, "# Reproduce this selection:\n"); err != nil {
