@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0](https://github.com/svg153/reclaimit/compare/v0.8.0...v0.9.0) (2026-09-15)
+
+
+### Features
+
+* compare versioned JSON reports ([#128](https://github.com/svg153/reclaimit/issues/128)) ([4a5926c](https://github.com/svg153/reclaimit/commit/4a5926caa882876f3de18a3cf4d988524811dfbb))
+
 ## [0.8.0](https://github.com/svg153/reclaimit/compare/v0.7.0...v0.8.0) (2026-09-15)
 
 
