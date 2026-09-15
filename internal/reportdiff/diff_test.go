@@ -29,6 +29,10 @@ func TestCompareAddedRemovedChangedAndUnchanged(t *testing.T) {
 	if len(result.AddedPaths) != 1 || result.AddedPaths[0] != "/new" || len(result.RemovedPaths) != 1 || result.RemovedPaths[0] != "/old" {
 		t.Fatalf("unexpected candidate paths: %+v", result)
 	}
+	output := Render(result)
+	if !strings.Contains(output, `added    "/new"`) || !strings.Contains(output, `removed  "/old"`) || !strings.Contains(output, `changed  "/changed"`) {
+		t.Fatalf("unexpected rendered candidate changes: %s", output)
+	}
 }
 
 func TestCompareAnonymousReportsOmitsCandidateChanges(t *testing.T) {
@@ -84,5 +88,25 @@ func TestCompareFilesRejectsMissingAndOversizedReports(t *testing.T) {
 	}
 	if _, err := CompareFiles(oversized, oversized); err == nil || !strings.Contains(err.Error(), "exceeds") {
 		t.Fatalf("expected size error, got %v", err)
+	}
+}
+
+func TestCompareFilesReadsValidReports(t *testing.T) {
+	dir := t.TempDir()
+	before := filepath.Join(dir, "before.json")
+	after := filepath.Join(dir, "after.json")
+	content := []byte(`{"schema_version":1,"selected_bytes":7,"selected_candidates":[]}`)
+	if err := os.WriteFile(before, content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(after, content, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	result, err := CompareFiles(before, after)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.BeforeBytes != 7 || result.AfterBytes != 7 {
+		t.Fatalf("unexpected result: %+v", result)
 	}
 }
