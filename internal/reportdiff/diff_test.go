@@ -62,3 +62,27 @@ func TestCompareFilesRejectsUnsupportedOrMalformedReports(t *testing.T) {
 		t.Fatalf("expected trailing document error, got %v", err)
 	}
 }
+
+func TestCompareFilesRejectsMissingAndOversizedReports(t *testing.T) {
+	dir := t.TempDir()
+	missing := filepath.Join(dir, "missing.json")
+	if _, err := CompareFiles(missing, missing); err == nil || !strings.Contains(err.Error(), "open report") {
+		t.Fatalf("expected open error, got %v", err)
+	}
+
+	oversized := filepath.Join(dir, "oversized.json")
+	file, err := os.Create(oversized)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Truncate(maxReportBytes + 1); err != nil {
+		file.Close()
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CompareFiles(oversized, oversized); err == nil || !strings.Contains(err.Error(), "exceeds") {
+		t.Fatalf("expected size error, got %v", err)
+	}
+}
