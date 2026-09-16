@@ -429,6 +429,25 @@ func TestRun_AnalyzeReportsSelectionExportError(t *testing.T) {
 	}
 }
 
+func TestRun_AnalyzeReportsCleanupPlanExportError(t *testing.T) {
+	root := t.TempDir()
+	mustMkdirRootTest(t, filepath.Join(root, "node_modules"))
+
+	var stderr bytes.Buffer
+	code := Run([]string{
+		"analyze",
+		"--root", root,
+		"--min-candidate-size", "0",
+		"--export-plan", filepath.Join(root, "missing", "cleanup-plan.json"),
+	}, io.Discard, &stderr)
+	if code != 1 {
+		t.Fatalf("expected exit code 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "write cleanup plan") {
+		t.Fatalf("expected write cleanup plan error, got %q", stderr.String())
+	}
+}
+
 func TestRun_AnalyzeReportsSelectionRootMismatch(t *testing.T) {
 	root := t.TempDir()
 	otherRoot := t.TempDir()
