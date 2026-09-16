@@ -34,7 +34,7 @@ Install the latest release from https://github.com/svg153/reclaimit/releases/lat
 For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.8.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.9.0
 ```
 
 Release archives include SHA-256 checksums and the installer verifies them before writing a destination file.
@@ -62,6 +62,9 @@ Use `--anonymous` for shareable reports with local roots, paths, groups,
 mismatches, recovery paths, cleanup previews, and TUI reproduction commands
 redacted. Selection manifests still contain operational paths and must not be
 shared publicly.
+Use `--inactive-projects 90d` to report old projects with regenerable artifacts.
+These findings are review-only and are excluded from cleanup candidates and
+selection manifests.
 
 ## Canonical links
 

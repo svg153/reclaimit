@@ -95,6 +95,9 @@ func TestRenderReportAnonymousRedactsPathsWithoutMutatingInput(t *testing.T) {
 		SelectionMismatches: []scanner.SelectionMismatch{
 			{Path: "/home/alice/code/node_modules", Status: "missing"},
 		},
+		InactiveProjects: []scanner.InactiveProject{
+			{Path: "/home/alice/code", GeneratedBytes: 1024, GeneratedCount: 1, ReviewOnly: true, Reason: "review"},
+		},
 	}
 
 	output, err := RenderReport(report, "json")
@@ -104,11 +107,15 @@ func TestRenderReportAnonymousRedactsPathsWithoutMutatingInput(t *testing.T) {
 	if strings.Contains(output, "alice") || strings.Contains(output, "node_modules") {
 		t.Fatalf("anonymous output leaked path data: %s", output)
 	}
-	var decoded scanner.Report
+	var decoded struct {
+		Root             string                    `json:"root"`
+		Candidates       []jsonCandidate           `json:"candidates"`
+		InactiveProjects []scanner.InactiveProject `json:"inactive_projects"`
+	}
 	if err := json.Unmarshal([]byte(output), &decoded); err != nil {
 		t.Fatalf("decode anonymous report: %v", err)
 	}
-	if decoded.Root != "<redacted>" || decoded.Candidates[0].Path != "<redacted>" {
+	if decoded.Root != "<redacted>" || decoded.Candidates[0].Path != "<redacted>" || decoded.InactiveProjects[0].Path != "<redacted>" {
 		t.Fatalf("anonymous output missing redaction marker: %+v", decoded)
 	}
 	if report.Root != "/home/alice/code" || report.Candidates[0].Path != "/home/alice/code/node_modules" || report.CleanIssues[0].Path == "<redacted>" {
@@ -190,6 +197,24 @@ func TestRenderJSON_Empty(t *testing.T) {
 	}
 	if !strings.Contains(output, `"candidates"`) {
 		t.Error("expected candidates field in JSON")
+	}
+}
+
+func TestRenderInactiveProjectsAsReviewOnly(t *testing.T) {
+	report := scanner.Report{
+		Root: "/tmp/test",
+		InactiveProjects: []scanner.InactiveProject{
+			{Path: "/tmp/project", GeneratedBytes: 2048, GeneratedCount: 2, ReviewOnly: true, Reason: "manual review required"},
+		},
+	}
+	for _, format := range []string{"plain", "markdown", "json"} {
+		output, err := RenderReport(report, format)
+		if err != nil {
+			t.Fatalf("RenderReport(%s): %v", format, err)
+		}
+		if !strings.Contains(output, "Review-only") && !strings.Contains(output, "review_only") {
+			t.Fatalf("expected review-only marker in %s output: %s", format, output)
+		}
 	}
 }
 

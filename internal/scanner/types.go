@@ -51,6 +51,15 @@ type GroupSummary struct {
 	ModifiedAt time.Time
 }
 
+type InactiveProject struct {
+	Path           string    `json:"path"`
+	GeneratedBytes int64     `json:"generated_bytes"`
+	GeneratedCount int       `json:"generated_count"`
+	LastActivity   time.Time `json:"last_activity"`
+	ReviewOnly     bool      `json:"review_only"`
+	Reason         string    `json:"reason"`
+}
+
 type Report struct {
 	Anonymous                 bool
 	Command                   string
@@ -76,6 +85,7 @@ type Report struct {
 	FailedCleanCandidates     int
 	CleanIssues               []CleanIssue
 	SelectionMismatches       []SelectionMismatch
+	InactiveProjects          []InactiveProject
 	EntriesScanned            int64
 	EntriesSkipped            int64
 	TruncatedDirectories      int64

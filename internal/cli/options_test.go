@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestParseConfigDefaults validates all default values.
@@ -104,6 +105,19 @@ func TestParseConfigAnonymousFlag(t *testing.T) {
 	}
 	if !cfg.Anonymous {
 		t.Fatal("expected anonymous flag")
+	}
+}
+
+func TestParseConfigInactiveProjects(t *testing.T) {
+	cfg, err := ParseConfig([]string{"analyze", "--inactive-projects", "90d"})
+	if err != nil {
+		t.Fatalf("ParseConfig inactive-projects: %v", err)
+	}
+	if cfg.InactiveProjects != 90*24*time.Hour {
+		t.Fatalf("expected 90 day threshold, got %s", cfg.InactiveProjects)
+	}
+	if _, err := ParseConfig([]string{"analyze", "--inactive-projects", "not-a-duration"}); err == nil {
+		t.Fatal("expected invalid inactive-projects duration error")
 	}
 }
 

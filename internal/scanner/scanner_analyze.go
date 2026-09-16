@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -30,6 +32,7 @@ type AnalyzeOptions struct {
 	MaxDepth          int
 	Workers           int
 	OlderThan         time.Duration
+	InactiveProjects  time.Duration
 	RiskProfile       string
 	IncludeCategories []string
 	ExcludeCategories []string
@@ -40,6 +43,14 @@ type AnalyzeOptions struct {
 type scanSummary struct {
 	bytes      int64
 	modifiedAt time.Time
+}
+
+type projectActivity struct {
+	path           string
+	hasMarker      bool
+	latestActivity time.Time
+	generatedBytes int64
+	generatedCount int
 }
 
 type scanChildResult struct {
@@ -140,6 +151,7 @@ func AnalyzeWithContext(ctx context.Context, command string, opts AnalyzeOptions
 		excludeSet:     ListToSet(opts.ExcludeCategories),
 		logger:         logger,
 		operations:     defaultScanOperations,
+		projects:       make(map[string]*projectActivity),
 	}
 
 	entries, err := sc.operations.readDir(opts.Root)
@@ -183,6 +195,9 @@ func AnalyzeWithContext(ctx context.Context, command string, opts AnalyzeOptions
 	report.EntriesSkipped = sc.entriesSkipped.Load()
 	report.TruncatedDirectories = sc.truncatedDirectories.Load()
 	report.MaxDepthReached = int(sc.maxDepthReached.Load())
+	if opts.InactiveProjects > 0 {
+		report.InactiveProjects = sc.inactiveProjects(time.Now().UTC().Add(-opts.InactiveProjects))
+	}
 	logger.Info("scan completed",
 		"candidates", len(report.Candidates),
 		"reclaimable_bytes", report.CandidateBytes,
@@ -207,6 +222,7 @@ type scanContext struct {
 	excludeSet     map[string]struct{}
 	logger         *slog.Logger
 	operations     scanOperations
+	projects       map[string]*projectActivity
 
 	mu                   sync.Mutex
 	entriesScanned       atomic.Int64
@@ -389,6 +405,9 @@ func (sc *scanContext) inspect(task scanTask) scanInspection {
 		inspection.dirCategory, inspection.dirIsCandidate = MatchDirectory(task.path)
 		inspection.nextInCandidate = task.inCandidateDir || inspection.dirIsCandidate
 		inspection.entries, inspection.err = sc.operations.readDir(task.path)
+		if filepath.Base(task.path) == ".git" {
+			sc.recordProjectMarker(filepath.Dir(task.path), info.ModTime())
+		}
 		return inspection
 	}
 	if !info.Mode().IsRegular() {
@@ -419,6 +438,12 @@ func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bo
 			IsDir:       false,
 		})
 	}
+	if !inCandidateDir && !isVCSMetadataPath(path) {
+		group := sc.groupFor(path)
+		if isProjectMarker(filepath.Base(path)) || isProjectSource(path) {
+			sc.recordProjectActivity(group, group, info.ModTime(), isProjectMarker(filepath.Base(path)))
+		}
+	}
 	return scanSummary{bytes: size, modifiedAt: info.ModTime()}
 }
 
@@ -437,11 +462,87 @@ func (sc *scanContext) addCandidate(candidate Candidate) {
 	}
 	sc.candidateByKey[key] = len(sc.report.Candidates)
 	sc.report.Candidates = append(sc.report.Candidates, candidate)
+	project := sc.projects[candidate.Group]
+	if project == nil {
+		project = &projectActivity{path: candidate.Group}
+		sc.projects[candidate.Group] = project
+	}
+	project.generatedBytes += candidate.Bytes
+	project.generatedCount++
 	sc.logger.Debug("candidate found",
 		"category", candidate.CategoryKey,
 		"path", candidate.Path,
 		"bytes", candidate.Bytes,
 	)
+}
+
+func (sc *scanContext) recordProjectMarker(path string, modifiedAt time.Time) {
+	sc.recordProjectActivity(path, path, modifiedAt, true)
+}
+
+func (sc *scanContext) recordProjectActivity(group, path string, modifiedAt time.Time, marker bool) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
+	project := sc.projects[group]
+	if project == nil {
+		project = &projectActivity{path: path}
+		sc.projects[group] = project
+	}
+	if marker {
+		project.hasMarker = true
+	}
+	if modifiedAt.After(project.latestActivity) {
+		project.latestActivity = modifiedAt
+	}
+}
+
+func (sc *scanContext) inactiveProjects(cutoff time.Time) []InactiveProject {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
+	projects := make([]InactiveProject, 0)
+	for _, project := range sc.projects {
+		if !project.hasMarker || project.generatedCount == 0 || project.latestActivity.IsZero() || !project.latestActivity.Before(cutoff) {
+			continue
+		}
+		projects = append(projects, InactiveProject{
+			Path:           project.path,
+			GeneratedBytes: project.generatedBytes,
+			GeneratedCount: project.generatedCount,
+			LastActivity:   project.latestActivity,
+			ReviewOnly:     true,
+			Reason:         "project markers and relevant source files are older than the configured threshold; review generated artifacts manually",
+		})
+	}
+	sort.Slice(projects, func(i, j int) bool { return projects[i].Path < projects[j].Path })
+	return projects
+}
+
+func isProjectMarker(name string) bool {
+	switch name {
+	case "package.json", "go.mod", "Cargo.toml", "pyproject.toml", "requirements.txt", "pom.xml", "build.gradle", "build.gradle.kts", "Gemfile", "composer.json", "mix.exs", "Makefile", "CMakeLists.txt":
+		return true
+	default:
+		return false
+	}
+}
+
+func isProjectSource(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	switch ext {
+	case ".go", ".js", ".jsx", ".ts", ".tsx", ".py", ".rs", ".java", ".kt", ".kts", ".rb", ".php", ".cs", ".c", ".h", ".cpp", ".cc", ".swift", ".m", ".mm", ".ex", ".exs":
+		return true
+	default:
+		return false
+	}
+}
+
+func isVCSMetadataPath(path string) bool {
+	for _, part := range strings.Split(filepath.Clean(path), string(filepath.Separator)) {
+		if part == ".git" || part == ".hg" || part == ".svn" {
+			return true
+		}
+	}
+	return false
 }
 
 func (sc *scanContext) skip(path string, err error) {

@@ -56,6 +56,8 @@ Flags:
       maximum traversal depth (0 means unlimited)
   -older-than DURATION
       include only candidates older than DURATION (for example 30d or 720h)
+  -inactive-projects DURATION
+      report review-only projects inactive longer than DURATION (for example 90d)
   -risk-profile conservative|balanced|expanded
       choose how broad cleanup candidate detection should be
   -workers N
