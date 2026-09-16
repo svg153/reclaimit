@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0](https://github.com/svg153/reclaimit/compare/v0.9.0...v0.10.0) (2026-09-16)
+
+
+### Features
+
+* add reviewable cleanup plans ([#132](https://github.com/svg153/reclaimit/issues/132)) ([1da9f53](https://github.com/svg153/reclaimit/commit/1da9f530a105c9745f68d3e6103272f947503359))
+* report inactive projects for review ([#130](https://github.com/svg153/reclaimit/issues/130)) ([0892194](https://github.com/svg153/reclaimit/commit/0892194f965c4451a1a8c014100539f77e723b2a))
+
 ## [0.9.0](https://github.com/svg153/reclaimit/compare/v0.8.0...v0.9.0) (2026-09-15)
 
 
