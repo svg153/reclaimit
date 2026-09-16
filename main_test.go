@@ -883,6 +883,7 @@ func TestRunContextReportsCancellation(t *testing.T) {
 func TestRunTUIWithInjectedSelection(t *testing.T) {
 	root := t.TempDir()
 	target := filepath.Join(root, "node_modules")
+	planPath := filepath.Join(root, "cleanup-plan.json")
 	mustMkdirRootTest(t, target)
 	original := runTUI
 	t.Cleanup(func() { runTUI = original })
@@ -893,12 +894,15 @@ func TestRunTUIWithInjectedSelection(t *testing.T) {
 		return tui.Selection{ExcludedPaths: []string{target}, Saved: true}, nil
 	}
 	var stdout, stderr bytes.Buffer
-	code := Run([]string{"tui", "--root", root, "--min-candidate-size", "0"}, &stdout, &stderr)
+	code := Run([]string{"tui", "--root", root, "--min-candidate-size", "0", "--export-plan", planPath}, &stdout, &stderr)
 	if code != 0 {
 		t.Fatalf("code=%d stderr=%q", code, stderr.String())
 	}
 	if !strings.Contains(stdout.String(), "Reproduce this selection") || !strings.Contains(stdout.String(), target) {
 		t.Fatalf("selection output missing: %s", stdout.String())
+	}
+	if _, err := os.Stat(planPath); err != nil {
+		t.Fatalf("TUI cleanup plan was not written: %v", err)
 	}
 }
 

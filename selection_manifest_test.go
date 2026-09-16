@@ -106,3 +106,22 @@ func TestCleanupPlanCLIRequiresReviewAndFailsClosed(t *testing.T) {
 		t.Fatalf("changed plan should fail closed: code=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
 	}
 }
+
+func TestCleanupPlanCLIErrorsAreExplicit(t *testing.T) {
+	root := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"clean", "--root", root, "--plan", filepath.Join(root, "missing.json"), "--dry-run"}, &stdout, &stderr); code == 0 || !strings.Contains(stderr.String(), "read cleanup plan") {
+		t.Fatalf("missing plan should fail explicitly: code=%d stderr=%s", code, stderr.String())
+	}
+
+	otherRoot := t.TempDir()
+	planPath := filepath.Join(root, "plan.json")
+	if err := scanner.WriteCleanupPlan(planPath, root, nil); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"clean", "--root", otherRoot, "--plan", planPath, "--dry-run"}, &stdout, &stderr); code == 0 || !strings.Contains(stderr.String(), "does not match scan root") {
+		t.Fatalf("root mismatch should fail explicitly: code=%d stderr=%s", code, stderr.String())
+	}
+}
