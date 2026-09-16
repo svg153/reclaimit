@@ -288,7 +288,7 @@ type jsonReport struct {
 	FailedCleanCandidates     int                         `json:"failed_clean_candidates"`
 	CleanIssues               []scanner.CleanIssue        `json:"clean_issues"`
 	SelectionMismatches       []scanner.SelectionMismatch `json:"selection_mismatches"`
-	InactiveProjects          []scanner.InactiveProject    `json:"inactive_projects"`
+	InactiveProjects          []scanner.InactiveProject   `json:"inactive_projects"`
 	EntriesScanned            int64                       `json:"entries_scanned"`
 	EntriesSkipped            int64                       `json:"entries_skipped"`
 	TruncatedDirectories      int64                       `json:"truncated_directories"`
