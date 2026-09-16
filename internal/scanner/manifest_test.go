@@ -80,8 +80,8 @@ func TestReadCleanupPlanRejectsInvalidFiles(t *testing.T) {
 	root := t.TempDir()
 	for name, content := range map[string]string{
 		"invalid-json": `{`,
-		"bad-schema": `{"schema_version":2,"root":"/tmp","action":"delete"}`,
-		"bad-action": `{"schema_version":1,"root":"/tmp","action":"inspect"}`,
+		"bad-schema":   `{"schema_version":2,"root":"/tmp","action":"delete"}`,
+		"bad-action":   `{"schema_version":1,"root":"/tmp","action":"inspect"}`,
 		"missing-root": `{"schema_version":1,"action":"delete"}`,
 	} {
 		t.Run(name, func(t *testing.T) {
