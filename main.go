@@ -220,6 +220,7 @@ func toScannerOpts(cfg cli.Options) scanner.AnalyzeOptions {
 		MaxDepth:          cfg.MaxDepth,
 		Workers:           cfg.Workers,
 		OlderThan:         cfg.OlderThan,
+		InactiveProjects:  cfg.InactiveProjects,
 		RiskProfile:       cfg.RiskProfile,
 		IncludeCategories: cfg.IncludeCategories,
 		ExcludeCategories: cfg.ExcludeCategories,

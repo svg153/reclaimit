@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 func analyzeConfig(root string) AnalyzeOptions {
@@ -167,6 +168,86 @@ func TestAnalyzeFindsBunCache(t *testing.T) {
 	if !foundGlobal {
 		t.Error("expected to find Bun download cache as candidate")
 	}
+}
+
+func TestAnalyzeInactiveProjectsAreReviewOnly(t *testing.T) {
+	old := time.Now().Add(-48 * time.Hour)
+
+	t.Run("inactive project with generated artifacts", func(t *testing.T) {
+		root := t.TempDir()
+		project := filepath.Join(root, "inactive")
+		mustMkdir(t, filepath.Join(project, ".git"))
+		mustWriteFile(t, filepath.Join(project, "go.mod"), "module example\n")
+		mustWriteFile(t, filepath.Join(project, "main.go"), "package main\n")
+		mustMkdir(t, filepath.Join(project, "node_modules"))
+		mustWriteFile(t, filepath.Join(project, "node_modules", "dep.js"), strings.Repeat("x", 1024))
+		for _, path := range []string{filepath.Join(project, ".git"), filepath.Join(project, "go.mod"), filepath.Join(project, "main.go"), filepath.Join(project, "node_modules"), filepath.Join(project, "node_modules", "dep.js")} {
+			if err := os.Chtimes(path, old, old); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		opts := analyzeConfig(root)
+		opts.InactiveProjects = 24 * time.Hour
+		report, err := AnalyzeWithOptions("analyze", opts, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(report.InactiveProjects) != 1 {
+			t.Fatalf("expected one inactive project, got %+v", report.InactiveProjects)
+		}
+		finding := report.InactiveProjects[0]
+		if finding.Path != project || !finding.ReviewOnly || finding.GeneratedCount != 1 || len(report.SelectedCandidates) != 1 {
+			t.Fatalf("unexpected inactive finding or cleanup selection: %+v, candidates=%+v", finding, report.SelectedCandidates)
+		}
+	})
+
+	t.Run("active project is not reported", func(t *testing.T) {
+		root := t.TempDir()
+		project := filepath.Join(root, "active")
+		mustMkdir(t, filepath.Join(project, ".git"))
+		mustWriteFile(t, filepath.Join(project, "go.mod"), "module example\n")
+		mustWriteFile(t, filepath.Join(project, "main.go"), "package main\n")
+		mustMkdir(t, filepath.Join(project, "node_modules"))
+		mustWriteFile(t, filepath.Join(project, "node_modules", "dep.js"), strings.Repeat("x", 1024))
+		for _, path := range []string{filepath.Join(project, ".git"), filepath.Join(project, "go.mod"), filepath.Join(project, "node_modules"), filepath.Join(project, "node_modules", "dep.js")} {
+			if err := os.Chtimes(path, old, old); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		opts := analyzeConfig(root)
+		opts.InactiveProjects = 24 * time.Hour
+		report, err := AnalyzeWithOptions("analyze", opts, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(report.InactiveProjects) != 0 {
+			t.Fatalf("active project should not be reported: %+v", report.InactiveProjects)
+		}
+	})
+
+	t.Run("marker without generated artifacts is not reported", func(t *testing.T) {
+		root := t.TempDir()
+		project := filepath.Join(root, "ambiguous")
+		mustMkdir(t, filepath.Join(project, ".git"))
+		mustWriteFile(t, filepath.Join(project, "go.mod"), "module example\n")
+		for _, path := range []string{filepath.Join(project, ".git"), filepath.Join(project, "go.mod")} {
+			if err := os.Chtimes(path, old, old); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		opts := analyzeConfig(root)
+		opts.InactiveProjects = 24 * time.Hour
+		report, err := AnalyzeWithOptions("analyze", opts, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(report.InactiveProjects) != 0 {
+			t.Fatalf("project without generated artifacts should not be reported: %+v", report.InactiveProjects)
+		}
+	})
 }
 
 func TestAnalyzeFindsMacOSCandidates(t *testing.T) {

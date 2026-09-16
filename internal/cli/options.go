@@ -42,6 +42,7 @@ type Options struct {
 	MaxDepth          int
 	Workers           int
 	OlderThan         time.Duration
+	InactiveProjects  time.Duration
 	RiskProfile       string
 	SelectionExport   string
 	SelectionImport   string
@@ -149,6 +150,8 @@ func ParseConfig(args []string) (Options, error) {
 	fs.IntVar(&cfg.MaxDepth, "max-depth", cfg.MaxDepth, "maximum traversal depth; 0 means unlimited")
 	var olderThan string
 	fs.StringVar(&olderThan, "older-than", "", "include only candidates older than a duration such as 30d or 720h")
+	var inactiveProjects string
+	fs.StringVar(&inactiveProjects, "inactive-projects", "", "report review-only projects inactive longer than a duration such as 90d")
 	fs.StringVar(&cfg.RiskProfile, "risk-profile", cfg.RiskProfile, "risk profile: conservative, balanced or expanded")
 	fs.IntVar(&cfg.Workers, "workers", cfg.Workers, "maximum concurrent workers across the complete traversal")
 	fs.StringVar(&cfg.OutFile, "out", "", "write the report to a file")
@@ -205,6 +208,13 @@ func ParseConfig(args []string) (Options, error) {
 			return cfg, err
 		}
 		cfg.OlderThan = parsedAge
+	}
+	if inactiveProjects != "" {
+		parsedAge, err := parseAgeDuration(inactiveProjects)
+		if err != nil {
+			return cfg, fmt.Errorf("invalid inactive-projects duration: %w", err)
+		}
+		cfg.InactiveProjects = parsedAge
 	}
 	if cfg.MinCandidateSize < 0 {
 		return cfg, errors.New("min-candidate-size must be >= 0")

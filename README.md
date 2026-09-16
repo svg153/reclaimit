@@ -22,7 +22,7 @@ fixture and commands are documented in [docs/demo.md](docs/demo.md).
 Install the latest published release from the [GitHub Releases page](https://github.com/svg153/reclaimit/releases/latest), or use Homebrew when available. For a source install, use Go 1.25.12 or newer:
 
 ```bash
-go install github.com/svg153/reclaimit/cmd/reclaimit@v0.8.0
+go install github.com/svg153/reclaimit/cmd/reclaimit@v0.9.0
 ```
 
 Release archives include SHA-256 checksums; the installer verifies the checksum before writing a destination file.
@@ -137,12 +137,19 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--yes`: confirm destructive cleanup.
 - `--anonymous`: redact root, path, group, mismatch, and cleanup recovery paths
   in generated reports.
+- `--inactive-projects DURATION`: report projects with old relevant activity and
+  regenerable artifacts as review-only findings.
 
 `reclaimit diff BEFORE.json AFTER.json` compares selected bytes, category totals,
 and candidate drift between two versioned JSON reports. Anonymous reports keep
 aggregate comparisons, while path-level candidate changes are intentionally
 omitted. JSON reports include `schema_version`; `diff` rejects missing or newer
 schemas instead of guessing how to interpret them.
+
+`--inactive-projects` is deliberately opt-in. It requires a recognized project
+marker, old relevant marker or source activity, and at least one generated
+artifact. Findings are reported separately with `review_only: true`; they are
+never cleanup candidates and never enter selection manifests.
 
 Run `reclaimit help analyze`, `reclaimit help tui`, `reclaimit help clean`, or `reclaimit help doctor` for the complete help text.
 
