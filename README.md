@@ -69,6 +69,11 @@ reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
 reclaimit analyze --root "$HOME/code" --older-than 30d --export-selection selection.json
 reclaimit clean --root "$HOME/code" --import-selection selection.json --dry-run
 
+# Create an explicit cleanup plan, review it, then dry-run or apply it
+reclaimit analyze --root "$HOME/code" --export-plan cleanup-plan.json
+reclaimit clean --root "$HOME/code" --plan cleanup-plan.json --dry-run
+reclaimit clean --root "$HOME/code" --plan cleanup-plan.json --yes
+
 # Delete only after reviewing the same selection
 reclaimit clean --root "$HOME/code" --include-category python-venv --yes
 ```
@@ -132,6 +137,10 @@ The tools complement each other: use a general analyzer to understand the whole 
   category set; `conservative` keeps only low-risk regenerable artifacts.
 - `--export-selection FILE`: write a versioned JSON manifest of the reviewed selection.
 - `--import-selection FILE`: validate a manifest; it never bypasses `--dry-run` or `--yes`.
+- `--export-plan FILE`: write an explicit, owner-only cleanup plan containing the
+  reviewed candidates and their identity snapshot.
+- `--plan FILE`: validate a cleanup plan before `clean`; any root, traversal,
+  category, type, size, or modification mismatch stops the operation.
 - `--out FILE`: write the report to a file.
 - `--dry-run`: run cleanup preflight without deleting.
 - `--yes`: confirm destructive cleanup.
@@ -169,6 +178,11 @@ groups, candidate paths, mismatch paths, and cleanup recovery paths with
 `<redacted>`. Cleanup previews and TUI reproduction commands are also redacted.
 Selection manifests remain operational and contain real paths, so do not share
 them publicly.
+
+Cleanup plans are also operational files and contain real paths. A plan is never
+applied implicitly: `clean --plan FILE` still requires `--dry-run` or `--yes`,
+and any mismatch stops the entire plan before deletion begins. Review the plan
+and its dry-run output before using `--yes`.
 
 Before deleting, `reclaimit` collapses nested selections and checks that each
 path still exists and matches the type, identity, size, and modification

@@ -25,6 +25,8 @@ or path, and lets users review candidates before deletion.
   destination write.
 - Versioned JSON selection manifests with fail-closed root and candidate
   identity validation.
+- Explicit versioned cleanup plans with dry-run review and fail-closed apply
+  validation for root, traversal, category, type, size, and modification drift.
 - Offline comparison of two versioned JSON reports with category and candidate
   drift summaries.
 
@@ -47,6 +49,8 @@ reclaimit analyze --root "$HOME/code" --format json --anonymous
 reclaimit diff before.json after.json
 reclaimit doctor
 reclaimit clean --root "$HOME/code" --include-category python-venv --dry-run
+reclaimit analyze --root "$HOME/code" --export-plan cleanup-plan.json
+reclaimit clean --root "$HOME/code" --plan cleanup-plan.json --dry-run
 ```
 
 ## Safety
@@ -65,6 +69,8 @@ shared publicly.
 Use `--inactive-projects 90d` to report old projects with regenerable artifacts.
 These findings are review-only and are excluded from cleanup candidates and
 selection manifests.
+Cleanup plans contain real paths, require explicit `--dry-run` or `--yes`, and
+abort completely if any candidate no longer matches the scan snapshot.
 
 ## Canonical links
 

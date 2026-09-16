@@ -46,6 +46,8 @@ type Options struct {
 	RiskProfile       string
 	SelectionExport   string
 	SelectionImport   string
+	PlanExport        string
+	PlanImport        string
 	OutFile           string
 	IgnoreFile        string
 	IncludeCategories []string
@@ -158,6 +160,8 @@ func ParseConfig(args []string) (Options, error) {
 	fs.StringVar(&cfg.IgnoreFile, "ignore-file", "", "path to a .reclaimitignore file with exclusion rules")
 	fs.StringVar(&cfg.SelectionExport, "export-selection", "", "write the reviewed selection to a versioned JSON manifest")
 	fs.StringVar(&cfg.SelectionImport, "import-selection", "", "load and validate a versioned JSON selection manifest")
+	fs.StringVar(&cfg.PlanExport, "export-plan", "", "write a reviewed cleanup plan for a later dry run or apply")
+	fs.StringVar(&cfg.PlanImport, "plan", "", "load and validate a cleanup plan for clean")
 	fs.BoolVar(&cfg.Yes, "yes", false, "confirm destructive cleanup when using clean")
 	fs.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "log verbosity sent to stderr: debug, info, warn or error")
 	fs.BoolVar(&cfg.DryRun, "dry-run", false, "preview cleanup without deleting files")
@@ -189,6 +193,15 @@ func ParseConfig(args []string) (Options, error) {
 	cfg.ExcludeCategories = append(cfg.ExcludeCategories, excludeCategories...)
 	cfg.ExcludeGroups = append(cfg.ExcludeGroups, excludeGroups...)
 	cfg.ExcludePaths = append(cfg.ExcludePaths, excludePaths...)
+	if cfg.SelectionImport != "" && cfg.PlanImport != "" {
+		return cfg, errors.New("--plan and --import-selection cannot be used together")
+	}
+	if cfg.SelectionExport != "" && cfg.PlanExport != "" {
+		return cfg, errors.New("--export-plan and --export-selection cannot be used together")
+	}
+	if cfg.PlanImport != "" && cfg.Command != "clean" {
+		return cfg, errors.New("--plan is only supported with clean")
+	}
 
 	if cfg.Format != "plain" && cfg.Format != "markdown" && cfg.Format != "json" {
 		return cfg, fmt.Errorf("unsupported format %q", cfg.Format)

@@ -27,6 +27,99 @@ func TestSelectionManifestRoundTripAndValidation(t *testing.T) {
 	}
 }
 
+func TestCleanupPlanRoundTripAndValidation(t *testing.T) {
+	root := t.TempDir()
+	modified := time.Date(2026, 8, 20, 12, 0, 0, 123, time.UTC)
+	candidate := Candidate{Path: filepath.Join(root, "node_modules"), Group: root, CategoryKey: "node-modules", Bytes: 42, ModifiedAt: modified, IsDir: true}
+	path := filepath.Join(root, "cleanup-plan.json")
+	if err := WriteCleanupPlan(path, root, []Candidate{candidate}); err != nil {
+		t.Fatal(err)
+	}
+	plan, err := ReadCleanupPlan(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plan.Action != "delete" || plan.SchemaVersion != CleanupPlanSchemaVersion || len(plan.Candidates) != 1 {
+		t.Fatalf("unexpected cleanup plan: %+v", plan)
+	}
+	selected, mismatches, err := ValidateCleanupPlan(plan, root, []Candidate{candidate})
+	if err != nil || len(mismatches) != 0 || len(selected) != 1 {
+		t.Fatalf("cleanup plan validation failed: selected=%+v mismatches=%+v err=%v", selected, mismatches, err)
+	}
+}
+
+func TestCleanupPlanRejectsTraversalCandidate(t *testing.T) {
+	root := t.TempDir()
+	plan, err := NewCleanupPlan(root, []Candidate{{Path: filepath.Join(root, "candidate"), Bytes: 1}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan.Candidates[0].Path = filepath.Join(root, "..", "outside")
+	if _, _, err := ValidateCleanupPlan(plan, root, nil); err == nil || !strings.Contains(err.Error(), "escapes plan root") {
+		t.Fatalf("expected traversal rejection, got %v", err)
+	}
+}
+
+func TestCleanupPlanReportsWriteAndEncodeErrors(t *testing.T) {
+	root := t.TempDir()
+	if err := WriteCleanupPlan(filepath.Join(root, "missing", "plan.json"), root, nil); err == nil || !strings.Contains(err.Error(), "write cleanup plan") {
+		t.Fatalf("expected cleanup plan write error, got %v", err)
+	}
+
+	oldMarshal := marshalSelectionManifest
+	marshalSelectionManifest = func(any, string, string) ([]byte, error) {
+		return nil, errors.New("boom")
+	}
+	t.Cleanup(func() { marshalSelectionManifest = oldMarshal })
+	if err := WriteCleanupPlan(filepath.Join(root, "plan.json"), root, nil); err == nil || !strings.Contains(err.Error(), "encode cleanup plan") {
+		t.Fatalf("expected cleanup plan encode error, got %v", err)
+	}
+}
+
+func TestReadCleanupPlanRejectsInvalidFiles(t *testing.T) {
+	root := t.TempDir()
+	for name, content := range map[string]string{
+		"invalid-json": `{`,
+		"bad-schema":   `{"schema_version":2,"root":"/tmp","action":"delete"}`,
+		"bad-action":   `{"schema_version":1,"root":"/tmp","action":"inspect"}`,
+		"missing-root": `{"schema_version":1,"action":"delete"}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(root, name+".json")
+			if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := ReadCleanupPlan(path); err == nil {
+				t.Fatal("expected cleanup plan validation error")
+			}
+		})
+	}
+	if _, err := ReadCleanupPlan(filepath.Join(root, "missing.json")); err == nil || !strings.Contains(err.Error(), "read cleanup plan") {
+		t.Fatalf("expected cleanup plan read error, got %v", err)
+	}
+}
+
+func TestValidateCleanupPlanRejectsInvalidValues(t *testing.T) {
+	root := t.TempDir()
+	plan, err := NewCleanupPlan(root, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan.SchemaVersion++
+	if _, _, err := ValidateCleanupPlan(plan, root, nil); err == nil || !strings.Contains(err.Error(), "unsupported cleanup plan schema") {
+		t.Fatalf("expected schema error, got %v", err)
+	}
+	plan.SchemaVersion = CleanupPlanSchemaVersion
+	plan.Action = "inspect"
+	if _, _, err := ValidateCleanupPlan(plan, root, nil); err == nil || !strings.Contains(err.Error(), "unsupported cleanup plan action") {
+		t.Fatalf("expected action error, got %v", err)
+	}
+	plan.Action = "delete"
+	if _, _, err := ValidateCleanupPlan(plan, filepath.Join(root, "other"), nil); err == nil || !strings.Contains(err.Error(), "root") {
+		t.Fatalf("expected root error, got %v", err)
+	}
+}
+
 func TestSelectionManifestFailsClosed(t *testing.T) {
 	root := t.TempDir()
 	modified := time.Now().UTC()

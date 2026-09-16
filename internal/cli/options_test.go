@@ -500,3 +500,19 @@ func TestParseConfigSelectionManifestFlags(t *testing.T) {
 		t.Fatalf("unexpected selection paths: export=%q import=%q", cfg.SelectionExport, cfg.SelectionImport)
 	}
 }
+
+func TestParseConfigCleanupPlanFlags(t *testing.T) {
+	cfg, err := ParseConfig([]string{"clean", "--export-plan", "plan.json", "--plan", "reviewed.json", "--dry-run"})
+	if err != nil {
+		t.Fatalf("ParseConfig cleanup plan flags: %v", err)
+	}
+	if cfg.PlanExport != "plan.json" || cfg.PlanImport != "reviewed.json" || !cfg.DryRun {
+		t.Fatalf("unexpected cleanup plan options: export=%q import=%q dry_run=%t", cfg.PlanExport, cfg.PlanImport, cfg.DryRun)
+	}
+	if _, err := ParseConfig([]string{"clean", "--plan", "plan.json", "--import-selection", "selection.json"}); err == nil {
+		t.Fatal("expected --plan and --import-selection conflict")
+	}
+	if _, err := ParseConfig([]string{"analyze", "--plan", "plan.json"}); err == nil {
+		t.Fatal("expected --plan to require clean")
+	}
+}
