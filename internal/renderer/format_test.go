@@ -107,7 +107,11 @@ func TestRenderReportAnonymousRedactsPathsWithoutMutatingInput(t *testing.T) {
 	if strings.Contains(output, "alice") || strings.Contains(output, "node_modules") {
 		t.Fatalf("anonymous output leaked path data: %s", output)
 	}
-	var decoded scanner.Report
+	var decoded struct {
+		Root             string                    `json:"root"`
+		Candidates       []jsonCandidate           `json:"candidates"`
+		InactiveProjects []scanner.InactiveProject `json:"inactive_projects"`
+	}
 	if err := json.Unmarshal([]byte(output), &decoded); err != nil {
 		t.Fatalf("decode anonymous report: %v", err)
 	}
