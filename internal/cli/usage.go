@@ -70,6 +70,10 @@ Flags:
       write the reviewed selection to a versioned JSON manifest
   -import-selection FILE
       load and validate a versioned JSON selection manifest
+  -export-plan FILE
+      write a reviewed cleanup plan for a later dry run or apply
+  -plan FILE
+      load and validate a cleanup plan for clean
   -include-category VALUE
       limit to a category (repeatable)
   -exclude-category VALUE

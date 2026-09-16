@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/svg153/reclaimit/internal/scanner"
 )
 
 func TestSelectionManifestImportReportsChangedCandidate(t *testing.T) {
@@ -45,5 +47,47 @@ func TestSelectionManifestImportReportsChangedCandidate(t *testing.T) {
 	}
 	if strings.Contains(stdout.String(), "cleaned") {
 		t.Fatal("import must remain read-only")
+	}
+}
+
+func TestCleanupPlanCLIRequiresReviewAndFailsClosed(t *testing.T) {
+	root := t.TempDir()
+	candidate := filepath.Join(root, "node_modules")
+	if err := os.MkdirAll(candidate, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(candidate, "package.json"), []byte("original"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	planPath := filepath.Join(root, "cleanup-plan.json")
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"analyze", "--root", root, "--min-candidate-size", "0", "--export-plan", planPath}, &stdout, &stderr); code != 0 {
+		t.Fatalf("plan export returned %d: %s", code, stderr.String())
+	}
+	var plan scanner.CleanupPlan
+	data, err := os.ReadFile(planPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(data, &plan); err != nil || plan.Action != "delete" || len(plan.Candidates) != 1 {
+		t.Fatalf("unexpected cleanup plan: err=%v plan=%+v", err, plan)
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"clean", "--root", root, "--min-candidate-size", "0", "--plan", planPath, "--dry-run"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("plan dry-run returned %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Cleanup plan validated") || strings.Contains(stdout.String(), "[CLEAN]") {
+		t.Fatalf("dry-run did not describe a non-destructive plan: %s", stdout.String())
+	}
+
+	if err := os.WriteFile(filepath.Join(candidate, "package.json"), []byte("changed"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"clean", "--root", root, "--min-candidate-size", "0", "--plan", planPath, "--yes"}, &stdout, &stderr); code == 0 || !strings.Contains(stderr.String(), "cleanup plan validation failed") {
+		t.Fatalf("changed plan should fail closed: code=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
 	}
 }

@@ -79,14 +79,30 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 	}
 	report.Anonymous = cfg.Anonymous
 
-	if cfg.SelectionImport != "" {
-		manifest, err := scanner.ReadSelectionManifest(cfg.SelectionImport)
-		if err != nil {
-			return exitf(stderr, "error: %v\n", err)
-		}
-		selected, mismatches, err := scanner.ValidateSelectionManifest(manifest, report.Root, report.Candidates)
-		if err != nil {
-			return exitf(stderr, "error: %v\n", err)
+	if cfg.SelectionImport != "" || cfg.PlanImport != "" {
+		var selected []scanner.Candidate
+		var mismatches []scanner.SelectionMismatch
+		if cfg.PlanImport != "" {
+			plan, err := scanner.ReadCleanupPlan(cfg.PlanImport)
+			if err != nil {
+				return exitf(stderr, "error: %v\n", err)
+			}
+			selected, mismatches, err = scanner.ValidateCleanupPlan(plan, report.Root, report.Candidates)
+			if err != nil {
+				return exitf(stderr, "error: %v\n", err)
+			}
+			if len(mismatches) > 0 {
+				return exitf(stderr, "error: cleanup plan validation failed for %d candidate(s)\n", len(mismatches))
+			}
+		} else {
+			manifest, err := scanner.ReadSelectionManifest(cfg.SelectionImport)
+			if err != nil {
+				return exitf(stderr, "error: %v\n", err)
+			}
+			selected, mismatches, err = scanner.ValidateSelectionManifest(manifest, report.Root, report.Candidates)
+			if err != nil {
+				return exitf(stderr, "error: %v\n", err)
+			}
 		}
 		report.SelectionMismatches = mismatches
 		report.Candidates = selected
@@ -101,6 +117,11 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 			return exitf(stderr, "error: %v\n", err)
 		}
 	}
+	if cfg.PlanExport != "" && cfg.Command != "tui" {
+		if err := scanner.WriteCleanupPlan(cfg.PlanExport, report.Root, report.SelectedCandidates); err != nil {
+			return exitf(stderr, "error: %v\n", err)
+		}
+	}
 
 	if cfg.Command == "tui" {
 		selection, err := runTUI(report)
@@ -111,6 +132,11 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 		if cfg.SelectionExport != "" {
 			exclusions := scanner.SelectionExclusions{Categories: cfg.ExcludeCategories, Groups: selection.ExcludedGroups, Paths: selection.ExcludedPaths}
 			if err := scanner.WriteSelectionManifest(cfg.SelectionExport, report.Root, report.SelectedCandidates, exclusions); err != nil {
+				return exitf(stderr, "error: %v\n", err)
+			}
+		}
+		if cfg.PlanExport != "" {
+			if err := scanner.WriteCleanupPlan(cfg.PlanExport, report.Root, report.SelectedCandidates); err != nil {
 				return exitf(stderr, "error: %v\n", err)
 			}
 		}
@@ -147,6 +173,11 @@ func RunContext(ctx context.Context, args []string, stdout, stderr io.Writer) in
 		}
 
 		if cfg.DryRun {
+			if cfg.PlanImport != "" {
+				if err := writef(stdout, "\n[PLAN] Cleanup plan validated for %d candidates; no files will be deleted.\n", cleanResult.Candidates); err != nil {
+					return exitf(stderr, "error: %v\n", err)
+				}
+			}
 			report.DeletedBytes = 0
 			if err := writef(stdout,
 				"\n[DRY RUN] Would delete %s across %d verified candidates (skipped %d)\n",

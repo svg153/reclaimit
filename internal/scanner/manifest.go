@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
 const SelectionManifestSchemaVersion = 1
+const CleanupPlanSchemaVersion = 1
 
 var marshalSelectionManifest = json.MarshalIndent
 
@@ -40,6 +42,17 @@ type SelectionMismatch struct {
 	Path   string `json:"path"`
 	Status string `json:"status"`
 	Reason string `json:"reason"`
+}
+
+// CleanupPlan is an explicit, reviewable description of candidates that a
+// later clean command may remove. It is deliberately separate from a report
+// so applying it cannot be implicit.
+type CleanupPlan struct {
+	SchemaVersion int                 `json:"schema_version"`
+	Root          string              `json:"root"`
+	CreatedAt     time.Time           `json:"created_at"`
+	Action        string              `json:"action"`
+	Candidates    []ManifestCandidate `json:"candidates"`
 }
 
 func WriteSelectionManifest(path string, root string, candidates []Candidate, exclusions SelectionExclusions) error {
@@ -75,6 +88,71 @@ func ReadSelectionManifest(path string) (SelectionManifest, error) {
 	return manifest, nil
 }
 
+func WriteCleanupPlan(path string, root string, candidates []Candidate) error {
+	plan, err := NewCleanupPlan(root, candidates)
+	if err != nil {
+		return err
+	}
+	data, err := marshalSelectionManifest(plan, "", "  ")
+	if err != nil {
+		return fmt.Errorf("encode cleanup plan: %w", err)
+	}
+	if err := os.WriteFile(path, append(data, 10), 0o600); err != nil {
+		return fmt.Errorf("write cleanup plan: %w", err)
+	}
+	return nil
+}
+
+func ReadCleanupPlan(path string) (CleanupPlan, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return CleanupPlan{}, fmt.Errorf("read cleanup plan: %w", err)
+	}
+	var plan CleanupPlan
+	if err := json.Unmarshal(data, &plan); err != nil {
+		return CleanupPlan{}, fmt.Errorf("decode cleanup plan: %w", err)
+	}
+	if plan.SchemaVersion != CleanupPlanSchemaVersion {
+		return CleanupPlan{}, fmt.Errorf("unsupported cleanup plan schema version %d", plan.SchemaVersion)
+	}
+	if plan.Action != "delete" {
+		return CleanupPlan{}, fmt.Errorf("unsupported cleanup plan action %q", plan.Action)
+	}
+	if plan.Root == "" {
+		return CleanupPlan{}, errors.New("cleanup plan root is required")
+	}
+	return plan, nil
+}
+
+func NewCleanupPlan(root string, candidates []Candidate) (CleanupPlan, error) {
+	manifest, err := NewSelectionManifest(root, candidates, SelectionExclusions{})
+	if err != nil {
+		return CleanupPlan{}, err
+	}
+	return CleanupPlan{
+		SchemaVersion: CleanupPlanSchemaVersion,
+		Root:          manifest.Root,
+		CreatedAt:     manifest.CreatedAt,
+		Action:        "delete",
+		Candidates:    manifest.Candidates,
+	}, nil
+}
+
+func ValidateCleanupPlan(plan CleanupPlan, root string, current []Candidate) ([]Candidate, []SelectionMismatch, error) {
+	if plan.SchemaVersion != CleanupPlanSchemaVersion {
+		return nil, nil, fmt.Errorf("unsupported cleanup plan schema version %d", plan.SchemaVersion)
+	}
+	if plan.Action != "delete" {
+		return nil, nil, fmt.Errorf("unsupported cleanup plan action %q", plan.Action)
+	}
+	for _, candidate := range plan.Candidates {
+		if !pathWithinRoot(candidate.Path, plan.Root) {
+			return nil, nil, fmt.Errorf("cleanup plan candidate %q escapes plan root", candidate.Path)
+		}
+	}
+	return validateManifestCandidates(plan.Root, plan.Candidates, root, current)
+}
+
 func NewSelectionManifest(root string, candidates []Candidate, exclusions SelectionExclusions) (SelectionManifest, error) {
 	canonicalRoot, err := canonicalPath(root)
 	if err != nil {
@@ -101,27 +179,34 @@ func NewSelectionManifest(root string, candidates []Candidate, exclusions Select
 }
 
 func ValidateSelectionManifest(manifest SelectionManifest, root string, current []Candidate) ([]Candidate, []SelectionMismatch, error) {
+	if manifest.SchemaVersion != SelectionManifestSchemaVersion {
+		return nil, nil, fmt.Errorf("unsupported selection manifest schema version %d", manifest.SchemaVersion)
+	}
+	return validateManifestCandidates(manifest.Root, manifest.Candidates, root, current)
+}
+
+func validateManifestCandidates(manifestRootValue string, expectedCandidates []ManifestCandidate, root string, current []Candidate) ([]Candidate, []SelectionMismatch, error) {
 	canonicalRoot, err := canonicalPath(root)
 	if err != nil {
 		return nil, nil, err
 	}
-	manifestRoot, err := canonicalPath(manifest.Root)
+	manifestRoot, err := canonicalPath(manifestRootValue)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid selection manifest root: %w", err)
 	}
-	if manifest.SchemaVersion != SelectionManifestSchemaVersion {
-		return nil, nil, fmt.Errorf("unsupported selection manifest schema version %d", manifest.SchemaVersion)
-	}
 	if canonicalRoot != manifestRoot {
-		return nil, nil, fmt.Errorf("selection manifest root %q does not match scan root %q", manifest.Root, canonicalRoot)
+		return nil, nil, fmt.Errorf("selection manifest root %q does not match scan root %q", manifestRootValue, canonicalRoot)
 	}
 	byPath := make(map[string]Candidate, len(current))
 	for _, candidate := range current {
 		byPath[filepath.Clean(candidate.Path)] = candidate
 	}
-	selected := make([]Candidate, 0, len(manifest.Candidates))
+	selected := make([]Candidate, 0, len(expectedCandidates))
 	mismatches := make([]SelectionMismatch, 0)
-	for _, expected := range manifest.Candidates {
+	for _, expected := range expectedCandidates {
+		if !pathWithinRoot(expected.Path, canonicalRoot) {
+			return nil, nil, fmt.Errorf("selection manifest candidate %q escapes scan root", expected.Path)
+		}
 		currentCandidate, ok := byPath[filepath.Clean(expected.Path)]
 		if !ok {
 			mismatches = append(mismatches, SelectionMismatch{Path: expected.Path, Status: "missing", Reason: "candidate is no longer present"})
@@ -135,6 +220,19 @@ func ValidateSelectionManifest(manifest SelectionManifest, root string, current 
 		selected = append(selected, currentCandidate)
 	}
 	return selected, mismatches, nil
+}
+
+func pathWithinRoot(path, root string) bool {
+	canonicalPathValue, err := canonicalPath(path)
+	if err != nil {
+		return false
+	}
+	canonicalRoot, err := canonicalPath(root)
+	if err != nil {
+		return false
+	}
+	relative, err := filepath.Rel(canonicalRoot, canonicalPathValue)
+	return err == nil && relative != ".." && !filepath.IsAbs(relative) && !strings.HasPrefix(relative, ".."+string(os.PathSeparator))
 }
 
 func canonicalPath(path string) (string, error) {
