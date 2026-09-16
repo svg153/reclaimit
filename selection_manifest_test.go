@@ -82,6 +82,21 @@ func TestCleanupPlanCLIRequiresReviewAndFailsClosed(t *testing.T) {
 		t.Fatalf("dry-run did not describe a non-destructive plan: %s", stdout.String())
 	}
 
+	stdout.Reset()
+	stderr.Reset()
+	if code := Run([]string{"clean", "--root", root, "--min-candidate-size", "0", "--plan", planPath, "--yes"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("plan apply returned %d: %s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "[CLEAN]") {
+		t.Fatalf("plan apply did not report cleanup: %s", stdout.String())
+	}
+	if _, err := os.Stat(candidate); !os.IsNotExist(err) {
+		t.Fatalf("plan apply should remove candidate, stat error=%v", err)
+	}
+
+	if err := os.MkdirAll(candidate, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(filepath.Join(candidate, "package.json"), []byte("changed"), 0o644); err != nil {
 		t.Fatal(err)
 	}

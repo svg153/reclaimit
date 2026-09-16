@@ -60,9 +60,26 @@ func TestCleanupPlanRejectsTraversalCandidate(t *testing.T) {
 	}
 }
 
+func TestCleanupPlanReportsWriteAndEncodeErrors(t *testing.T) {
+	root := t.TempDir()
+	if err := WriteCleanupPlan(filepath.Join(root, "missing", "plan.json"), root, nil); err == nil || !strings.Contains(err.Error(), "write cleanup plan") {
+		t.Fatalf("expected cleanup plan write error, got %v", err)
+	}
+
+	oldMarshal := marshalSelectionManifest
+	marshalSelectionManifest = func(any, string, string) ([]byte, error) {
+		return nil, errors.New("boom")
+	}
+	t.Cleanup(func() { marshalSelectionManifest = oldMarshal })
+	if err := WriteCleanupPlan(filepath.Join(root, "plan.json"), root, nil); err == nil || !strings.Contains(err.Error(), "encode cleanup plan") {
+		t.Fatalf("expected cleanup plan encode error, got %v", err)
+	}
+}
+
 func TestReadCleanupPlanRejectsInvalidFiles(t *testing.T) {
 	root := t.TempDir()
 	for name, content := range map[string]string{
+		"invalid-json": `{`,
 		"bad-schema": `{"schema_version":2,"root":"/tmp","action":"delete"}`,
 		"bad-action": `{"schema_version":1,"root":"/tmp","action":"inspect"}`,
 		"missing-root": `{"schema_version":1,"action":"delete"}`,
@@ -76,6 +93,30 @@ func TestReadCleanupPlanRejectsInvalidFiles(t *testing.T) {
 				t.Fatal("expected cleanup plan validation error")
 			}
 		})
+	}
+	if _, err := ReadCleanupPlan(filepath.Join(root, "missing.json")); err == nil || !strings.Contains(err.Error(), "read cleanup plan") {
+		t.Fatalf("expected cleanup plan read error, got %v", err)
+	}
+}
+
+func TestValidateCleanupPlanRejectsInvalidValues(t *testing.T) {
+	root := t.TempDir()
+	plan, err := NewCleanupPlan(root, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan.SchemaVersion++
+	if _, _, err := ValidateCleanupPlan(plan, root, nil); err == nil || !strings.Contains(err.Error(), "unsupported cleanup plan schema") {
+		t.Fatalf("expected schema error, got %v", err)
+	}
+	plan.SchemaVersion = CleanupPlanSchemaVersion
+	plan.Action = "inspect"
+	if _, _, err := ValidateCleanupPlan(plan, root, nil); err == nil || !strings.Contains(err.Error(), "unsupported cleanup plan action") {
+		t.Fatalf("expected action error, got %v", err)
+	}
+	plan.Action = "delete"
+	if _, _, err := ValidateCleanupPlan(plan, filepath.Join(root, "other"), nil); err == nil || !strings.Contains(err.Error(), "root") {
+		t.Fatalf("expected root error, got %v", err)
 	}
 }
 
