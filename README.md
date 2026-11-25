@@ -135,6 +135,8 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--risk-profile conservative|balanced|expanded`: choose how broad candidate
   detection should be. `balanced` is the default and preserves the standard
   category set; `conservative` keeps only low-risk regenerable artifacts.
+  Categories with the `opt-in` risk level are never included by any profile;
+  they appear only when explicitly enabled with `--include-category`.
 - `--export-selection FILE`: write a versioned JSON manifest of the reviewed selection.
 - `--import-selection FILE`: validate a manifest; it never bypasses `--dry-run` or `--yes`.
 - `--export-plan FILE`: write an explicit, owner-only cleanup plan containing the
@@ -170,7 +172,11 @@ Each reported cleanup candidate includes a safety note that explains why the
 matched artifact is reviewable, for example because it is a cache, build output,
 or dependency directory that can be regenerated. Candidates also carry a
 `risk_level`; use `--risk-profile conservative` to exclude categories that need
-broader manual review.
+broader manual review. `opt-in` categories (see
+[docs/category-safety-contract.md](docs/category-safety-contract.md) and
+[docs/field-evidence-2026-11-25.md](docs/field-evidence-2026-11-25.md)), such as
+AI agent worktrees and session state, are excluded from every profile and are
+considered only when explicitly listed with `--include-category`.
 
 Use `--anonymous` when sharing a report publicly. It preserves aggregate sizes,
 category counts, risk levels, and safety notes, while replacing local roots,
