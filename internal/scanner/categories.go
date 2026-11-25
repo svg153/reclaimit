@@ -25,6 +25,18 @@ var categories = []Category{
 	newFileCategory("ds-store", ".DS_Store", "macOS desktop storage file that is regenerated automatically.", ".DS_Store"),
 	newDirCategory("spotlight-index", ".Spotlight-V100", "macOS Spotlight indexing database.", ".Spotlight-V100"),
 	reviewCategory(newDirCategory("macos-trash", ".Trashes", "macOS trash folder.", ".Trashes")),
+
+	// Field evidence (2026-11-25): see docs/field-evidence-2026-11-25.md.
+	newDirPathSuffixesCategory("npm-cache", "npm cache", "npm download and npx cache. Packages are downloaded again when needed.", "AppData/Local/npm-cache", ".npm/_cacache", ".npm/_npx"),
+	newDirPathSuffixesCategory("go-mod-cache", "Go module cache", "Go module download cache. Modules are downloaded again by go commands and removed with `go clean -modcache`.", "go/pkg/mod"),
+	newDirPathSuffixesCategory("uv-cache", "uv cache", "uv package cache. Packages are downloaded again on the next sync or install.", ".cache/uv", "AppData/Local/uv/cache"),
+	newDirPathSuffixesCategory("playwright-browsers", "Playwright browsers", "Browser binaries installed by Playwright. Reinstall with `npx playwright install`.", ".cache/ms-playwright", "AppData/Local/ms-playwright"),
+	newDirPathSuffixesCategory("puppeteer-cache", "Puppeteer browsers", "Browser binaries downloaded by Puppeteer. Downloaded again on demand.", ".cache/puppeteer"),
+	newDirPathSuffixesCategory("pre-commit-cache", "pre-commit cache", "pre-commit hook environments. Cloned and rebuilt automatically on the next hook run.", ".cache/pre-commit"),
+	reviewCategory(newDirPathSuffixesCategory("pnpm-store", "pnpm store", "pnpm content-addressable store. node_modules directories may be hardlinked into it; prefer `pnpm store prune` over deleting the store.", ".local/share/pnpm/store", "Library/pnpm/store", "AppData/Local/pnpm/store")),
+	reviewCategory(newDirPathSuffixesCategory("vscode-vsix-cache", "VS Code extension VSIX cache", "Downloaded extension packages cached by VS Code. Downloaded again from the marketplace when needed.", "Code/CachedExtensionVSIXs", "Code - Insiders/CachedExtensionVSIXs", "Code - OSS/CachedExtensionVSIXs")),
+	optInCategory(newDirPathSuffixesCategory("agent-worktrees", "AI agent git worktrees", "Git worktrees created by AI coding agents. They may contain uncommitted work; enable explicitly and review before deleting.", ".copilot/copilot-worktrees", ".codex/worktrees")),
+	optInCategory(newDirPathSuffixesCategory("agent-session-state", "AI agent session state", "Conversation, plan, and artifact state kept by AI coding agents. It may include active sessions and history; enable explicitly and review before deleting.", ".copilot/session-state", ".codex/sessions")),
 }
 
 func newDirCategory(key, display, description string, names ...string) Category {
@@ -57,6 +69,25 @@ func newDirPathCategory(key, display, description string, pathParts ...string) C
 	}
 }
 
+// newDirPathSuffixesCategory builds a path-suffix category with several
+// home-relative suffixes (forward slashes are normalized to the OS separator).
+func newDirPathSuffixesCategory(key, display, description string, suffixes ...string) Category {
+	paths := make(map[string]struct{}, len(suffixes))
+	for _, suffix := range suffixes {
+		paths[filepath.Join(strings.Split(filepath.ToSlash(suffix), "/")...)] = struct{}{}
+	}
+	return Category{
+		Key:            key,
+		Display:        display,
+		Description:    description,
+		SafetyNote:     description,
+		RiskLevel:      RiskLow,
+		DirectoryNames: map[string]struct{}{},
+		DirectoryPaths: paths,
+		FileExtensions: map[string]struct{}{},
+	}
+}
+
 func newFileCategory(key, display, description string, exts ...string) Category {
 	fileExts := make(map[string]struct{}, len(exts))
 	for _, ext := range exts {
@@ -79,11 +110,33 @@ func reviewCategory(category Category) Category {
 	return category
 }
 
+func optInCategory(category Category) Category {
+	category.RiskLevel = RiskOptIn
+	return category
+}
+
 func IncludeRiskProfile(category Category, profile string) bool {
+	if category.RiskLevel == RiskOptIn {
+		return false
+	}
 	if profile == "" || profile == "balanced" || profile == "expanded" {
 		return true
 	}
 	return profile != "conservative" || category.RiskLevel == RiskLow
+}
+
+// IncludeCandidate combines the category include/exclude filters with the risk
+// profile. Opt-in categories never pass the profile filters on their own; they
+// are considered only when explicitly listed in the include set.
+func IncludeCandidate(category Category, includeSet, excludeSet map[string]struct{}, profile string) bool {
+	if !IncludeCategory(category.Key, includeSet, excludeSet) {
+		return false
+	}
+	if category.RiskLevel == RiskOptIn {
+		_, explicit := includeSet[category.Key]
+		return explicit
+	}
+	return IncludeRiskProfile(category, profile)
 }
 
 func validateRiskProfile(profile string) error {
