@@ -10,7 +10,14 @@ import (
 func TestMatchDirectory(t *testing.T) {
 	for _, name := range []string{"node_modules", ".venv", "venv", "__pycache__",
 		".pytest_cache", ".mypy_cache", ".tox", "dist", "build", "target",
-		".next", ".nuxt", ".cache", ".cache/pip", ".local/pipx", ".bun/install/cache"} {
+		".next", ".nuxt", ".cache", ".cache/pip", ".local/pipx", ".bun/install/cache",
+		".npm/_cacache", ".npm/_npx", "go/pkg/mod", "AppData/Local/npm-cache",
+		".cache/uv", "AppData/Local/uv/cache", ".cache/ms-playwright",
+		"AppData/Local/ms-playwright", ".cache/puppeteer", ".cache/pre-commit",
+		".local/share/pnpm/store", "Library/pnpm/store", "AppData/Local/pnpm/store",
+		"Code/CachedExtensionVSIXs", "Code - Insiders/CachedExtensionVSIXs",
+		"Code - OSS/CachedExtensionVSIXs",
+		".copilot/copilot-worktrees", ".copilot/session-state"} {
 		cat, ok := MatchDirectory(name)
 		if !ok {
 			t.Fatalf("expected %q to match a category", name)
@@ -21,9 +28,24 @@ func TestMatchDirectory(t *testing.T) {
 	}
 
 	for name, want := range map[string]string{
-		".cache/pip":         "pip-cache",
-		".local/pipx":        "pipx-data",
-		".bun/install/cache": "bun-cache",
+		".cache/pip":                           "pip-cache",
+		".local/pipx":                          "pipx-data",
+		".bun/install/cache":                   "bun-cache",
+		".npm/_cacache":                        "npm-cache",
+		"AppData/Local/npm-cache":              "npm-cache",
+		"go/pkg/mod":                           "go-mod-cache",
+		".cache/uv":                            "uv-cache",
+		"AppData/Local/uv/cache":               "uv-cache",
+		".cache/ms-playwright":                 "playwright-browsers",
+		"AppData/Local/ms-playwright":          "playwright-browsers",
+		".cache/puppeteer":                     "puppeteer-cache",
+		".cache/pre-commit":                    "pre-commit-cache",
+		".local/share/pnpm/store":              "pnpm-store",
+		"Library/pnpm/store":                   "pnpm-store",
+		"Code/CachedExtensionVSIXs":            "vscode-vsix-cache",
+		"Code - Insiders/CachedExtensionVSIXs": "vscode-vsix-cache",
+		".copilot/copilot-worktrees":           "agent-worktrees",
+		".copilot/session-state":               "agent-session-state",
 	} {
 		cat, ok := MatchDirectory(name)
 		if !ok || cat.Key != want {
@@ -36,6 +58,21 @@ func TestMatchDirectory(t *testing.T) {
 	}
 	if _, ok := MatchDirectory(".bun"); ok {
 		t.Fatal("the Bun home must not be treated as a cache")
+	}
+}
+
+// TestMatchDirectoryHomePrefixesNotCandidates guards against flagging the
+// tool homes themselves instead of their cache subdirectories.
+func TestMatchDirectoryHomePrefixesNotCandidates(t *testing.T) {
+	for _, name := range []string{
+		".npm", ".npm/_logs", "AppData/Local/npm-cache-mcp", ".cache/puppeteer-mcp",
+		"ms-playwright-mcp", ".cache/ms-playwright-mcp",
+		"go", "go/pkg", ".cache/uvx", "Library/pnpm", ".local/share/pnpm",
+		".copilot", ".codex",
+	} {
+		if _, ok := MatchDirectory(name); ok {
+			t.Fatalf("expected %q not to match any category", name)
+		}
 	}
 }
 
@@ -88,7 +125,7 @@ func TestCategoriesList(t *testing.T) {
 		if cat.SafetyNote == "" {
 			t.Fatalf("category %q has empty safety note", cat.Key)
 		}
-		if cat.RiskLevel != RiskLow && cat.RiskLevel != RiskReview {
+		if cat.RiskLevel != RiskLow && cat.RiskLevel != RiskReview && cat.RiskLevel != RiskOptIn {
 			t.Fatalf("category %q has unsupported risk level %q", cat.Key, cat.RiskLevel)
 		}
 		if len(cat.DirectoryNames) == 0 && len(cat.DirectoryPaths) == 0 && len(cat.FileExtensions) == 0 {
@@ -100,6 +137,7 @@ func TestCategoriesList(t *testing.T) {
 func TestIncludeRiskProfile(t *testing.T) {
 	low := Category{RiskLevel: RiskLow}
 	review := Category{RiskLevel: RiskReview}
+	optIn := Category{RiskLevel: RiskOptIn}
 
 	if !IncludeRiskProfile(low, "conservative") {
 		t.Fatal("conservative profile should include low-risk categories")
@@ -112,8 +150,58 @@ func TestIncludeRiskProfile(t *testing.T) {
 			t.Fatalf("profile %q should include review categories", profile)
 		}
 	}
+	for _, profile := range []string{"", "conservative", "balanced", "expanded"} {
+		if IncludeRiskProfile(optIn, profile) {
+			t.Fatalf("profile %q must exclude opt-in categories", profile)
+		}
+	}
 	if err := validateRiskProfile("reckless"); err == nil {
 		t.Fatal("expected invalid risk profile error")
+	}
+}
+
+func TestIncludeCandidate(t *testing.T) {
+	low := Category{Key: "node-modules", RiskLevel: RiskLow}
+	review := Category{Key: "pipx-data", RiskLevel: RiskReview}
+	optIn := Category{Key: "agent-worktrees", RiskLevel: RiskOptIn}
+
+	// Defaults: no include, no exclude, balanced.
+	for _, cat := range []Category{low, review} {
+		if !IncludeCandidate(cat, nil, nil, "") {
+			t.Fatalf("default scan must include %q category", cat.Key)
+		}
+	}
+	if IncludeCandidate(optIn, nil, nil, "") {
+		t.Fatal("opt-in category must be excluded by default")
+	}
+
+	// Risk profiles still apply to non opt-in categories.
+	if IncludeCandidate(review, nil, nil, "conservative") {
+		t.Fatal("conservative profile must exclude review categories")
+	}
+
+	// Explicit include enables opt-in categories at every profile.
+	for _, profile := range []string{"", "conservative", "balanced", "expanded"} {
+		if !IncludeCandidate(optIn, ListToSet([]string{"agent-worktrees"}), nil, profile) {
+			t.Fatalf("explicit include must enable opt-in category at profile %q", profile)
+		}
+	}
+
+	// The explicit include acts through the include filter, so a matching
+	// exclusion always wins and a non-opt-in include does not unlock it.
+	if IncludeCandidate(optIn, ListToSet([]string{"agent-worktrees"}), ListToSet([]string{"agent-worktrees"}), "") {
+		t.Fatal("exclude filter must win over include for opt-in categories")
+	}
+	if IncludeCandidate(optIn, ListToSet([]string{"node-modules"}), nil, "") {
+		t.Fatal("including a different category must not enable opt-in categories")
+	}
+
+	// Explicit include cannot bypass a risk profile for non opt-in categories.
+	if !IncludeCandidate(low, ListToSet([]string{"node-modules"}), nil, "conservative") {
+		t.Fatal("explicit include should keep low-risk categories enabled under conservative")
+	}
+	if IncludeCandidate(review, ListToSet([]string{"pipx-data"}), nil, "conservative") {
+		t.Fatal("explicit include must not bypass the conservative profile for review categories")
 	}
 }
 

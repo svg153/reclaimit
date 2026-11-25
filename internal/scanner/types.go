@@ -5,6 +5,7 @@ import "time"
 const (
 	RiskLow    = "low"
 	RiskReview = "review"
+	RiskOptIn  = "opt-in"
 )
 
 type Category struct {

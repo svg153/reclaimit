@@ -89,8 +89,34 @@ reclaimit clean --root "$HOME/code" --include-category python-venv --yes
 | Bun | `.bun/install/cache` |
 | Generic caches | `.cache` |
 | macOS | `.DS_Store`, `.Spotlight-V100`, `.Trashes` |
+| Go | `go/pkg/mod` (module cache) |
+| Package manager caches | `AppData/Local/npm-cache`, `.npm/_cacache`, `.npm/_npx`, `.local/share/pnpm/store`, `Library/pnpm/store`, `AppData/Local/pnpm/store`, `.cache/uv`, `AppData/Local/uv/cache` |
+| Browser automation | `.cache/ms-playwright`, `AppData/Local/ms-playwright`, `.cache/puppeteer` |
+| pre-commit | `.cache/pre-commit` |
+| VS Code | `Code/CachedExtensionVSIXs`, `Code - Insiders/CachedExtensionVSIXs`, `Code - OSS/CachedExtensionVSIXs` |
+| AI agent artifacts | `.copilot/copilot-worktrees`, `.codex/worktrees`, `.copilot/session-state`, `.codex/sessions` |
 
 Generic caches and pipx-managed environments can contain useful or costly-to-recreate data. `reclaimit` describes these candidates but leaves the decision to you.
+
+### Regeneration behavior of evidence-based categories
+
+Categories added from field evidence and their official regeneration paths:
+
+| Category | Risk | Regeneration |
+| --- | --- | --- |
+| `npm-cache` | low | `npm cache verify`; packages re-download on the next install |
+| `go-mod-cache` | low | `go clean -modcache`; modules re-download on the next build |
+| `uv-cache` | low | `uv cache clean` |
+| `playwright-browsers` | low | `npx playwright install` re-downloads the browsers you use |
+| `puppeteer-cache` | low | the browser is downloaded again on the next launch |
+| `pre-commit-cache` | low | hook environments are rebuilt on the next hook run (`pre-commit clean` forces it) |
+| `pnpm-store` | review | prefer `pnpm store prune`; deleting the store is riskier because `node_modules` may be hard-linked into it |
+| `vscode-vsix-cache` | review | extensions are downloaded again from the marketplace on demand |
+| `agent-worktrees` | opt-in | none — may contain uncommitted work |
+| `agent-session-state` | opt-in | none — may contain live session state |
+
+`opt-in` categories are never scanned by any risk profile; they are considered
+only when explicitly listed with `--include-category`.
 
 ## reclaimit vs ncdu, gdu, dust, and dua
 
@@ -135,6 +161,8 @@ The tools complement each other: use a general analyzer to understand the whole 
 - `--risk-profile conservative|balanced|expanded`: choose how broad candidate
   detection should be. `balanced` is the default and preserves the standard
   category set; `conservative` keeps only low-risk regenerable artifacts.
+  Categories with the `opt-in` risk level are never included by any profile;
+  they appear only when explicitly enabled with `--include-category`.
 - `--export-selection FILE`: write a versioned JSON manifest of the reviewed selection.
 - `--import-selection FILE`: validate a manifest; it never bypasses `--dry-run` or `--yes`.
 - `--export-plan FILE`: write an explicit, owner-only cleanup plan containing the
@@ -170,7 +198,11 @@ Each reported cleanup candidate includes a safety note that explains why the
 matched artifact is reviewable, for example because it is a cache, build output,
 or dependency directory that can be regenerated. Candidates also carry a
 `risk_level`; use `--risk-profile conservative` to exclude categories that need
-broader manual review.
+broader manual review. `opt-in` categories (see
+[docs/category-safety-contract.md](docs/category-safety-contract.md) and
+[docs/field-evidence-2026-11-25.md](docs/field-evidence-2026-11-25.md)), such as
+AI agent worktrees and session state, are excluded from every profile and are
+considered only when explicitly listed with `--include-category`.
 
 Use `--anonymous` when sharing a report publicly. It preserves aggregate sizes,
 category counts, risk levels, and safety notes, while replacing local roots,

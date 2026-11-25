@@ -285,7 +285,7 @@ func (sc *scanContext) scanTree(ctx context.Context, parent string, entries []os
 
 	finalizeDirectory := func(state *directoryState) {
 		if state.dirIsCandidate && (!state.task.inCandidateDir || len(state.dirCategory.DirectoryPaths) > 0) &&
-			IncludeCategory(state.dirCategory.Key, sc.includeSet, sc.excludeSet) && IncludeRiskProfile(state.dirCategory, sc.opts.RiskProfile) && state.summary.bytes >= sc.opts.MinCandidateSize {
+			IncludeCandidate(state.dirCategory, sc.includeSet, sc.excludeSet, sc.opts.RiskProfile) && state.summary.bytes >= sc.opts.MinCandidateSize {
 			sc.addCandidate(Candidate{
 				Category:    state.dirCategory.Display,
 				CategoryKey: state.dirCategory.Key,
@@ -424,7 +424,7 @@ func (sc *scanContext) scanFile(path string, info os.FileInfo, inCandidateDir bo
 	sc.mu.Unlock()
 
 	fileCategory, fileIsCandidate := MatchFile(path)
-	if fileIsCandidate && !inCandidateDir && IncludeCategory(fileCategory.Key, sc.includeSet, sc.excludeSet) && IncludeRiskProfile(fileCategory, sc.opts.RiskProfile) && size >= sc.opts.MinCandidateSize {
+	if fileIsCandidate && !inCandidateDir && IncludeCandidate(fileCategory, sc.includeSet, sc.excludeSet, sc.opts.RiskProfile) && size >= sc.opts.MinCandidateSize {
 		sc.addCandidate(Candidate{
 			Category:    fileCategory.Display,
 			CategoryKey: fileCategory.Key,
